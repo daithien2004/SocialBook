@@ -5,11 +5,11 @@ import {
   READING_PROGRESS_DEBOUNCE_MS,
   READING_PROGRESS_QUEUE,
 } from './reading-progress-queue.constants';
-import { IReadingProgressQueuePort } from '../../application/ports/external/reading-progress-queue.port';
+import { ReadingProgressQueuePort } from '../../application/ports/external/reading-progress-queue.port';
 import type { ReadingProgressJob } from '../../application/ports/external/reading-progress-queue.port';
 
 @Injectable()
-export class ReadingProgressQueueAdapter implements IReadingProgressQueuePort {
+export class ReadingProgressQueueAdapter implements ReadingProgressQueuePort {
   constructor(
     @InjectQueue(READING_PROGRESS_QUEUE)
     private readonly queue: Queue<ReadingProgressJob>,

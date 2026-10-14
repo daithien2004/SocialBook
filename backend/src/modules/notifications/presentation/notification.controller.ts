@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
@@ -30,9 +31,14 @@ import {
   ApiPaginatedResponse,
   ApiProblemResponses,
 } from '@/shared/platform/decorators/api-response.decorators';
-import { ApiCreatedResponse, ApiNoContentResponse } from '@nestjs/swagger';
+import {
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 
 @ApiProblemResponses()
+@ApiTags('Notifications')
 @Controller('notifications')
 export class NotificationController {
   constructor(
@@ -40,6 +46,7 @@ export class NotificationController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Get My Notifications' })
   @Get()
   @ApiPaginatedResponse(NotificationResponseDto, 'offset')
   async getMyNotifications(
@@ -68,6 +75,7 @@ export class NotificationController {
     };
   }
 
+  @ApiOperation({ summary: 'Mark All Read' })
   @Patch('read-all')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiNoContentResponse()
@@ -77,6 +85,7 @@ export class NotificationController {
     return undefined;
   }
 
+  @ApiOperation({ summary: 'Mark Read' })
   @Patch(':id/read')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiNoContentResponse()
@@ -89,6 +98,7 @@ export class NotificationController {
     return undefined;
   }
 
+  @ApiOperation({ summary: 'Create' })
   @Post()
   @ApiCreatedResponse({ type: NotificationResponseDto })
   @Roles('admin')

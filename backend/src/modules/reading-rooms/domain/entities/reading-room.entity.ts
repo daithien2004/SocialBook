@@ -1,13 +1,9 @@
 import { Entity } from '@/shared/domain/entity.base';
 import {
-  BadRequestDomainException,
-  ForbiddenDomainException,
-  InternalServerDomainException,
-  RoomFullDomainException,
-} from '@/shared/domain/common-exceptions';
-import { BookId } from '@/modules/books/domain/public-api';
-import { ChapterId } from '@/modules/chapters/domain/public-api';
-import { UserId } from '@/modules/users/domain/public-api';
+  ReadingRoomInvalidError,
+  ReadingRoomFullError,
+} from '@/modules/reading-rooms/domain/errors/reading-room.errors';
+import { InternalServerDomainException } from '@/shared/domain/common-exceptions';
 import { RoomId } from '../value-objects/room-id.vo';
 import { RoomMode } from '../value-objects/room-mode.vo';
 import type { RoomModeType } from '../value-objects/room-mode.vo';
@@ -27,9 +23,9 @@ export interface RoomHighlightProps {
 }
 
 export interface ReadingRoomProps {
-  bookId: BookId;
-  currentChapterId: ChapterId;
-  hostId: UserId;
+  bookId: string;
+  currentChapterId: string;
+  hostId: string;
   mode: RoomMode;
   status: ReadingRoomStatus;
   currentChapterSlug: string;
@@ -77,7 +73,7 @@ export class ReadingRoom extends Entity<RoomId> {
     const mode = RoomMode.create(props.mode);
     const maxMembers = props.maxMembers ?? DEFAULT_MAX_MEMBERS;
     if (!Number.isInteger(maxMembers) || maxMembers < 2 || maxMembers > 50) {
-      throw new BadRequestDomainException(
+      throw new ReadingRoomInvalidError(
         'Số lượng thành viên tối đa phải là số nguyên từ 2 đến 50',
       );
     }
@@ -90,9 +86,9 @@ export class ReadingRoom extends Entity<RoomId> {
     return new ReadingRoom(
       roomId,
       {
-        bookId: BookId.create(props.bookId),
-        currentChapterId: ChapterId.create(props.currentChapterId),
-        hostId: UserId.create(props.hostId),
+        bookId: props.bookId,
+        currentChapterId: props.currentChapterId,
+        hostId: props.hostId,
         mode,
         status: 'active',
         currentChapterSlug: props.currentChapterSlug,
@@ -133,9 +129,9 @@ export class ReadingRoom extends Entity<RoomId> {
     return new ReadingRoom(
       RoomId.create(props.id),
       {
-        bookId: BookId.create(props.bookId),
-        currentChapterId: ChapterId.create(props.currentChapterId),
-        hostId: UserId.create(props.hostId),
+        bookId: props.bookId,
+        currentChapterId: props.currentChapterId,
+        hostId: props.hostId,
         mode: RoomMode.create(props.mode),
         status: props.status,
         currentChapterSlug: props.currentChapterSlug,
@@ -157,13 +153,13 @@ export class ReadingRoom extends Entity<RoomId> {
     return this.id.toString();
   }
   get bookId(): string {
-    return this._props.bookId.toString();
+    return this._props.bookId;
   }
   get currentChapterId(): string {
-    return this._props.currentChapterId.toString();
+    return this._props.currentChapterId;
   }
   get hostId(): string {
-    return this._props.hostId.toString();
+    return this._props.hostId;
   }
   get mode(): RoomModeType {
     return this._props.mode.modeType;
@@ -236,30 +232,30 @@ export class ReadingRoom extends Entity<RoomId> {
     content: string;
   }): RoomHighlightProps & { id: string; createdAt: Date } {
     if (this._props.status === 'ended') {
-      throw new BadRequestDomainException(
+      throw new ReadingRoomInvalidError(
         'Không thể highlight trong phòng đã kết thúc',
       );
     }
 
     const trimmedContent = (props.content || '').trim();
     if (!trimmedContent || trimmedContent.length > 1000) {
-      throw new BadRequestDomainException(
+      throw new ReadingRoomInvalidError(
         'Nội dung highlight phải từ 1 đến 1000 ký tự',
       );
     }
 
     if (!props.paragraphId || props.paragraphId.length > 100) {
-      throw new BadRequestDomainException(
+      throw new ReadingRoomInvalidError(
         'paragraphId không hợp lệ (tối đa 100 ký tự)',
       );
     }
 
     if (!/^[a-z0-9-]{1,200}$/.test(props.chapterSlug)) {
-      throw new BadRequestDomainException('chapterSlug không hợp lệ');
+      throw new ReadingRoomInvalidError('chapterSlug không hợp lệ');
     }
 
     if (this._props.highlights.length >= 500) {
-      throw new BadRequestDomainException(
+      throw new ReadingRoomInvalidError(
         'Phòng đọc đã đạt giới hạn tối đa 500 highlight',
       );
     }
@@ -268,7 +264,7 @@ export class ReadingRoom extends Entity<RoomId> {
       (h) => h.userId === props.userId,
     ).length;
     if (userHighlightCount >= 100) {
-      throw new BadRequestDomainException(
+      throw new ReadingRoomInvalidError(
         'Bạn đã đạt giới hạn tối đa 100 highlight trong phòng này',
       );
     }
@@ -289,15 +285,10 @@ export class ReadingRoom extends Entity<RoomId> {
     return { ...highlight };
   }
 
-  removeHighlight(highlightId: string, userId: string): void {
+  removeHighlight(highlightId: string): void {
     const index = this._props.highlights.findIndex((h) => h.id === highlightId);
     if (index === -1) {
-      throw new BadRequestDomainException('Không tìm thấy highlight');
-    }
-    if (this._props.highlights[index].userId !== userId) {
-      throw new ForbiddenDomainException(
-        'Chỉ chủ sở hữu mới có thể gỡ highlight',
-      );
+      throw new ReadingRoomInvalidError('Không tìm thấy highlight');
     }
     if (this._props.highlights[index].id) {
       const highlightId = this._props.highlights[index].id;
@@ -311,14 +302,14 @@ export class ReadingRoom extends Entity<RoomId> {
 
   addMember(userId: string): void {
     if (this._props.status === 'ended') {
-      throw new BadRequestDomainException('Phòng đã kết thúc');
+      throw new ReadingRoomInvalidError('Phòng đã kết thúc');
     }
 
     if (
       this.activeMembers.length >= this._props.maxMembers &&
       !this.isMember(userId)
     ) {
-      throw new RoomFullDomainException('Phòng đã đầy');
+      throw new ReadingRoomFullError('Phòng đã đầy');
     }
 
     const existingMember = this._props.members.find((m) => m.userId === userId);
@@ -336,14 +327,9 @@ export class ReadingRoom extends Entity<RoomId> {
     this.markAsUpdated();
   }
 
-  transferHost(callerId: string, newHostId: string): void {
-    if (callerId !== this.hostId) {
-      throw new ForbiddenDomainException(
-        'Chỉ chủ phòng mới được chỉ định chủ phòng mới',
-      );
-    }
-    if (callerId === newHostId) {
-      throw new BadRequestDomainException(
+  transferHost(newHostId: string): void {
+    if (this.hostId === newHostId) {
+      throw new ReadingRoomInvalidError(
         'Không thể chuyển quyền cho chính mình',
       );
     }
@@ -352,7 +338,7 @@ export class ReadingRoom extends Entity<RoomId> {
       (m) => m.userId === newHostId && m.isActive,
     );
     if (!newHost) {
-      throw new BadRequestDomainException(
+      throw new ReadingRoomInvalidError(
         'Người nhận quyền không phải thành viên đang hoạt động',
       );
     }
@@ -367,7 +353,7 @@ export class ReadingRoom extends Entity<RoomId> {
 
     newHost.changeRole('host');
     this._changedMemberIds.add(newHost.userId);
-    this._props.hostId = UserId.create(newHostId);
+    this._props.hostId = newHostId;
     this.markAsUpdated();
   }
 
@@ -390,7 +376,7 @@ export class ReadingRoom extends Entity<RoomId> {
           const nextHost = remainingMembers[0];
           nextHost.changeRole('host');
           this._changedMemberIds.add(nextHost.userId);
-          this._props.hostId = UserId.create(nextHost.userId);
+          this._props.hostId = nextHost.userId;
 
           if (this._props.mode.toString() === 'sync') {
             this._props.mode = RoomMode.create('free');
@@ -412,14 +398,10 @@ export class ReadingRoom extends Entity<RoomId> {
     }
   }
 
-  reactivate(userId: string): void {
-    if (this.hostId !== userId) {
-      throw new ForbiddenDomainException(
-        'Ch\u1ec9 ch\u1ee7 ph\u00f2ng m\u1edbi c\u00f3 th\u1ec3 m\u1edf l\u1ea1i ph\u00f2ng',
-      );
-    }
-
-    const hostMember = this._props.members.find((m) => m.userId === userId);
+  reactivate(): void {
+    const hostMember = this._props.members.find(
+      (member) => member.userId === this.hostId,
+    );
     if (!hostMember) {
       throw new InternalServerDomainException(
         'Reading room host membership is missing',

@@ -1,7 +1,7 @@
+export { ChaptersReadingRoomsIntegrationModule } from './application/public-api/chapters-reading-rooms-integration.module';
+export type { ChapterDetailReadModel } from './application/read-models/chapter-detail.read-model';
+export type { ReadingRoomChapterContextReadModel } from './application/read-models/reading-room-chapter-context.read-model';
+export { TouchChapterForReadingRoomCommand } from './application/chapters/commands/touch-chapter-for-reading-room/touch-chapter-for-reading-room.command';
+export { GetReadingRoomChapterQuery } from './application/chapters/queries/get-reading-room-chapter/get-reading-room-chapter.query';
+export { GetReadingRoomChapterContextQuery } from './application/chapters/queries/get-reading-room-chapter-context/get-reading-room-chapter-context.query';
 export { ChaptersModule } from './chapters.module';
-export { ChaptersApplicationModule } from './application/chapters/chapters-application.module';
-export { ChaptersRepositoryModule } from './infrastructure/repositories/chapters/chapters-repository.module';
-export { Chapter } from './domain/chapters/entities/chapter.entity';
-export { IChapterRepository } from './domain/chapters/repositories/chapter.repository.interface';
-export { IChapterReadRepository } from './application/ports/chapter-read.repository';
-export type { ChapterDetailReadModel } from './domain/chapters/read-models/chapter-detail.read-model';

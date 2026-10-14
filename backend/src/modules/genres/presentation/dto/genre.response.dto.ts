@@ -1,39 +1,37 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Genre } from '@/modules/genres/domain/entities/genre.entity';
+import type { GenreReadModel } from '../../application/read-models/genre.read-model';
 
 export class GenreResponseDto {
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty()
-  name: string;
+  name!: string;
 
   @ApiProperty()
-  slug: string;
+  slug!: string;
 
   @ApiPropertyOptional()
   description?: string;
 
   @ApiProperty()
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty()
-  updatedAt: Date;
+  updatedAt!: Date;
 
-  constructor(genre: Genre) {
-    this.id = genre.id.toString();
-    this.name = genre.name.toString();
-    this.slug = genre.slug;
-    this.description = genre.description;
-    this.createdAt = genre.createdAt;
-    this.updatedAt = genre.updatedAt;
+  static fromReadModel(model: GenreReadModel): GenreResponseDto {
+    const dto = new GenreResponseDto();
+    dto.id = model.id;
+    dto.name = model.name;
+    dto.slug = model.slug;
+    dto.description = model.description;
+    dto.createdAt = model.createdAt;
+    dto.updatedAt = model.updatedAt;
+    return dto;
   }
 
-  static fromDomain(genre: Genre): GenreResponseDto {
-    return new GenreResponseDto(genre);
-  }
-
-  static fromArray(genres: Genre[]): GenreResponseDto[] {
-    return genres.map((genre) => new GenreResponseDto(genre));
+  static fromArray(models: GenreReadModel[]): GenreResponseDto[] {
+    return models.map((model) => GenreResponseDto.fromReadModel(model));
   }
 }

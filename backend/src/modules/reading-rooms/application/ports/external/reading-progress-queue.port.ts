@@ -5,6 +5,6 @@ export interface ReadingProgressJob {
   progress: number;
 }
 
-export abstract class IReadingProgressQueuePort {
+export abstract class ReadingProgressQueuePort {
   abstract enqueue(progress: ReadingProgressJob): Promise<void>;
 }

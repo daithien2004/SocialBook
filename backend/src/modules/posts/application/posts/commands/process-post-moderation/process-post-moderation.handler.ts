@@ -1,9 +1,9 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger, Inject } from '@nestjs/common';
 import { INotificationQueuePort } from '@/modules/notifications/application/public-api';
 import { PostModeratedJobPayload } from '@/modules/notifications/application/public-api';
 import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
-import { CheckContentHandler } from '@/modules/content-moderation/application/public-api';
+import { CheckContentCommand } from '@/modules/content-moderation/application/public-api';
 
 import { Command } from '@nestjs/cqrs';
 export class ProcessPostModerationCommand extends Command<void> {
@@ -23,7 +23,7 @@ export class ProcessPostModerationHandler implements ICommandHandler<
   private readonly logger = new Logger(ProcessPostModerationHandler.name);
 
   constructor(
-    private readonly checkContentUseCase: CheckContentHandler,
+    private readonly commandBus: CommandBus,
     private readonly postRepository: IPostRepository,
     @Inject(INotificationQueuePort)
     private readonly notificationQueue: INotificationQueuePort,
@@ -33,7 +33,9 @@ export class ProcessPostModerationHandler implements ICommandHandler<
     const { postId, content } = command;
     this.logger.debug(`[AI Moderation] Processing post ${postId}`);
 
-    const result = await this.checkContentUseCase.execute(content);
+    const result = await this.commandBus.execute(
+      new CheckContentCommand(content),
+    );
 
     if (result.action === 'ALLOW') {
       const post = await this.postRepository.findById(postId);

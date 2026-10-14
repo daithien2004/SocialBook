@@ -1,9 +1,9 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
-import { IReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
+import { ForbiddenError, subject } from '@casl/ability';
+import { Transactional } from '@nestjs-cls/transactional';
+import { ReadingRoomNotFoundError } from '@/modules/reading-rooms/domain/errors/reading-room.errors';
+import { ReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository';
 import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
-import { LeaveRoomResult } from '@/modules/reading-rooms/application/reading-room.result';
-import { toReadingRoomResult } from '../../mappers/reading-room-result.mapper';
 import { LeaveRoomCommand } from './leave-room.command';
 
 import { withOptimisticRetry } from '@/shared/application/with-optimistic-retry';
@@ -11,40 +11,48 @@ import { withOptimisticRetry } from '@/shared/application/with-optimistic-retry'
 @CommandHandler(LeaveRoomCommand)
 export class LeaveRoomHandler implements ICommandHandler<
   LeaveRoomCommand,
-  LeaveRoomResult
+  void
 > {
-  constructor(private readonly roomRepository: IReadingRoomRepository) {}
+  constructor(private readonly roomRepository: ReadingRoomRepository) {}
 
-  async execute(command: LeaveRoomCommand): Promise<LeaveRoomResult> {
-    return withOptimisticRetry(async () => {
-      const room = await this.roomRepository.findById(
-        RoomId.create(command.roomId),
+  async execute(command: LeaveRoomCommand): Promise<void> {
+    await withOptimisticRetry(() => this.executeInTransaction(command));
+  }
+
+  @Transactional()
+  private async executeInTransaction(command: LeaveRoomCommand): Promise<void> {
+    const room = await this.roomRepository.findById(
+      RoomId.create(command.roomId),
+    );
+    if (!room) {
+      throw new ReadingRoomNotFoundError('Requested resource not found.');
+    }
+
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'update',
+      subject('ReadingRoomMember', {
+        roomId: room.roomId,
+        userId: command.actor.userId,
+      }),
+    );
+
+    if (!room.isMember(command.actor.userId)) {
+      return;
+    }
+
+    if (command.newHostId) {
+      ForbiddenError.from(command.actor.ability).throwUnlessCan(
+        'update',
+        subject('ReadingRoom', {
+          id: room.roomId,
+          hostId: room.hostId,
+          status: room.status,
+        }),
       );
-      if (!room) {
-        throw new NotFoundDomainException('Phòng không tồn tại');
-      }
+      room.transferHost(command.newHostId);
+    }
 
-      if (!room.isMember(command.userId)) {
-        return {
-          ...toReadingRoomResult(room),
-          roomEnded: room.status === 'ended',
-        };
-      }
-
-      if (command.newHostId) {
-        room.transferHost(command.userId, command.newHostId);
-      }
-
-      room.removeMember(command.userId);
-      await this.roomRepository.save(room);
-
-      const roomEnded = room.status === 'ended';
-
-      const baseResult = toReadingRoomResult(room);
-      return {
-        ...baseResult,
-        roomEnded,
-      };
-    });
+    room.removeMember(command.actor.userId);
+    await this.roomRepository.save(room);
   }
 }

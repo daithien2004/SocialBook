@@ -1,4 +1,4 @@
-﻿CREATE TABLE "posts" (
+CREATE TABLE "posts" (
     "id" UUID NOT NULL,
     "userId" UUID NOT NULL,
     "bookId" UUID,

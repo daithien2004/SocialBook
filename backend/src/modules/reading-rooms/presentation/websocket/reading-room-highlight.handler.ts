@@ -1,4 +1,5 @@
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { createReadingRoomActor } from '@/modules/reading-rooms/application/policies/reading-room.ability';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { WsRateLimiter } from './core/ws-rate-limiter.service';
@@ -7,7 +8,8 @@ import { ReadingRoomEmitter } from './reading-room.emitter';
 import { AddHighlightCommand } from '@/modules/reading-rooms/application/commands/add-highlight/add-highlight.command';
 import { RemoveHighlightCommand } from '@/modules/reading-rooms/application/commands/remove-highlight/remove-highlight.command';
 import { GenerateHighlightInsightCommand } from '@/modules/reading-rooms/application/commands/generate-highlight-insight/generate-highlight-insight.command';
-import { ReadingRoomServerEvent } from '../../reading-room.socket-events';
+import { GetRoomHighlightQuery } from '@/modules/reading-rooms/application/queries/get-room-highlight/get-room-highlight.query';
+import { ReadingRoomServerEvent } from './reading-room.socket-events';
 import { RoomSocket, SocketData } from './reading-room.types';
 import { AddHighlightDto } from './dto/add-highlight.dto';
 import { RemoveHighlightDto } from './dto/remove-highlight.dto';
@@ -20,6 +22,7 @@ export class ReadingRoomHighlightHandler {
 
   constructor(
     private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
     private readonly rateLimiter: WsRateLimiter,
     private readonly emitter: ReadingRoomEmitter,
   ) {}
@@ -55,16 +58,23 @@ export class ReadingRoomHighlightHandler {
     }
     const command = new AddHighlightCommand(
       roomId,
-      userId,
+      createReadingRoomActor(userId, sd.role),
       body.chapterSlug,
       body.paragraphId,
       body.content,
       displayName,
       avatarUrl,
     );
-    const newHighlight = await this.commandBus.execute(command);
+    const highlightId = await this.commandBus.execute<string>(command);
+    const newHighlight = await this.queryBus.execute(
+      new GetRoomHighlightQuery(
+        roomId,
+        highlightId,
+        createReadingRoomActor(userId, sd.role),
+      ),
+    );
 
-    const authorName = newHighlight.displayName || displayName || 'Thành viên';
+    const authorName = newHighlight.displayName || displayName || 'Member';
     const authorAvatar = newHighlight.avatarUrl || avatarUrl || '';
 
     this.emitter.toRoom(roomId).emit(ReadingRoomServerEvent.NEW_HIGHLIGHT, {
@@ -89,7 +99,7 @@ export class ReadingRoomHighlightHandler {
 
     const command = new RemoveHighlightCommand(
       roomId,
-      userId,
+      createReadingRoomActor(userId, socket.data.role),
       body.highlightId,
     );
     await this.commandBus.execute(command);
@@ -117,7 +127,7 @@ export class ReadingRoomHighlightHandler {
     }
 
     const command = new GenerateHighlightInsightCommand(
-      userId,
+      createReadingRoomActor(userId, socket.data.role),
       roomId,
       body.highlightId,
     );

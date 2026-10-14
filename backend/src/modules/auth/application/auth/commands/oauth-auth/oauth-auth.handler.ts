@@ -1,10 +1,10 @@
 import { OAuthAuthCommand } from './oauth-auth.command';
 import { CommandHandler } from '@nestjs/cqrs';
+import { Logger } from '@nestjs/common';
 import {
-  ConflictException,
-  InternalServerErrorException,
-  Logger,
-} from '@nestjs/common';
+  ConflictDomainException,
+  InternalServerDomainException,
+} from '@/shared/domain/common-exceptions';
 import {
   UnauthorizedDomainException,
   UserBannedDomainException,
@@ -45,7 +45,7 @@ export class OAuthAuthHandler {
         this.logger.error(
           'User role not found in database during OAuth signup - role may not be seeded',
         );
-        throw new InternalServerErrorException(
+        throw new InternalServerDomainException(
           'Đã có lỗi xảy ra trong quá trình đăng ký',
         );
       }
@@ -99,7 +99,7 @@ export class OAuthAuthHandler {
       this.logger.warn(
         `OAuth login failed: Email already registered with password for ${p.email}`,
       );
-      throw new ConflictException(
+      throw new ConflictDomainException(
         'Email đã được đăng ký bằng mật khẩu. Vui lòng đăng nhập bằng mật khẩu.',
       );
     }

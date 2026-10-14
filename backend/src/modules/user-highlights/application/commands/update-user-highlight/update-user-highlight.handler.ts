@@ -1,6 +1,9 @@
 import { UpdateUserHighlightCommand } from './update-user-highlight.command';
 import { CommandHandler } from '@nestjs/cqrs';
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenDomainException,
+  NotFoundDomainException,
+} from '@/shared/domain/common-exceptions';
 import { IUserHighlightRepository } from '@/modules/user-highlights/domain/repositories/user-highlight.repository.interface';
 import { UserHighlight } from '@/modules/user-highlights/domain/entities/user-highlight.entity';
 import { Action, Subject } from '@socialbook/shared';
@@ -16,7 +19,7 @@ export class UpdateUserHighlightHandler {
     );
 
     if (!highlight) {
-      throw new NotFoundException('Highlight not found');
+      throw new NotFoundDomainException('Highlight not found');
     }
 
     if (
@@ -25,7 +28,7 @@ export class UpdateUserHighlightHandler {
         subject(Subject.UserHighlight, highlight),
       )
     ) {
-      throw new UnauthorizedException(
+      throw new ForbiddenDomainException(
         'You can only update your own highlights',
       );
     }

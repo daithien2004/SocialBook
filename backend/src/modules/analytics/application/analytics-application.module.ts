@@ -7,7 +7,7 @@ import { GetTopActiveReadersHandler } from './queries/get-top-active-readers/get
 import { AnalyticsInfrastructureModule } from '../infrastructure/analytics-infrastructure.module';
 import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api';
-import { GenresInfrastructureModule } from '@/modules/genres/infrastructure/public-api';
+import { GenresInfrastructureModule } from '@/modules/genres';
 import { ScoringService } from './services/scoring.service';
 import { AnalyticsListener } from './listeners/analytics.listener';
 import { BookAnalyticsListener } from './listeners/book-analytics.listener';

@@ -1,38 +1,17 @@
 import { GetBookStatsQuery } from './get-book-stats.query';
 import { QueryHandler } from '@nestjs/cqrs';
-import { IBookRepository } from '@/modules/books/domain/public-api';
-import { IChapterRepository } from '@/modules/chapters/domain/public-api';
-import { BookStats } from '@/modules/statistics/domain/read-models/statistics.model';
+import { StatisticsReadRepository } from '@/modules/statistics/application/ports/statistics-read.repository';
+import type { BookStatsReadModel } from '@/modules/statistics/application/read-models/statistics.read-model';
+import { assertStatisticsReadAllowed } from '@/modules/statistics/application/assert-statistics-read-policy';
 
 @QueryHandler(GetBookStatsQuery)
 export class GetBookStatsHandler {
   constructor(
-    private readonly bookRepository: IBookRepository,
-    private readonly chapterRepository: IChapterRepository,
+    private readonly statisticsReadRepository: StatisticsReadRepository,
   ) {}
 
-  async execute(): Promise<BookStats> {
-    const [total, totalChapters, byGenre, popularBooksResult] =
-      await Promise.all([
-        this.bookRepository.countTotal(),
-        this.chapterRepository.countTotal(),
-        this.bookRepository.countByGenreName(),
-        this.bookRepository.findPopular({ page: 1, limit: 10 }),
-      ]);
-
-    return {
-      total,
-      totalChapters,
-      byGenre: byGenre.map((g) => ({ genres: g.name, count: g.count })),
-      popularBooks: popularBooksResult.data.map((book) => ({
-        id: book.id.toString(),
-        title: book.title.toString(),
-        slug: book.slug,
-        stats: {
-          views: book.views,
-          likes: book.likes,
-        },
-      })),
-    };
+  async execute(query: GetBookStatsQuery): Promise<BookStatsReadModel> {
+    assertStatisticsReadAllowed(query.actor);
+    return this.statisticsReadRepository.getBookStats();
   }
 }

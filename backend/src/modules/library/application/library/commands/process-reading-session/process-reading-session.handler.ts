@@ -1,6 +1,6 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import { RecordReadingTimeHandler } from '@/modules/library/application/library/commands/record-reading-time/record-reading-time.handler';
+import { RecordReadingTimeCommand } from '@/modules/library/application/library/commands/record-reading-time/record-reading-time.command';
 import { ProcessReadingSessionCommand } from './process-reading-session.command';
 
 export interface ProcessReadingSessionResult {
@@ -14,16 +14,19 @@ export class ProcessReadingSessionHandler implements ICommandHandler<
 > {
   private readonly logger = new Logger(ProcessReadingSessionHandler.name);
 
-  constructor(
-    private readonly recordReadingTimeHandler: RecordReadingTimeHandler,
-  ) {}
+  constructor(private readonly commandBus: CommandBus) {}
 
   async execute(
     command: ProcessReadingSessionCommand,
   ): Promise<ProcessReadingSessionResult> {
     try {
-      const result = await this.recordReadingTimeHandler.execute(
-        command as any,
+      const result = await this.commandBus.execute(
+        new RecordReadingTimeCommand(
+          command.userId,
+          command.bookId,
+          command.chapterId,
+          command.durationInSeconds,
+        ),
       );
 
       this.logger.log(

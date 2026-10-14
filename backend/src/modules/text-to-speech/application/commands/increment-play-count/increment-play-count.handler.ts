@@ -8,10 +8,10 @@ import { EventNames } from '@/shared/platform/constants/event-names.constant';
 export class IncrementPlayCountHandler {
   constructor(private readonly eventEmitter: EventEmitter2) {}
 
-  execute(chapterId: string): void {
+  execute(command: IncrementPlayCountCommand): void {
     this.eventEmitter.emit(
       EventNames.AUDIO_PLAYED,
-      new AudioPlayedEvent(chapterId),
+      new AudioPlayedEvent(command.chapterId),
     );
   }
 }

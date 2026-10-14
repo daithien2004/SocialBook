@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { UpdateCollectionCommand } from '@/modules/library/application/library/commands/update-collection/update-collection.command';
@@ -43,9 +44,11 @@ import {
   ApiNoContentResponse,
   ApiOkResponse,
   getSchemaPath,
+  ApiOperation,
 } from '@nestjs/swagger';
 
 @ApiProblemResponses()
+@ApiTags('Library')
 @Controller('collections')
 export class CollectionsController {
   constructor(
@@ -53,6 +56,7 @@ export class CollectionsController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Create' })
   @Post()
   @ApiCreatedResponse({ type: CollectionResponseDto })
   async create(
@@ -70,6 +74,7 @@ export class CollectionsController {
     return CollectionResponseDto.fromResult(collection);
   }
 
+  @ApiOperation({ summary: 'List' })
   @Public()
   @Get()
   @ApiPaginatedResponse(CollectionResponseDto, 'offset')
@@ -90,6 +95,7 @@ export class CollectionsController {
     };
   }
 
+  @ApiOperation({ summary: 'Find One By Query' })
   @Public()
   @Get('detail')
   @HttpCode(HttpStatus.OK)
@@ -115,6 +121,7 @@ export class CollectionsController {
       : null;
   }
 
+  @ApiOperation({ summary: 'Get' })
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiExtraModels(CollectionDetailResponseDto)
@@ -139,6 +146,7 @@ export class CollectionsController {
       : null;
   }
 
+  @ApiOperation({ summary: 'Update' })
   @Patch(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: CollectionResponseDto })
@@ -160,6 +168,7 @@ export class CollectionsController {
     return CollectionResponseDto.fromResult(collection);
   }
 
+  @ApiOperation({ summary: 'Delete' })
   @HttpCode(204)
   @Delete(':id')
   @ApiNoContentResponse()

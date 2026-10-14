@@ -1,66 +1,73 @@
-import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import {
+  Body,
   Controller,
   Get,
-  Query,
-  Post,
-  Body,
   HttpCode,
+  Post,
+  Query as QueryParam,
   RequestTimeoutException,
 } from '@nestjs/common';
-import { IntelligentSearchHandler } from '@/modules/search/application/queries/intelligent-search/intelligent-search.handler';
-import { IntelligentSearchQuery } from '@/modules/search/application/queries/intelligent-search/intelligent-search.query';
-import { Public } from '@/shared/platform/decorators/custom.decorator';
-import { SearchQueryDto } from '@/modules/chroma/presentation/public-api';
-import { ITrendingKeywordCachePort } from '@/modules/search/domain/interfaces/trending-keyword-cache.port';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { ApiNoContentResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import {
   ApiPaginatedResponse,
   ApiProblemResponses,
 } from '@/shared/platform/decorators/api-response.decorators';
-import { ApiNoContentResponse } from '@nestjs/swagger';
+import { Public } from '@/shared/platform/decorators/custom.decorator';
+import { GetTrendingKeywordsQuery } from '@/modules/search/application/queries/get-trending-keywords/get-trending-keywords.query';
+import { SearchQueryDto } from './dto/search-query.dto';
+import { RecordSearchDto } from './dto/record-search.dto';
 import { SearchBookResponseDto } from './dto/search-book.response.dto';
 
 @ApiProblemResponses()
+@ApiTags('Search')
 @Controller('search')
 export class SearchController {
   constructor(
-    private readonly intelligentSearchUseCase: IntelligentSearchHandler,
-    private readonly trendingKeywordCache: ITrendingKeywordCachePort,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Search' })
   @Public()
   @Get()
   @ApiPaginatedResponse(SearchBookResponseDto, 'offset')
-  async search(@Query() searchQuery: SearchQueryDto) {
-    const query = new IntelligentSearchQuery({
-      query: searchQuery.query,
-      limit: searchQuery.limit,
-    });
+  async search(@QueryParam() dto: SearchQueryDto) {
+    const query = dto.toQuery();
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
 
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject(
-          new RequestTimeoutException(
-            'TÃ¬m kiáº¿m quÃ¡ thá»i gian (vÆ°á»£t quÃ¡ 8 giÃ¢y), vui lÃ²ng thá»­ láº¡i sau.',
-          ),
-        );
-      }, 8000);
-    });
-
-    const result = await Promise.race([
-      this.intelligentSearchUseCase.execute(query),
-      timeoutPromise,
-    ]);
-
-    return { data: result.data, meta: result.meta };
+    try {
+      const timeout = new Promise<never>((_, reject) => {
+        timeoutHandle = setTimeout(() => {
+          reject(
+            new RequestTimeoutException('Search timed out; please try again.'),
+          );
+        }, 8000);
+      });
+      const result = await Promise.race([
+        this.queryBus.execute(query),
+        timeout,
+      ]);
+      return {
+        data: result.data.map((item) =>
+          SearchBookResponseDto.fromReadModel(item),
+        ),
+        meta: result.meta,
+      };
+    } finally {
+      if (timeoutHandle) clearTimeout(timeoutHandle);
+    }
   }
 
+  @ApiOperation({ summary: 'Get Trending Keywords' })
   @Public()
   @Get('trending-keywords')
   @ApiPaginatedResponse('string', 'offset')
   async getTrendingKeywords() {
-    const keywords = await this.trendingKeywordCache.getTrendingKeywords();
-
+    const keywords = await this.queryBus.execute(
+      new GetTrendingKeywordsQuery(),
+    );
     return {
       data: keywords,
       meta: buildPaginationMeta(
@@ -71,14 +78,12 @@ export class SearchController {
     };
   }
 
+  @ApiOperation({ summary: 'Record Search' })
   @Public()
   @Post('record')
   @HttpCode(204)
   @ApiNoContentResponse()
-  async recordSearch(@Body('keyword') keyword: string) {
-    if (keyword) {
-      await this.intelligentSearchUseCase.recordSearch(keyword);
-    }
-    return undefined;
+  async recordSearch(@Body() dto: RecordSearchDto): Promise<void> {
+    await this.commandBus.execute(dto.toCommand());
   }
 }

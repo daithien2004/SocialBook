@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { Comment } from '@/modules/comments/domain/entities/comment.entity';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
@@ -48,9 +49,11 @@ import {
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
+  ApiOperation,
 } from '@nestjs/swagger';
 
 @ApiProblemResponses()
+@ApiTags('Comments')
 @Controller('comments')
 export class CommentsController {
   constructor(
@@ -58,6 +61,7 @@ export class CommentsController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Create' })
   @Post()
   @ApiCreatedResponse({ type: CommentResponseDto })
   async create(
@@ -77,6 +81,7 @@ export class CommentsController {
     return new CommentResponseDto(comment);
   }
 
+  @ApiOperation({ summary: 'Get By Target' })
   @Public()
   @ApiPaginatedResponse(CommentResponseDto, 'cursor')
   @Get('target')
@@ -99,6 +104,7 @@ export class CommentsController {
     return { data: result.data, meta: result.meta };
   }
 
+  @ApiOperation({ summary: 'Get Count' })
   @Public()
   @Get('count')
   @ApiOkResponse({ schema: { type: 'integer' } })
@@ -113,6 +119,7 @@ export class CommentsController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Get By Id' })
   @Get(':id')
   @Public()
   @ApiOkResponse({
@@ -122,6 +129,7 @@ export class CommentsController {
     return null;
   }
 
+  @ApiOperation({ summary: 'Update' })
   @Put(':id')
   @ApiOkResponse({ type: CommentResponseDto })
   async update(
@@ -137,6 +145,7 @@ export class CommentsController {
     return new CommentResponseDto(comment);
   }
 
+  @ApiOperation({ summary: 'Delete' })
   @HttpCode(204)
   @Delete(':id')
   @ApiNoContentResponse()
@@ -152,6 +161,7 @@ export class CommentsController {
     return undefined;
   }
 
+  @ApiOperation({ summary: 'Flag' })
   @Post(':id/flag')
   @ApiCreatedResponse({
     schema: { type: 'object', nullable: true, example: null },
@@ -160,6 +170,7 @@ export class CommentsController {
     return null;
   }
 
+  @ApiOperation({ summary: 'Moderate' })
   @Post(':id/moderate')
   @HttpCode(204)
   @ApiNoContentResponse()
@@ -176,6 +187,7 @@ export class CommentsController {
     return undefined;
   }
 
+  @ApiOperation({ summary: 'Get Stats' })
   @Get('stats')
   @ApiOkResponse({ type: CommentStatsDto })
   @Roles('admin')
@@ -184,6 +196,7 @@ export class CommentsController {
     return new CommentStatsDto(0, 0, 0, 0, 0, {});
   }
 
+  @ApiOperation({ summary: 'Get Pending Moderation' })
   @Get('moderation/pending')
   @ApiPaginatedResponse(CommentResponseDto, 'offset')
   @Roles('admin')
@@ -195,6 +208,7 @@ export class CommentsController {
     };
   }
 
+  @ApiOperation({ summary: 'Get Flagged' })
   @Get('moderation/flagged')
   @ApiPaginatedResponse(CommentResponseDto, 'offset')
   @Roles('admin')

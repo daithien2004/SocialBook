@@ -1,18 +1,21 @@
 import { Injectable } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
-import { CheckContentHandler } from '@/modules/content-moderation/application/public-api';
+import { CheckContentCommand } from '@/modules/content-moderation/application/public-api';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 
 @Injectable()
 export class PostModerationService {
-  constructor(private readonly checkContentUseCase: CheckContentHandler) {}
+  constructor(private readonly commandBus: CommandBus) {}
 
   /**
    * Moderate post content and update Post entity status.
    * Returns a warning message if applicable.
    */
   async moderate(post: Post, content: string): Promise<string | undefined> {
-    const moderationResult = await this.checkContentUseCase.execute(content);
+    const moderationResult = await this.commandBus.execute(
+      new CheckContentCommand(content),
+    );
 
     if (moderationResult.action === 'BLOCK') {
       throw new BadRequestDomainException(

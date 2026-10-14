@@ -1,9 +1,10 @@
-import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import { IBookQueryProvider } from '@/modules/books/domain/books/repositories/book-query.provider.interface';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
+import { BookReadRepository } from '@/modules/books/application/ports/book-read.repository';
+import { BookListReadModel } from '@/modules/books/application/read-models/book-list.read-model';
 import { IViewRankingCachePort } from '@/modules/books/domain/books/interfaces/view-ranking-cache.port';
+import type { AppAbility } from '@/shared/casl/app-ability';
 import { GetTopReadBooksQuery } from './get-top-read-books.query';
-import { BookListReadModel } from '@/modules/books/domain/books/read-models/book-list.read-model';
 
 @QueryHandler(GetTopReadBooksQuery)
 export class GetTopReadBooksHandler implements IQueryHandler<
@@ -13,64 +14,57 @@ export class GetTopReadBooksHandler implements IQueryHandler<
   private readonly logger = new Logger(GetTopReadBooksHandler.name);
 
   constructor(
-    private readonly bookQueryProvider: IBookQueryProvider,
+    private readonly bookReadRepository: BookReadRepository,
     private readonly viewRankingCache: IViewRankingCachePort,
   ) {}
 
   async execute(query: GetTopReadBooksQuery): Promise<BookListReadModel[]> {
-    const { timeRange, limit } = query;
-
+    const { timeRange, limit, actor } = query;
     if (timeRange === 'all') {
-      return this.getFallbackTopBooks(limit);
+      return this.getFallbackTopBooks(limit, actor.ability);
     }
 
     try {
-      // Get top N book IDs from Redis
       const bookIds = await this.viewRankingCache.getTopBookIds(
         timeRange,
         limit,
       );
-
-      if (!bookIds || bookIds.length === 0) {
-        // Fallback to all-time top read if no data for current week/month yet
+      if (!bookIds?.length) {
         this.logger.debug(
           `No data for ${timeRange} in Redis, falling back to all-time top read.`,
         );
-        return this.getFallbackTopBooks(limit);
+        return this.getFallbackTopBooks(limit, actor.ability);
       }
 
-      // Find books by IDs
-      const paginated = await this.bookQueryProvider.findAllList(
+      const page = await this.bookReadRepository.findAllList(
+        actor.ability,
         { ids: bookIds, status: 'published' },
         { page: 1, limit },
       );
-
-      const books: BookListReadModel[] = [];
-      for (const id of bookIds) {
-        const book = paginated.data.find((b) => b.id.toString() === id);
-        if (book) {
-          books.push(book);
-        }
-      }
-
-      return books;
-    } catch (err) {
+      const byId = new Map(page.data.map((book) => [book.id, book]));
+      return bookIds.flatMap((id) => {
+        const book = byId.get(id);
+        return book ? [book] : [];
+      });
+    } catch (error: unknown) {
       this.logger.error(
         'Error fetching top read books from Redis',
-        err instanceof Error ? err.stack : String(err),
+        error instanceof Error ? error.stack : String(error),
       );
-      return this.getFallbackTopBooks(limit);
+      return this.getFallbackTopBooks(limit, actor.ability);
     }
   }
 
   private async getFallbackTopBooks(
     limit: number,
+    ability: AppAbility,
   ): Promise<BookListReadModel[]> {
-    const paginated = await this.bookQueryProvider.findAllList(
+    const page = await this.bookReadRepository.findAllList(
+      ability,
       { status: 'published' },
       { page: 1, limit },
       { sortBy: 'views', order: 'desc' },
     );
-    return paginated.data;
+    return page.data;
   }
 }

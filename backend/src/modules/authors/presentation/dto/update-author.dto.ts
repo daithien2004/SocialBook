@@ -1,4 +1,7 @@
 import { IsOptional, IsString, MaxLength } from 'class-validator';
+import type { Actor } from '@/shared/casl/actor';
+import type { MediaUploadFile } from '@/modules/media/domain/public-api';
+import { UpdateAuthorCommand } from '../../application/commands/update-author/update-author.command';
 
 export class UpdateAuthorDto {
   @IsOptional()
@@ -14,4 +17,19 @@ export class UpdateAuthorDto {
   @IsOptional()
   @IsString()
   photoUrl?: string;
+
+  toCommand(
+    actor: Actor,
+    id: string,
+    photo?: MediaUploadFile,
+  ): UpdateAuthorCommand {
+    return new UpdateAuthorCommand(
+      actor,
+      id,
+      this.name,
+      this.bio,
+      this.photoUrl,
+      photo,
+    );
+  }
 }

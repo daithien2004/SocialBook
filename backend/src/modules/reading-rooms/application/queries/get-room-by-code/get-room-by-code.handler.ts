@@ -1,38 +1,36 @@
 import { QueryHandler } from '@nestjs/cqrs';
 import type { IQueryHandler } from '@nestjs/cqrs';
-import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
-import { IReadingRoomReadRepository } from '@/modules/reading-rooms/application/ports/persistence/reading-room-read.repository';
+import { ReadingRoomNotFoundError } from '@/modules/reading-rooms/domain/errors/reading-room.errors';
+import { ReadingRoomQueryRepository } from '@/modules/reading-rooms/application/ports/persistence/reading-room-query.repository';
 import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
 import type {
-  GetRoomByCodeResult,
-  ReadingRoomResult,
-} from '@/modules/reading-rooms/application/reading-room.result';
+  GetRoomByCodeReadModel,
+  ReadingRoomReadModel,
+} from '@/modules/reading-rooms/application/read-models/reading-room.read-model';
 
 import { GetRoomByCodeQuery } from './get-room-by-code.query';
 
 @QueryHandler(GetRoomByCodeQuery)
 export class GetRoomByCodeHandler implements IQueryHandler<
   GetRoomByCodeQuery,
-  GetRoomByCodeResult
+  GetRoomByCodeReadModel
 > {
   constructor(
-    private readonly readingRoomReadRepository: IReadingRoomReadRepository,
+    private readonly readingRoomReadRepository: ReadingRoomQueryRepository,
   ) {}
 
-  async execute(query: GetRoomByCodeQuery): Promise<GetRoomByCodeResult> {
+  async execute(query: GetRoomByCodeQuery): Promise<GetRoomByCodeReadModel> {
     const room = await this.readingRoomReadRepository.findDetailsById(
       RoomId.create(query.code).toString(),
+      query.actor.ability,
     );
     if (!room) {
-      throw new NotFoundDomainException('Phòng không tồn tại');
+      throw new ReadingRoomNotFoundError('Requested resource not found.');
     }
 
-    const activeMembers = room.members.filter(
-      (member) => member.leftAt === undefined || member.leftAt === null,
+    const isMember = room.activeMembers.some(
+      (member) => member.userId === query.actor.userId,
     );
-    const isMember =
-      query.userId !== undefined &&
-      activeMembers.some((member) => member.userId === query.userId);
     const roomDetails = {
       roomId: room.roomId,
       bookId: room.bookId,
@@ -40,22 +38,22 @@ export class GetRoomByCodeHandler implements IQueryHandler<
       status: room.status,
       currentChapterSlug: room.currentChapterSlug,
       maxMembers: room.maxMembers,
-      membersCount: activeMembers.length,
+      membersCount: room.activeMembers.length,
       createdAt: room.createdAt,
     };
     if (!isMember) {
       return {
         ...roomDetails,
-        isFull: activeMembers.length >= room.maxMembers,
+        isFull: room.activeMembers.length >= room.maxMembers,
         isMember: false,
       };
     }
 
-    const full: ReadingRoomResult = {
+    const full: ReadingRoomReadModel = {
       ...roomDetails,
       currentChapterId: room.currentChapterId,
       hostId: room.hostId,
-      members: activeMembers.map(({ userId, role }) => ({ userId, role })),
+      members: room.activeMembers.map(({ userId, role }) => ({ userId, role })),
     };
     return { ...full, isMember: true };
   }

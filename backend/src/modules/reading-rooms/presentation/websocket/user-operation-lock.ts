@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import type { Redis } from 'ioredis';
 import { randomUUID } from 'node:crypto';
-import { ConcurrencyException } from '@/shared/domain/common-exceptions';
+import { ReadingRoomConcurrencyError } from '@/modules/reading-rooms/domain/errors/reading-room.errors';
 
 const USER_LOCK_TTL_MS = 15_000;
 const USER_LOCK_WAIT_MS = 10_000;
@@ -54,6 +54,8 @@ export class UserOperationLock {
       await new Promise((resolve) => setTimeout(resolve, USER_LOCK_RETRY_MS));
     }
 
-    throw new ConcurrencyException('Timed out waiting for user operation lock');
+    throw new ReadingRoomConcurrencyError(
+      'Timed out waiting for user operation lock',
+    );
   }
 }

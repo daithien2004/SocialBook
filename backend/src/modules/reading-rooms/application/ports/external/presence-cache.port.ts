@@ -8,7 +8,7 @@ export interface PresenceData {
   lastSeen: number;
 }
 
-export abstract class IPresenceCachePort {
+export abstract class PresenceCachePort {
   abstract upsertPresence(
     roomId: string,
     userId: string,

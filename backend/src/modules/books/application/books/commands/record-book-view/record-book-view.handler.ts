@@ -1,5 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
+import { ForbiddenError, subject } from '@casl/ability';
 import { IBookRepository } from '@/modules/books/domain/books/repositories/book.repository.interface';
 import { RecordBookViewCommand } from './record-book-view.command';
 import { IBookCachePort } from '@/modules/books/domain/books/interfaces/book-cache.port';
@@ -26,6 +27,14 @@ export class RecordBookViewHandler implements ICommandHandler<
       if (!book) {
         throw new NotFoundDomainException(BookErrorMessages.BOOK_NOT_FOUND);
       }
+      ForbiddenError.from(command.actor.ability).throwUnlessCan(
+        'read',
+        subject('Book', {
+          id: book.id.toString(),
+          status: book.status.toString(),
+          isDeleted: false,
+        }),
+      );
 
       await this.bookRepository.incrementViews(book.id);
 

@@ -1,5 +1,5 @@
 import { Identifier } from '@/shared/domain/identifier.base';
-import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+import { ReadingRoomInvalidError } from '@/modules/reading-rooms/domain/errors/reading-room.errors';
 
 export type RoomModeType = 'sync' | 'free';
 
@@ -13,7 +13,7 @@ export class RoomMode extends Identifier {
 
   static create(value: string): RoomMode {
     if (!this.isValid(value)) {
-      throw new BadRequestDomainException(
+      throw new ReadingRoomInvalidError(
         `Invalid room mode: ${value}. Allowed: sync, free`,
       );
     }

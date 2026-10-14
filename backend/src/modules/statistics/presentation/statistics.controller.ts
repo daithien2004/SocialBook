@@ -1,99 +1,165 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-
-import { Roles } from '@/shared/platform/decorators/roles.decorator';
-import { RolesGuard } from '@/shared/platform/guards/roles.guard';
-
-import { GetBookStatsHandler } from '@/modules/statistics/application/queries/get-book-stats/get-book-stats.handler';
-import { GetEngagementStatsHandler } from '@/modules/statistics/application/queries/get-engagement-stats/get-engagement-stats.handler';
-import { GetGrowthStatsHandler } from '@/modules/statistics/application/queries/get-growth-stats/get-growth-stats.handler';
-import { GetOverviewStatsHandler } from '@/modules/statistics/application/queries/get-overview-stats/get-overview-stats.handler';
-import { GetUserStatsHandler } from '@/modules/statistics/application/queries/get-user-stats/get-user-stats.handler';
-import { CheckUserLocationsHandler } from '@/modules/statistics/application/commands/check-user-locations/check-user-locations.handler';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { QueryBus } from '@nestjs/cqrs';
+import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
+import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
+import type { Actor } from '@/shared/casl/actor';
 import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
+import { GetOverviewStatsQuery } from '@/modules/statistics/application/queries/get-overview-stats/get-overview-stats.query';
+import { GetUserStatsQuery } from '@/modules/statistics/application/queries/get-user-stats/get-user-stats.query';
+import { GetBookStatsQuery } from '@/modules/statistics/application/queries/get-book-stats/get-book-stats.query';
+import { GetReadingHeatmapQuery } from '@/modules/statistics/application/queries/get-reading-heatmap/get-reading-heatmap.query';
+import { GetActiveUsersQuery } from '@/modules/statistics/application/queries/get-active-users/get-active-users.query';
+import { GetGeographicDistributionQuery } from '@/modules/statistics/application/queries/get-geographic-distribution/get-geographic-distribution.query';
+import { CheckUserLocationsQuery } from '@/modules/statistics/application/queries/check-user-locations/check-user-locations.query';
+import {
+  ChapterEngagementQueryDto,
+  GrowthStatsQueryDto,
+  ReadingSpeedQueryDto,
+} from './dto/statistics-query.dto';
+import {
+  ActiveUsersResponseDto,
+  BookStatsResponseDto,
+  ChapterEngagementResponseDto,
+  GeographicResponseDto,
+  GrowthMetricResponseDto,
+  OverviewStatsResponseDto,
+  ReadingHeatmapResponseDto,
+  ReadingSpeedResponseDto,
+  UserLocationSummaryResponseDto,
+  UserStatsResponseDto,
+} from './dto/statistics.response.dto';
 
-@ApiProblemResponses()
+@ApiProblemResponses([401, 403, 500])
+@ApiTags('Statistics')
+@ApiBearerAuth()
+@UseGuards(PoliciesGuard)
+@CheckPolicy('read', 'Statistics')
 @Controller('statistics')
-@UseGuards(RolesGuard)
-@Roles('admin', 'editor')
 export class StatisticsController {
-  constructor(
-    private readonly getOverviewStatsUseCase: GetOverviewStatsHandler,
-    private readonly getUserStatsUseCase: GetUserStatsHandler,
-    private readonly getBookStatsUseCase: GetBookStatsHandler,
-    private readonly getEngagementStatsUseCase: GetEngagementStatsHandler,
-    private readonly getGrowthStatsUseCase: GetGrowthStatsHandler,
-    private readonly checkUserLocationsUseCase: CheckUserLocationsHandler,
-  ) {}
+  constructor(private readonly queryBus: QueryBus) {}
 
   @Get('overview')
-  async getOverview() {
-    const data = await this.getOverviewStatsUseCase.execute();
-    return data;
+  @ApiOperation({ summary: 'Get overview statistics' })
+  @ApiOkResponse({ type: OverviewStatsResponseDto })
+  async getOverview(
+    @CurrentActor() actor: Actor,
+  ): Promise<OverviewStatsResponseDto> {
+    const result = await this.queryBus.execute(
+      new GetOverviewStatsQuery(actor),
+    );
+    return OverviewStatsResponseDto.fromReadModel(result);
   }
 
   @Get('users')
-  async getUserStats() {
-    const data = await this.getUserStatsUseCase.execute();
-    return data;
+  @ApiOperation({ summary: 'Get user statistics' })
+  @ApiOkResponse({ type: UserStatsResponseDto })
+  async getUserStats(
+    @CurrentActor() actor: Actor,
+  ): Promise<UserStatsResponseDto> {
+    const result = await this.queryBus.execute(new GetUserStatsQuery(actor));
+    return UserStatsResponseDto.fromReadModel(result);
   }
 
   @Get('books')
-  async getBookStats() {
-    const data = await this.getBookStatsUseCase.execute();
-    return data;
+  @ApiOperation({ summary: 'Get book statistics' })
+  @ApiOkResponse({ type: BookStatsResponseDto })
+  async getBookStats(
+    @CurrentActor() actor: Actor,
+  ): Promise<BookStatsResponseDto> {
+    const result = await this.queryBus.execute(new GetBookStatsQuery(actor));
+    return BookStatsResponseDto.fromReadModel(result);
   }
 
   @Get('growth')
+  @ApiOperation({ summary: 'Get growth statistics' })
+  @ApiProblemResponses([400])
+  @ApiOkResponse({ type: [GrowthMetricResponseDto] })
   async getGrowth(
-    @Query('days') days?: string,
-    @Query('groupBy') groupBy?: string,
-  ) {
-    const numDays = days ? parseInt(days, 10) : 30;
-    const groupByValue = (groupBy as 'day' | 'month' | 'year') || 'day';
-    const data = await this.getGrowthStatsUseCase.execute(
-      numDays,
-      groupByValue,
+    @CurrentActor() actor: Actor,
+    @Query() dto: GrowthStatsQueryDto,
+  ): Promise<GrowthMetricResponseDto[]> {
+    const result = await this.queryBus.execute(dto.toQuery(actor));
+    return result.map((metric) =>
+      GrowthMetricResponseDto.fromReadModel(metric),
     );
-    return data;
   }
 
   @Get('analytics/reading-heatmap')
-  async getReadingHeatmap() {
-    const data = await this.getEngagementStatsUseCase.getReadingHeatmap();
-    return data;
+  @ApiOperation({ summary: 'Get reading activity by hour' })
+  @ApiOkResponse({ type: [ReadingHeatmapResponseDto] })
+  async getReadingHeatmap(
+    @CurrentActor() actor: Actor,
+  ): Promise<ReadingHeatmapResponseDto[]> {
+    const result = await this.queryBus.execute(
+      new GetReadingHeatmapQuery(actor),
+    );
+    return result.map((item) => ReadingHeatmapResponseDto.fromReadModel(item));
   }
 
   @Get('analytics/chapter-engagement')
-  async getChapterEngagement(@Query('limit') limit?: string) {
-    const numLimit = limit ? parseInt(limit, 10) : 10;
-    const data =
-      await this.getEngagementStatsUseCase.getChapterEngagement(numLimit);
-    return data;
+  @ApiOperation({ summary: 'Get chapter engagement statistics' })
+  @ApiProblemResponses([400])
+  @ApiOkResponse({ type: [ChapterEngagementResponseDto] })
+  async getChapterEngagement(
+    @CurrentActor() actor: Actor,
+    @Query() dto: ChapterEngagementQueryDto,
+  ): Promise<ChapterEngagementResponseDto[]> {
+    const result = await this.queryBus.execute(dto.toQuery(actor));
+    return result.map((item) =>
+      ChapterEngagementResponseDto.fromReadModel(item),
+    );
   }
 
   @Get('analytics/reading-speed')
-  async getReadingSpeed(@Query('days') days?: string) {
-    const numDays = days ? parseInt(days, 10) : 30;
-    const data = await this.getEngagementStatsUseCase.getReadingSpeed(numDays);
-    return data;
+  @ApiOperation({ summary: 'Get reading speed statistics' })
+  @ApiProblemResponses([400])
+  @ApiOkResponse({ type: [ReadingSpeedResponseDto] })
+  async getReadingSpeed(
+    @CurrentActor() actor: Actor,
+    @Query() dto: ReadingSpeedQueryDto,
+  ): Promise<ReadingSpeedResponseDto[]> {
+    const result = await this.queryBus.execute(dto.toQuery(actor));
+    return result.map((item) => ReadingSpeedResponseDto.fromReadModel(item));
   }
 
   @Get('analytics/active-users')
-  async getActiveUsers() {
-    const data = await this.getEngagementStatsUseCase.getActiveUsers();
-    return data;
+  @ApiOperation({ summary: 'Get active user statistics' })
+  @ApiOkResponse({ type: ActiveUsersResponseDto })
+  async getActiveUsers(
+    @CurrentActor() actor: Actor,
+  ): Promise<ActiveUsersResponseDto> {
+    const result = await this.queryBus.execute(new GetActiveUsersQuery(actor));
+    return ActiveUsersResponseDto.fromReadModel(result);
   }
 
   @Get('analytics/geographic')
-  async getGeographicDistribution() {
-    const data =
-      await this.getEngagementStatsUseCase.getGeographicDistribution();
-    return data;
+  @ApiOperation({ summary: 'Get geographic user statistics' })
+  @ApiOkResponse({ type: [GeographicResponseDto] })
+  async getGeographicDistribution(
+    @CurrentActor() actor: Actor,
+  ): Promise<GeographicResponseDto[]> {
+    const result = await this.queryBus.execute(
+      new GetGeographicDistributionQuery(actor),
+    );
+    return result.map((item) => GeographicResponseDto.fromReadModel(item));
   }
 
   @Get('check-locations')
-  async checkLocations() {
-    const result = await this.checkUserLocationsUseCase.execute();
-    return result;
+  @ApiOperation({ summary: 'Check users with location data' })
+  @ApiOkResponse({ type: UserLocationSummaryResponseDto })
+  async checkLocations(
+    @CurrentActor() actor: Actor,
+  ): Promise<UserLocationSummaryResponseDto> {
+    const result = await this.queryBus.execute(
+      new CheckUserLocationsQuery(actor),
+    );
+    return UserLocationSummaryResponseDto.fromReadModel(result);
   }
 }

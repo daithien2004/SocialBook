@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   Body,
@@ -26,9 +27,14 @@ import { ClearCollectionCommand } from '@/modules/chroma/application/commands/cl
 import { ReindexAllCommand } from '@/modules/chroma/application/commands/reindex-all/reindex-all.command';
 import { GetCollectionStatsQuery } from '@/modules/chroma/application/queries/get-collection-stats/get-collection-stats.query';
 import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
-import { ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+import {
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 
 @ApiProblemResponses()
+@ApiTags('Chroma')
 @Controller('chroma')
 export class ChromaController {
   constructor(
@@ -36,6 +42,7 @@ export class ChromaController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Search' })
   @Public()
   @Post('search')
   async search(@Body() searchQuery: SearchQueryDto) {
@@ -53,6 +60,7 @@ export class ChromaController {
     return new SearchResponseDto(result.results, result.query, result.total);
   }
 
+  @ApiOperation({ summary: 'Index Document' })
   @Roles('admin')
   @UseGuards(RolesGuard)
   @Post('index')
@@ -81,6 +89,7 @@ export class ChromaController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Batch index Index' })
   @Roles('admin')
   @UseGuards(RolesGuard)
   @Post('batch-index')
@@ -119,6 +128,7 @@ export class ChromaController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Reindex All' })
   @Roles('admin')
   @UseGuards(RolesGuard)
   @Post('reindex-all')
@@ -129,6 +139,7 @@ export class ChromaController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Clear Collection' })
   @Roles('admin')
   @UseGuards(RolesGuard)
   @Post('clear')
@@ -147,6 +158,7 @@ export class ChromaController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Get Stats' })
   @Public()
   @Get('stats')
   async getStats() {
@@ -156,6 +168,7 @@ export class ChromaController {
     return stats;
   }
 
+  @ApiOperation({ summary: 'Check health' })
   @Public()
   @Get('health')
   @ApiOkResponse({
@@ -175,6 +188,7 @@ export class ChromaController {
     };
   }
 
+  @ApiOperation({ summary: 'Ask Chatbot' })
   @Public()
   @UseGuards(AIThrottleGuard)
   @Post('chat/ask')

@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import type { Redis } from 'ioredis';
 import type {
-  IPresenceCachePort,
+  PresenceCachePort,
   PresenceData,
 } from '@/modules/reading-rooms/application/ports/external/presence-cache.port';
 import {
@@ -10,7 +10,7 @@ import {
   ROOM_MEMBERS_SET_TTL_SECONDS,
 } from './presence-cache.constants';
 
-function isPresenceData(data: unknown): data is PresenceData {
+export function isPresenceData(data: unknown): data is PresenceData {
   return (
     typeof data === 'object' &&
     data !== null &&
@@ -23,12 +23,19 @@ function isPresenceData(data: unknown): data is PresenceData {
     'currentChapterSlug' in data &&
     typeof data.currentChapterSlug === 'string' &&
     'lastSeen' in data &&
-    typeof data.lastSeen === 'number'
+    typeof data.lastSeen === 'number' &&
+    Number.isFinite(data.lastSeen) &&
+    (!('paragraphId' in data) || typeof data.paragraphId === 'string') &&
+    (!('progress' in data) ||
+      (typeof data.progress === 'number' &&
+        Number.isFinite(data.progress) &&
+        data.progress >= 0 &&
+        data.progress <= 100))
   );
 }
 
 @Injectable()
-export class PresenceCacheAdapter implements IPresenceCachePort {
+export class PresenceCacheAdapter implements PresenceCachePort {
   private readonly logger = new Logger(PresenceCacheAdapter.name);
 
   constructor(@InjectRedis() private readonly redis: Redis) {}

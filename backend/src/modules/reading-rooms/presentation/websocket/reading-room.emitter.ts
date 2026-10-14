@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Namespace } from 'socket.io';
 import { RoomSocket } from './reading-room.types';
-import { ReadingRoomServerEvent } from '../../reading-room.socket-events';
+import { ReadingRoomServerEvent } from './reading-room.socket-events';
 import { ReadingRoomNamespaceProvider } from './reading-room.namespace-provider';
 import { randomUUID } from 'node:crypto';
 

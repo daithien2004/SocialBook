@@ -2,10 +2,8 @@ import { GenerateBookAudioCommand } from './generate-book-audio.command';
 import { CommandHandler } from '@nestjs/cqrs';
 import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
-import {
-  GenerateChapterAudioHandler,
-  GenerateAudioOptions,
-} from '@/modules/text-to-speech/application/commands/generate-chapter-audio/generate-chapter-audio.handler';
+import { GenerateChapterAudioCommand } from '@/modules/text-to-speech/application/commands/generate-chapter-audio/generate-chapter-audio.command';
+import { ChapterAudioGenerationService } from '@/modules/text-to-speech/application/services/chapter-audio-generation.service';
 import { IChapterRepository } from '@/modules/chapters/domain/public-api';
 import { BookId } from '@/modules/books/domain/public-api';
 
@@ -20,15 +18,14 @@ export interface GenerateBookResult {
 @CommandHandler(GenerateBookAudioCommand)
 export class GenerateBookAudioHandler {
   constructor(
-    private readonly generateChapterAudioUseCase: GenerateChapterAudioHandler,
+    private readonly chapterAudioGeneration: ChapterAudioGenerationService,
     private readonly chapterRepository: IChapterRepository,
   ) {}
 
   async execute(
-    bookIdStr: string,
-    options: GenerateAudioOptions = {},
+    command: GenerateBookAudioCommand,
   ): Promise<GenerateBookResult> {
-    const bookId = BookId.create(bookIdStr);
+    const bookId = BookId.create(command.bookId);
 
     const chapters = await this.chapterRepository.findByBook(bookId, {
       page: 1,
@@ -54,16 +51,20 @@ export class GenerateBookAudioHandler {
     for (const chapter of chapters.data) {
       const chapterId = chapter.id.toString();
       try {
-        const result = await this.generateChapterAudioUseCase.execute(
-          chapterId,
-          options,
+        const result = await this.chapterAudioGeneration.execute(
+          new GenerateChapterAudioCommand(
+            chapterId,
+            command.forceRegenerate,
+            command.voice,
+          ),
         );
         results.successful++;
-        results.generated.push({
+        const generated = {
           chapterId: chapterId,
           status: 'success',
-          audioUrl: result.audioUrl!,
-        });
+          ...(result.audioUrl ? { audioUrl: result.audioUrl } : {}),
+        };
+        results.generated.push(generated);
       } catch (error: unknown) {
         const errorMessage = getErrorMessage(error);
         results.failed++;

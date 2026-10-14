@@ -13,7 +13,7 @@ export class DeleteToxicWordHandler {
   ) {}
 
   async execute(command: DeleteToxicWordCommand): Promise<void> {
-    const deleted = await this.toxicWordRepository.delete((command as any).id);
+    const deleted = await this.toxicWordRepository.delete(command.id);
 
     if (!deleted) {
       throw new NotFoundDomainException(

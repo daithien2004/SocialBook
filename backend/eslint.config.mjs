@@ -33,7 +33,7 @@ const typeSafetyRules = {
   // Nest: module/provider rỗng chỉ hợp lệ khi có decorator
   '@typescript-eslint/no-extraneous-class': [
     'error',
-    { allowWithDecorator: true },
+    { allowStaticOnly: true, allowWithDecorator: true },
   ],
 };
 

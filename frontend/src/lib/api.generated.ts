@@ -3144,6 +3144,9 @@ export interface components {
             avatar: Record<string, never> | null;
             score: number;
         };
+        CreateRoomResponseDto: {
+            roomId: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -20946,7 +20949,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReadingRoomResponseDto"];
+                    "application/json": components["schemas"]["CreateRoomResponseDto"];
                 };
             };
             400: {
@@ -21295,13 +21298,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: {
+            /** @description Room reactivated. */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["ReadingRoomResponseDto"];
-                };
+                content?: never;
             };
             400: {
                 headers: {

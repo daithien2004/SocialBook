@@ -1,4 +1,4 @@
-import { CommandHandler } from '@nestjs/cqrs';
+import { QueryHandler } from '@nestjs/cqrs';
 import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { calculateFuzzyScore } from './fuzzy-search.util';
 import { Logger } from '@nestjs/common';
@@ -10,8 +10,11 @@ import {
 import { IBookRepository } from '@/modules/books/domain/public-api';
 import { IChapterRepository } from '@/modules/chapters/domain/public-api';
 import { IReviewRepository } from '@/modules/reviews/domain/public-api';
-import { IGenreRepository } from '@/modules/genres/domain/public-api';
-import { IAuthorRepository, AuthorEntity as Author } from '@/modules/authors';
+import { GenreReadRepository } from '@/modules/genres';
+import {
+  AuthorReadRepository,
+  type AuthorSearchReadModel,
+} from '@/modules/authors';
 import { Book } from '@/modules/books/domain/public-api';
 import { BookId } from '@/modules/books/domain/public-api';
 import { BookTitle } from '@/modules/books/domain/public-api';
@@ -21,14 +24,13 @@ import {
 } from '../../services/search-query-expansion.service';
 import { SearchRankingService } from '../../services/search-ranking.service';
 import { ICachePort } from '@/shared/domain/cache.port';
-import { ITrendingKeywordCachePort } from '@/modules/search/domain/interfaces/trending-keyword-cache.port';
 
 interface HybridScore {
   finalScore: number;
   matchType: 'semantic' | 'keyword' | 'hybrid';
 }
 
-@CommandHandler(IntelligentSearchQuery)
+@QueryHandler(IntelligentSearchQuery)
 export class IntelligentSearchHandler {
   private readonly logger = new Logger(IntelligentSearchHandler.name);
 
@@ -41,12 +43,11 @@ export class IntelligentSearchHandler {
     private readonly bookRepository: IBookRepository,
     private readonly chapterRepository: IChapterRepository,
     private readonly reviewRepository: IReviewRepository,
-    private readonly genreRepository: IGenreRepository,
-    private readonly authorRepository: IAuthorRepository,
+    private readonly genreRepository: GenreReadRepository,
+    private readonly authorRepository: AuthorReadRepository,
     private readonly queryExpansionService: SearchQueryExpansionService,
     private readonly rankingService: SearchRankingService,
     private readonly cacheService: ICachePort,
-    private readonly trendingKeywordCache: ITrendingKeywordCachePort,
   ) {}
 
   async execute(
@@ -83,7 +84,7 @@ export class IntelligentSearchHandler {
       ]);
 
       const exactAuthor = authors.find(
-        (a) => a.name.toString().toLowerCase() === normalizedQuery,
+        (author) => author.name.toLowerCase() === normalizedQuery,
       );
 
       // 2. Cháº¡y tÃ¬m kiáº¿m tuá»³ theo mode
@@ -186,17 +187,17 @@ export class IntelligentSearchHandler {
 
   private async getKeywordCandidates(
     query: string,
-    exactAuthor?: Author,
+    exactAuthor?: AuthorSearchReadModel,
     exactBook?: Book,
   ): Promise<Map<string, number>> {
     const results = new Map<string, number>();
 
     // 1. TÃ¬m tÃ¡c giáº£ theo tÃªn
     const authors = await this.authorRepository.searchByName(query, 5);
-    const authorIds = authors.map((a) => a.id.toString());
+    const authorIds = authors.map((author) => author.id);
 
-    if (exactAuthor && !authorIds.includes(exactAuthor.id.toString())) {
-      authorIds.push(exactAuthor.id.toString());
+    if (exactAuthor && !authorIds.includes(exactAuthor.id)) {
+      authorIds.push(exactAuthor.id);
     }
 
     let allBooks: Array<{
@@ -244,10 +245,7 @@ export class IntelligentSearchHandler {
       );
 
       // Náº¿u search trÃºng Ä‘Ã­ch danh tÃ¡c giáº£ hoáº·c Ä‘Ã­ch danh sÃ¡ch, cá»™ng ká»‹ch tráº§n
-      if (
-        exactAuthor &&
-        calculateFuzzyScore(exactAuthor.name.toString(), author) >= 90
-      ) {
+      if (exactAuthor && calculateFuzzyScore(exactAuthor.name, author) >= 90) {
         score = Math.max(score, 100);
       }
       if (exactBook && bid === exactBook.id.toString()) {
@@ -326,12 +324,12 @@ export class IntelligentSearchHandler {
   ): Promise<string[]> {
     if (genres && genres.length > 0) {
       const found = await this.genreRepository.findBySlugs(genres);
-      return found.map((g) => g.id.toString());
+      return found.map((genre) => genre.id);
     }
     const targetNames = analysis?.targetGenres ?? [];
     if (targetNames.length === 0) return [];
     const foundGenres = await this.genreRepository.findByNames(targetNames);
-    return foundGenres.map((g) => g.id.toString());
+    return foundGenres.map((genre) => genre.id);
   }
 
   private async enrichAndMap(
@@ -401,12 +399,5 @@ export class IntelligentSearchHandler {
         totalPages: Math.ceil(total / divisor),
       },
     };
-  }
-
-  async recordSearch(keyword: string): Promise<void> {
-    const cleanKeyword = keyword.trim().toLowerCase();
-    if (cleanKeyword.length <= 2) return;
-
-    await this.trendingKeywordCache.recordSearch(cleanKeyword);
   }
 }

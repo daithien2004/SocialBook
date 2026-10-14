@@ -1,45 +1,62 @@
 import { Test } from '@nestjs/testing';
+import { AbilityBuilder, ForbiddenError } from '@casl/ability';
+import { createPrismaAbility } from '@casl/prisma/runtime';
+import { ClsModule } from 'nestjs-cls';
+import {
+  ClsPluginTransactional,
+  NoOpTransactionalAdapter,
+} from '@nestjs-cls/transactional';
 import {
   CreateRoomWriteCollision,
-  ICreateRoomStore,
+  CreateRoomStore,
 } from '@/modules/reading-rooms/application/ports/persistence/create-room.store';
 import type { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
 import { CreateRoomCommand } from '@/modules/reading-rooms/application/commands/create-room/create-room.command';
 import { CreateRoomHandler } from '@/modules/reading-rooms/application/commands/create-room/create-room.handler';
-import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
-import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
-import { IBookRepository, BookId } from '@/modules/books/domain/public-api';
-import {
-  IChapterRepository,
-  BookId as ChapterBookId,
-  ChapterId,
-} from '@/modules/chapters/domain/public-api';
+import { ReadingRoomNotFoundError } from '@/modules/reading-rooms/domain/errors/reading-room.errors';
+import { createReadingRoomActor } from '@/modules/reading-rooms/application/policies/reading-room.ability';
+import { CommandBus } from '@nestjs/cqrs';
+import { TouchBookForReadingRoomCommand } from '@/modules/books';
+import { TouchChapterForReadingRoomCommand } from '@/modules/chapters';
+import type { AppAbility } from '@/shared/casl/app-ability';
+import type { Actor } from '@/shared/casl/actor';
 
 describe('CreateRoomHandler', () => {
   const createHandler = async (chapterSlug: string | null) => {
     const createRoomStore = {
       findByRequestKey: jest.fn().mockResolvedValue(null),
       createIdempotently: jest.fn((room: ReadingRoom) =>
-        Promise.resolve({ kind: 'created' as const, room }),
+        Promise.resolve(room.roomId),
       ),
     };
-    const bookRepository = {
-      touchIfActive: jest.fn().mockResolvedValue(true),
+    const commandBus = {
+      execute: jest.fn((command: unknown) => {
+        if (command instanceof TouchBookForReadingRoomCommand) {
+          return Promise.resolve(true);
+        }
+        if (command instanceof TouchChapterForReadingRoomCommand) {
+          return Promise.resolve(chapterSlug);
+        }
+        return Promise.resolve(undefined);
+      }),
     };
-    const chapterRepository = {
-      touchIfInBook: jest.fn().mockResolvedValue(chapterSlug),
-    };
-    const unitOfWork = {
-      execute: jest.fn(<T>(operation: () => Promise<T>) => operation()),
-    };
-
     const moduleRef = await Test.createTestingModule({
+      imports: [
+        ClsModule.forRoot({
+          plugins: [
+            new ClsPluginTransactional({
+              adapter: new NoOpTransactionalAdapter({
+                tx: {},
+                disableWarning: true,
+              }),
+            }),
+          ],
+        }),
+      ],
       providers: [
         CreateRoomHandler,
-        { provide: ICreateRoomStore, useValue: createRoomStore },
-        { provide: IBookRepository, useValue: bookRepository },
-        { provide: IChapterRepository, useValue: chapterRepository },
-        { provide: UnitOfWorkPort, useValue: unitOfWork },
+        { provide: CreateRoomStore, useValue: createRoomStore },
+        { provide: CommandBus, useValue: commandBus },
       ],
     }).compile();
 
@@ -47,13 +64,12 @@ describe('CreateRoomHandler', () => {
       handler: moduleRef.get(CreateRoomHandler),
       moduleRef,
       createRoomStore,
-      bookRepository,
-      chapterRepository,
+      commandBus,
     };
   };
 
   const command = new CreateRoomCommand(
-    'host-1',
+    createReadingRoomActor('host-1', 'user'),
     'book-1',
     'chapter-id-1',
     'sync',
@@ -61,27 +77,21 @@ describe('CreateRoomHandler', () => {
   );
 
   it('starts the room at the chapter requested by the client', async () => {
-    const {
-      handler,
-      moduleRef,
-      createRoomStore,
-      bookRepository,
-      chapterRepository,
-    } = await createHandler('chapter-current-slug');
+    const { handler, moduleRef, createRoomStore, commandBus } =
+      await createHandler('chapter-current-slug');
 
     const result = await handler.execute(command);
 
-    expect(bookRepository.touchIfActive).toHaveBeenCalledWith(
-      BookId.create('book-1'),
+    expect(commandBus.execute).toHaveBeenCalledWith(
+      expect.any(TouchBookForReadingRoomCommand),
     );
-    expect(chapterRepository.touchIfInBook).toHaveBeenCalledWith(
-      ChapterId.create('chapter-id-1'),
-      ChapterBookId.create('book-1'),
+    expect(commandBus.execute).toHaveBeenCalledWith(
+      expect.any(TouchChapterForReadingRoomCommand),
     );
     expect(createRoomStore.createIdempotently).toHaveBeenCalledTimes(1);
     const storedRoom = createRoomStore.createIdempotently.mock.calls[0][0];
     expect(storedRoom.currentChapterId).toBe('chapter-id-1');
-    expect(result.currentChapterSlug).toBe('chapter-current-slug');
+    expect(result).toBe(storedRoom.roomId);
     await moduleRef.close();
   });
 
@@ -89,9 +99,34 @@ describe('CreateRoomHandler', () => {
     const { handler, moduleRef, createRoomStore } = await createHandler(null);
 
     await expect(handler.execute(command)).rejects.toBeInstanceOf(
-      NotFoundDomainException,
+      ReadingRoomNotFoundError,
     );
     expect(createRoomStore.createIdempotently).not.toHaveBeenCalled();
+    await moduleRef.close();
+  });
+
+  it('rejects a command when the actor lacks the create policy', async () => {
+    const { handler, moduleRef, createRoomStore, commandBus } =
+      await createHandler('chapter-current-slug');
+    const deniedActor: Actor = {
+      userId: 'host-1',
+      roles: ['user'],
+      ability: new AbilityBuilder<AppAbility>(createPrismaAbility).build(),
+    };
+
+    await expect(
+      handler.execute(
+        new CreateRoomCommand(
+          deniedActor,
+          command.bookId,
+          command.chapterId,
+          command.mode,
+          command.idempotencyKey,
+        ),
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    expect(createRoomStore.findByRequestKey).not.toHaveBeenCalled();
+    expect(commandBus.execute).not.toHaveBeenCalled();
     await moduleRef.close();
   });
 
@@ -103,9 +138,10 @@ describe('CreateRoomHandler', () => {
       new CreateRoomWriteCollision('idempotency-key'),
     );
 
-    await expect(handler.execute(command)).resolves.toMatchObject({
-      currentChapterSlug: 'chapter-current-slug',
-    });
+    const result = await handler.execute(command);
+    expect(result).toBe(
+      createRoomStore.createIdempotently.mock.calls[1][0].roomId,
+    );
     expect(createRoomStore.findByRequestKey).toHaveBeenCalledTimes(2);
     expect(createRoomStore.createIdempotently).toHaveBeenCalledTimes(2);
     await moduleRef.close();

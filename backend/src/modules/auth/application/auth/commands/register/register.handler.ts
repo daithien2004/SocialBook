@@ -1,17 +1,16 @@
 import { RegisterCommand } from './register.command';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler } from '@nestjs/cqrs';
+import { Logger } from '@nestjs/common';
 import {
-  ConflictException,
-  InternalServerErrorException,
-  Logger,
-} from '@nestjs/common';
+  ConflictDomainException,
+  InternalServerDomainException,
+} from '@/shared/domain/common-exceptions';
 import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { IUserRepository } from '@/modules/users/domain/public-api';
 import { IRoleRepository } from '@/modules/roles/domain/public-api';
 import { UserCreationPort } from '@/modules/users/application/public-api';
 import { CreateUserCommand } from '@/modules/users/application/public-api';
 import { UserEmail } from '@/modules/users/domain/public-api';
-import { SendOtpHandler } from '@/modules/auth/application/otp/commands/send-otp/send-otp.handler';
 import { SendOtpCommand } from '@/modules/auth/application/otp/commands/send-otp/send-otp.command';
 
 @CommandHandler(RegisterCommand)
@@ -22,7 +21,7 @@ export class RegisterHandler {
     private readonly userRepository: IUserRepository,
     private readonly roleRepository: IRoleRepository,
     private readonly createUserService: UserCreationPort,
-    private readonly sendOtpUseCase: SendOtpHandler,
+    private readonly commandBus: CommandBus,
     private readonly passwordHasher: IPasswordHasher,
   ) {}
 
@@ -41,7 +40,7 @@ export class RegisterHandler {
 
         return await this.sendOtp(command.email);
       }
-      throw new ConflictException('Email này đã được sử dụng');
+      throw new ConflictDomainException('Email này đã được sử dụng');
     }
 
     const userRole = await this.roleRepository.findByName('user');
@@ -49,7 +48,7 @@ export class RegisterHandler {
       this.logger.error(
         'User role not found in database during signup - role may not be seeded',
       );
-      throw new InternalServerErrorException(
+      throw new InternalServerDomainException(
         'Đã có lỗi xảy ra trong quá trình đăng ký',
       );
     }
@@ -69,7 +68,7 @@ export class RegisterHandler {
 
   private async sendOtp(email: string): Promise<string> {
     const sendOtpCommand = new SendOtpCommand(email);
-    await this.sendOtpUseCase.execute(sendOtpCommand);
+    await this.commandBus.execute(sendOtpCommand);
     return 'Mã OTP đã được gửi đến email của bạn';
   }
 }

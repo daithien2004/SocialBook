@@ -1,7 +1,8 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
+import { subject } from '@casl/ability';
 import { BookErrorMessages } from '@/modules/books/application/error-messages';
-import { BookDetailReadModel } from '@/modules/books/domain/books/read-models/book-detail.read-model';
-import { IBookQueryProvider } from '@/modules/books/domain/books/repositories/book-query.provider.interface';
+import { BookDetailReadModel } from '@/modules/books/application/read-models/book-detail.read-model';
+import { BookReadRepository } from '@/modules/books/application/ports/book-read.repository';
 import { IReviewRepository } from '@/modules/reviews/domain/public-api';
 import {
   BadRequestDomainException,
@@ -17,7 +18,7 @@ export class GetBookBySlugHandler implements IQueryHandler<
   BookDetailReadModel
 > {
   constructor(
-    private readonly bookQueryProvider: IBookQueryProvider,
+    private readonly bookQueryProvider: BookReadRepository,
     private readonly cache: ICachePort,
     private readonly reviewRepository: IReviewRepository,
   ) {}
@@ -30,25 +31,41 @@ export class GetBookBySlugHandler implements IQueryHandler<
     const cacheKey = `books:slug:${query.slug}`;
 
     const cached = await this.cache.get<BookDetailReadModel>(cacheKey);
-
-    if (cached) {
-      return cached;
-    }
-
-    const book = await this.bookQueryProvider.findDetailBySlug(query.slug);
+    const book =
+      cached ??
+      (await this.bookQueryProvider.findDetailBySlug(
+        query.actor.ability,
+        query.slug,
+      ));
 
     if (!book) {
       throw new NotFoundDomainException(BookErrorMessages.BOOK_NOT_FOUND);
     }
 
-    const ratingStats = await this.reviewRepository.getStatsForBooks([book.id]);
-    const stats = ratingStats.get(book.id);
-    if (stats) {
-      book.stats.averageRating = stats.rating;
-      book.stats.totalRatings = stats.count;
+    if (
+      !query.actor.ability.can(
+        'read',
+        subject('Book', {
+          id: book.id,
+          status: book.status,
+          isDeleted: false,
+        }),
+      )
+    ) {
+      throw new NotFoundDomainException(BookErrorMessages.BOOK_NOT_FOUND);
     }
 
-    await this.cache.set(cacheKey, book, CACHE_TTL.DEFAULT);
+    if (!cached) {
+      const ratingStats = await this.reviewRepository.getStatsForBooks([
+        book.id,
+      ]);
+      const stats = ratingStats.get(book.id);
+      if (stats) {
+        book.stats.averageRating = stats.rating;
+        book.stats.totalRatings = stats.count;
+      }
+      await this.cache.set(cacheKey, book, CACHE_TTL.DEFAULT);
+    }
 
     return book;
   }

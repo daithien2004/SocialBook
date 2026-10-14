@@ -1,25 +1,26 @@
 import { QueryHandler } from '@nestjs/cqrs';
 import type { IQueryHandler } from '@nestjs/cqrs';
-import { IReadingRoomReadRepository } from '@/modules/reading-rooms/application/ports/persistence/reading-room-read.repository';
-import type { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.result';
+import { ReadingRoomQueryRepository } from '@/modules/reading-rooms/application/ports/persistence/reading-room-query.repository';
+import type { ReadingRoomReadModel } from '@/modules/reading-rooms/application/read-models/reading-room.read-model';
 import type { PageResult } from '@/shared/domain/pagination.types';
 import { GetMyHistoryQuery } from './get-my-history.query';
 
 @QueryHandler(GetMyHistoryQuery)
 export class GetMyHistoryHandler implements IQueryHandler<
   GetMyHistoryQuery,
-  PageResult<ReadingRoomResult>
+  PageResult<ReadingRoomReadModel>
 > {
   constructor(
-    private readonly readingRoomReadRepository: IReadingRoomReadRepository,
+    private readonly readingRoomReadRepository: ReadingRoomQueryRepository,
   ) {}
 
   async execute(
     query: GetMyHistoryQuery,
-  ): Promise<PageResult<ReadingRoomResult>> {
+  ): Promise<PageResult<ReadingRoomReadModel>> {
     return this.readingRoomReadRepository.findHistorySummariesByUser(
-      query.userId,
+      query.actor.userId,
       query.pagination,
+      query.actor.ability,
     );
   }
 }

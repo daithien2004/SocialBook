@@ -13,7 +13,6 @@ import { BookId } from '@/modules/library/domain/library/value-objects/book-id.v
 import { ChapterId } from '@/modules/library/domain/library/value-objects/chapter-id.vo';
 import { UserId } from '@/modules/library/domain/library/value-objects/user-id.vo';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
-import { InternalServerErrorException } from '@nestjs/common';
 import { UpdateProgressCommand } from './update-progress.command';
 import { ReadingProgressResult } from '../../dto/library.dto';
 import { LibraryApplicationMapper } from '../../mappers/library.mapper';
@@ -21,7 +20,10 @@ import { IBookRepository } from '@/modules/books/domain/public-api';
 import { IChapterRepository } from '@/modules/chapters/domain/public-api';
 import { ChapterStatus } from '@/modules/library/domain/library/entities/reading-progress.entity';
 import { IRecommendationCachePort } from '@/modules/recommendations/domain/public-api';
-import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
+import {
+  InternalServerDomainException,
+  NotFoundDomainException,
+} from '@/shared/domain/common-exceptions';
 import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
 
 export interface UpdateProgressResult {
@@ -147,7 +149,7 @@ export class UpdateProgressHandler implements ICommandHandler<
       bookId,
     );
     if (!detail) {
-      throw new InternalServerErrorException(
+      throw new InternalServerDomainException(
         'Failed to retrieve updated reading list detail',
       );
     }

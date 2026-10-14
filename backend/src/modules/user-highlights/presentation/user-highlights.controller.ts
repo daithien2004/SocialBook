@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
@@ -33,6 +34,7 @@ import {
   ApiOkResponse,
   ApiProperty,
   ApiPropertyOptional,
+  ApiOperation,
 } from '@nestjs/swagger';
 
 class UserHighlightResponseDto {
@@ -65,6 +67,7 @@ class UserHighlightResponseDto {
 }
 
 @ApiProblemResponses()
+@ApiTags('User Highlights')
 @Controller('user-highlights')
 @UseGuards(JwtAuthGuard)
 export class UserHighlightsController {
@@ -73,6 +76,7 @@ export class UserHighlightsController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Create Highlight' })
   @Post()
   @ApiCreatedResponse({ type: UserHighlightResponseDto })
   async createHighlight(
@@ -102,6 +106,7 @@ export class UserHighlightsController {
     };
   }
 
+  @ApiOperation({ summary: 'Get Highlights By Book' })
   @Get('book/:bookId')
   @ApiPaginatedResponse(UserHighlightResponseDto, 'offset')
   async getHighlightsByBook(
@@ -127,6 +132,7 @@ export class UserHighlightsController {
     };
   }
 
+  @ApiOperation({ summary: 'Get Highlights By Chapter' })
   @Get('chapter/:chapterId')
   @ApiPaginatedResponse(UserHighlightResponseDto, 'offset')
   async getHighlightsByChapter(
@@ -152,6 +158,7 @@ export class UserHighlightsController {
     };
   }
 
+  @ApiOperation({ summary: 'Update Highlight' })
   @Patch(':id')
   @ApiOkResponse({ type: UserHighlightResponseDto })
   async updateHighlight(
@@ -177,6 +184,7 @@ export class UserHighlightsController {
     };
   }
 
+  @ApiOperation({ summary: 'Delete Highlight' })
   @HttpCode(204)
   @Delete(':id')
   @ApiNoContentResponse()

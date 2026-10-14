@@ -6,7 +6,7 @@ import { ITextToSpeechRepository } from '@/modules/text-to-speech/domain/reposit
 export class DeleteChapterAudioHandler {
   constructor(private readonly ttsRepository: ITextToSpeechRepository) {}
 
-  async execute(chapterId: string): Promise<void> {
-    await this.ttsRepository.deleteByChapterId(chapterId);
+  async execute(command: DeleteChapterAudioCommand): Promise<void> {
+    await this.ttsRepository.deleteByChapterId(command.chapterId);
   }
 }

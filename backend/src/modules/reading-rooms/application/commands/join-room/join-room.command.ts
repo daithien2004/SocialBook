@@ -1,10 +1,10 @@
 import { Command } from '@nestjs/cqrs';
 
-import { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.result';
+import type { Actor } from '@/shared/casl/actor';
 
-export class JoinRoomCommand extends Command<ReadingRoomResult> {
+export class JoinRoomCommand extends Command<string> {
   constructor(
-    public readonly userId: string,
+    public readonly actor: Actor,
     public readonly roomCode: string,
   ) {
     super();

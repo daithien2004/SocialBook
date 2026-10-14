@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   Body,
@@ -31,7 +32,7 @@ import {
 } from '@/modules/users/presentation/users/dto/user.dto';
 import { UserResponseDto } from '@/modules/users/presentation/users/dto/user.response.dto';
 
-import { CheckUserExistQuery } from '@/modules/users/application/users/commands/check-user-exist/check-user-exist.query';
+import { CheckUserExistQuery } from '@/modules/users/application/users/queries/check-user-exist/check-user-exist.query';
 import { CreateUserCommand } from '@/modules/users/application/users/commands/create-user/create-user.command';
 import { GetReadingPreferencesQuery } from '@/modules/users/application/users/queries/get-reading-preferences/get-reading-preferences.query';
 import { GetUserProfileQuery } from '@/modules/users/application/users/queries/get-user-profile/get-user-profile.query';
@@ -46,10 +47,15 @@ import {
   ApiPaginatedResponse,
   ApiProblemResponses,
 } from '@/shared/platform/decorators/api-response.decorators';
-import { ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+import {
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { paginate } from '@/shared/domain/pagination.types';
 
 @ApiProblemResponses()
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(
@@ -57,6 +63,7 @@ export class UsersController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Create' })
   @Post()
   @ApiCreatedResponse({ type: UserResponseDto })
   async create(@Body() createUserDto: CreateUserDto) {
@@ -73,6 +80,7 @@ export class UsersController {
     return new UserResponseDto(user);
   }
 
+  @ApiOperation({ summary: 'Find All Admin' })
   @Get('admin')
   @ApiPaginatedResponse(UserResponseDto, 'offset')
   @Roles('admin')
@@ -93,6 +101,7 @@ export class UsersController {
     );
   }
 
+  @ApiOperation({ summary: 'List' })
   @Public()
   @Get()
   @ApiPaginatedResponse(UserResponseDto, 'offset')
@@ -112,6 +121,7 @@ export class UsersController {
     );
   }
 
+  @ApiOperation({ summary: 'Toggle Ban' })
   @Patch(':id/ban')
   @ApiOkResponse({ type: UserResponseDto })
   @UseGuards(RolesGuard)
@@ -124,6 +134,7 @@ export class UsersController {
     return new UserResponseDto(user);
   }
 
+  @ApiOperation({ summary: 'Get User Profile Overview' })
   @Public()
   @Get(':id/overview')
   @ApiOkResponse({
@@ -159,6 +170,7 @@ export class UsersController {
     return data;
   }
 
+  @ApiOperation({ summary: 'Is User Exist' })
   @Public()
   @Get(':id/exist')
   @ApiOkResponse({ schema: { type: 'boolean' } })
@@ -170,6 +182,7 @@ export class UsersController {
     return exists;
   }
 
+  @ApiOperation({ summary: 'Update My Profile Overview' })
   @Patch('me/overview')
   @ApiOkResponse({ type: UserResponseDto })
   async updateMyProfileOverview(
@@ -187,6 +200,7 @@ export class UsersController {
     return new UserResponseDto(user);
   }
 
+  @ApiOperation({ summary: 'Update My Avatar' })
   @Patch('me/avatar')
   @ApiOkResponse({
     schema: {
@@ -219,6 +233,7 @@ export class UsersController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Get My Reading Preferences' })
   @Get('me/reading-preferences')
   async getMyReadingPreferences(@CurrentUser('id') userId: string) {
     const query = new GetReadingPreferencesQuery(userId);
@@ -226,6 +241,7 @@ export class UsersController {
     return data;
   }
 
+  @ApiOperation({ summary: 'Update My Reading Preferences' })
   @Put('me/reading-preferences')
   async updateMyReadingPreferences(
     @CurrentUser('id') userId: string,
@@ -253,6 +269,7 @@ export class UsersController {
     return user.readingPreferences;
   }
 
+  @ApiOperation({ summary: 'Search Users' })
   @Public()
   @Get('search')
   @ApiPaginatedResponse(UserResponseDto, 'offset')

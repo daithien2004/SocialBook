@@ -1,10 +1,10 @@
-import { QueryHandler } from '@nestjs/cqrs';
+import { QueryBus, QueryHandler } from '@nestjs/cqrs';
 import type { IQueryHandler } from '@nestjs/cqrs';
-import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
-import { IChapterReadRepository } from '@/modules/chapters';
+import { ReadingRoomNotFoundError } from '@/modules/reading-rooms/domain/errors/reading-room.errors';
+import { GetReadingRoomChapterQuery } from '@/modules/chapters';
 import type { ChapterDetailReadModel } from '@/modules/chapters';
 import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
-import { IReadingRoomReadRepository } from '@/modules/reading-rooms/application/ports/persistence/reading-room-read.repository';
+import { ReadingRoomQueryRepository } from '@/modules/reading-rooms/application/ports/persistence/reading-room-query.repository';
 import { GetCurrentRoomChapterQuery } from './get-current-room-chapter.query';
 
 @QueryHandler(GetCurrentRoomChapterQuery)
@@ -13,8 +13,8 @@ export class GetCurrentRoomChapterHandler implements IQueryHandler<
   ChapterDetailReadModel
 > {
   constructor(
-    private readonly readingRoomReadRepository: IReadingRoomReadRepository,
-    private readonly chapterReadRepository: IChapterReadRepository,
+    private readonly readingRoomReadRepository: ReadingRoomQueryRepository,
+    private readonly queryBus: QueryBus,
   ) {}
 
   async execute(
@@ -22,22 +22,24 @@ export class GetCurrentRoomChapterHandler implements IQueryHandler<
   ): Promise<ChapterDetailReadModel> {
     const room = await this.readingRoomReadRepository.findDetailsById(
       RoomId.create(query.roomCode).toString(),
+      query.actor.ability,
     );
-    const isActiveMember = room?.members.some(
-      (member) =>
-        member.userId === query.userId &&
-        (member.leftAt === undefined || member.leftAt === null),
+    const isActiveMember = room?.activeMembers.some(
+      (member) => member.userId === query.actor.userId,
     );
     if (!room || room.status !== 'active' || !isActiveMember) {
-      throw new NotFoundDomainException('Room chapter is unavailable');
+      throw new ReadingRoomNotFoundError('Requested resource not found.');
     }
 
-    const chapter = await this.chapterReadRepository.findCurrentRoomChapterById(
-      room.bookId,
-      room.currentChapterId,
+    const chapter = await this.queryBus.execute(
+      new GetReadingRoomChapterQuery(
+        query.actor,
+        room.bookId,
+        room.currentChapterId,
+      ),
     );
     if (!chapter) {
-      throw new NotFoundDomainException('Room chapter is unavailable');
+      throw new ReadingRoomNotFoundError('Requested resource not found.');
     }
 
     return chapter;

@@ -1,5 +1,12 @@
+export { BooksReadingRoomsIntegrationModule } from './application/public-api/books-reading-rooms-integration.module';
+export { TouchBookForReadingRoomCommand } from './application/books/commands/touch-book-for-reading-room/touch-book-for-reading-room.command';
+export type { BookListReadModel } from './application/read-models/book-list.read-model';
+export type { BookDetailReadModel } from './application/read-models/book-detail.read-model';
+export type { BookFiltersReadModel } from './application/read-models/book-filters.read-model';
+export { CreateBookCommand } from './application/books/commands/create-book/create-book.command';
+export { UpdateBookCommand } from './application/books/commands/update-book/update-book.command';
+export { DeleteBookCommand } from './application/books/commands/delete-book/delete-book.command';
+export { GetBookByIdQuery } from './application/books/queries/get-book-by-id/get-book-by-id.query';
+export { GetBookBySlugQuery } from './application/books/queries/get-book-by-slug/get-book-by-slug.query';
+export { GetBooksQuery } from './application/books/queries/get-books/get-books.query';
 export { BooksModule } from './books.module';
-export { BooksApplicationModule } from './application/books/books-application.module';
-export { BooksRepositoryModule } from './infrastructure/repositories/books/books-repository.module';
-export { Book } from './domain/books/entities/book.entity';
-export { IBookRepository } from './domain/books/repositories/book.repository.interface';

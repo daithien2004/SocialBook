@@ -5,7 +5,7 @@ import { IReadingListRepository } from '@/modules/library/domain/library/reposit
 import { BookId } from '@/modules/library/domain/library/value-objects/book-id.vo';
 import { UserId } from '@/modules/library/domain/library/value-objects/user-id.vo';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
-import { InternalServerErrorException } from '@nestjs/common';
+import { InternalServerDomainException } from '@/shared/domain/common-exceptions';
 import { UpdateCollectionsCommand } from './update-collections.command';
 
 @CommandHandler(UpdateCollectionsCommand)
@@ -45,7 +45,7 @@ export class UpdateCollectionsHandler implements ICommandHandler<
       bookId,
     );
     if (!result) {
-      throw new InternalServerErrorException(
+      throw new InternalServerDomainException(
         'Failed to retrieve updated reading list detail',
       );
     }

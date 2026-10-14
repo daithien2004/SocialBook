@@ -1,7 +1,9 @@
 import { Command } from '@nestjs/cqrs';
-import { Book } from '@/modules/books/domain/books/entities/book.entity';
+import type { MediaUploadFile } from '@/modules/media/domain/public-api';
+import type { Actor } from '@/shared/casl/actor';
 
-export class UpdateBookCommand extends Command<Book> {
+export class UpdateBookCommand extends Command<string> {
+  public readonly actor: Actor;
   public readonly id: string;
   public readonly title?: string;
   public readonly authorId?: string;
@@ -9,10 +11,12 @@ export class UpdateBookCommand extends Command<Book> {
   public readonly description?: string;
   public readonly publishedYear?: string;
   public readonly coverUrl?: string;
+  public readonly coverFile?: MediaUploadFile;
   public readonly status?: 'draft' | 'published' | 'completed';
   public readonly tags?: string[];
 
   constructor(props: {
+    actor: Actor;
     id: string;
     title?: string;
     authorId?: string;
@@ -20,10 +24,12 @@ export class UpdateBookCommand extends Command<Book> {
     description?: string;
     publishedYear?: string;
     coverUrl?: string;
+    coverFile?: MediaUploadFile;
     status?: 'draft' | 'published' | 'completed';
     tags?: string[];
   }) {
     super();
+    this.actor = props.actor;
     this.id = props.id;
     this.title = props.title;
     this.authorId = props.authorId;
@@ -31,6 +37,7 @@ export class UpdateBookCommand extends Command<Book> {
     this.description = props.description;
     this.publishedYear = props.publishedYear;
     this.coverUrl = props.coverUrl;
+    this.coverFile = props.coverFile;
     this.status = props.status;
     this.tags = props.tags;
   }

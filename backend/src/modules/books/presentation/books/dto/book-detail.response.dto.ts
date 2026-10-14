@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   BookDetailReadModel,
   ChapterSummary,
-} from '@/modules/books/domain/books/read-models/book-detail.read-model';
+} from '@/modules/books/application/read-models/book-detail.read-model';
 
 export class ChapterResponseDto {
   @ApiProperty()

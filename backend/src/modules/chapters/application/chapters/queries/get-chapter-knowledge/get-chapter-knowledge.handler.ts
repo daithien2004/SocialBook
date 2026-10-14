@@ -1,6 +1,7 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { GetChapterKnowledgeQuery } from './get-chapter-knowledge.query';
-import { Logger, NotFoundException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 
 import { IChapterKnowledgeRepository } from '@/modules/chapters/domain/chapters/repositories/chapter-knowledge.repository.interface';
 import { IChapterRepository } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
@@ -35,7 +36,7 @@ export class GetChapterKnowledgeHandler implements IQueryHandler<GetChapterKnowl
     const chapter = await this.chapterRepository.findById(
       ChapterId.create(query.chapterId),
     );
-    if (!chapter) throw new NotFoundException('Chapter not found');
+    if (!chapter) throw new NotFoundDomainException('Chapter not found');
 
     // 3. Prepare prompt
     const content = chapter.paragraphs.map((p) => p.content).join('\n');

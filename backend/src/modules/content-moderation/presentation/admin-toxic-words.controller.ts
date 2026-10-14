@@ -83,7 +83,7 @@ export class AdminToxicWordsController {
     const command = new AddToxicWordCommand(
       dto.pattern,
       dto.group,
-      (dto as any).originalWord,
+      dto.originalWord,
     );
     const word = await this.commandBus.execute(command);
     return {

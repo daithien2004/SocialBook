@@ -3,7 +3,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
-import { IMediaPort } from '@/modules/media/domain/media.port';
+import { IMediaPort, MediaUploadFile } from '@/modules/media/domain/media.port';
 
 @Injectable()
 export class CloudinaryAdapter implements IMediaPort, OnModuleInit {
@@ -19,7 +19,7 @@ export class CloudinaryAdapter implements IMediaPort, OnModuleInit {
     });
   }
 
-  async uploadImage(file: Express.Multer.File): Promise<string> {
+  async uploadImage(file: MediaUploadFile): Promise<string> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
@@ -46,7 +46,7 @@ export class CloudinaryAdapter implements IMediaPort, OnModuleInit {
     });
   }
 
-  async uploadMultipleImages(files: Express.Multer.File[]): Promise<string[]> {
+  async uploadMultipleImages(files: MediaUploadFile[]): Promise<string[]> {
     const uploadPromises = files.map((file) => this.uploadImage(file));
     return Promise.all(uploadPromises);
   }
@@ -65,7 +65,7 @@ export class CloudinaryAdapter implements IMediaPort, OnModuleInit {
     await Promise.all(deletePromises);
   }
 
-  async uploadAudio(file: Express.Multer.File): Promise<string> {
+  async uploadAudio(file: MediaUploadFile): Promise<string> {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {

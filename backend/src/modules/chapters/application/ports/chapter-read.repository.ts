@@ -1,7 +1,7 @@
 import { ChapterListReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-list.read-model';
 import { ChapterFilter } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
 import { ChapterResult } from '@/modules/chapters/application/chapters/queries/get-chapters/get-chapters.result';
-import { ChapterDetailReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-detail.read-model';
+import { ChapterDetailReadModel } from '@/modules/chapters/application/read-models/chapter-detail.read-model';
 import {
   PaginatedResult,
   PaginationOptions,
@@ -19,6 +19,11 @@ export abstract class IChapterReadRepository {
   abstract findCurrentRoomChapterById(
     bookId: string,
     chapterId: string,
+  ): Promise<ChapterDetailReadModel | null>;
+
+  abstract findDetailByBookIdAndSlug(
+    bookId: string,
+    chapterSlug: string,
   ): Promise<ChapterDetailReadModel | null>;
 
   abstract findPaginated(

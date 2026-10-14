@@ -9,7 +9,7 @@ import { ReindexAllHandler } from './commands/reindex-all/reindex-all.handler';
 import { AskChatbotHandler } from './commands/ask-chatbot/ask-chatbot.handler';
 import { ChromaInfrastructureModule } from '../infrastructure/chroma-infrastructure.module';
 import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api';
-import { AuthorsInfrastructureModule } from '@/modules/authors/infrastructure/public-api';
+import { AuthorsInfrastructureModule } from '@/modules/authors';
 import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/public-api';
 import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { AIInfrastructureModule } from '@/modules/ai/infrastructure/public-api';

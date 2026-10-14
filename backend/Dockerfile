@@ -1,4 +1,4 @@
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 
 # --- Mở cửa để CASL shared/ lọt vào image backend ---
@@ -27,7 +27,7 @@ WORKDIR /app/backend
 # ngừng được tiêu thụ — mà deploy vẫn báo thành công. Fail ở build time.
 RUN npm run build && test -f dist/worker.js
 
-FROM node:22-alpine
+FROM node:24-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package.json ./package.json

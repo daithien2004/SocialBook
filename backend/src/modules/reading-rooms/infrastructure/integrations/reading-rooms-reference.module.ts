@@ -1,16 +1,17 @@
 import { Module } from '@nestjs/common';
-import { IReadingRoomReferencePort } from '../../application/public-api/reading-room-reference.port';
-import { ReadingRoomsPostgresModule } from '../postgres/reading-rooms-postgres.module';
+import { PostgresDatabaseModule } from '@/core/database/postgres/postgres-database.module';
+import { ReadingRoomReferencePort } from '../../application/public-api/reading-room-reference.port';
 import { ReadingRoomReferenceAdapter } from './reading-room-reference.adapter';
 
 @Module({
-  imports: [ReadingRoomsPostgresModule],
+  imports: [PostgresDatabaseModule],
   providers: [
+    ReadingRoomReferenceAdapter,
     {
-      provide: IReadingRoomReferencePort,
+      provide: ReadingRoomReferencePort,
       useExisting: ReadingRoomReferenceAdapter,
     },
   ],
-  exports: [IReadingRoomReferencePort],
+  exports: [ReadingRoomReferencePort],
 })
 export class ReadingRoomsReferenceModule {}

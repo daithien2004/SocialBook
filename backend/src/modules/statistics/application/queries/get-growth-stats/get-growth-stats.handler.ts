@@ -1,22 +1,18 @@
 import { GetGrowthStatsQuery } from './get-growth-stats.query';
 import { QueryHandler } from '@nestjs/cqrs';
-import { IBookQueryProvider } from '@/modules/books/domain/public-api';
-import { IPostRepository } from '@/modules/posts/domain/public-api';
-import { GrowthMetric } from '@/modules/statistics/domain/read-models/statistics.model';
-import { IUserRepository } from '@/modules/users/domain/public-api';
+import { StatisticsReadRepository } from '@/modules/statistics/application/ports/statistics-read.repository';
+import type { GrowthMetricReadModel } from '@/modules/statistics/application/read-models/statistics.read-model';
+import { assertStatisticsReadAllowed } from '@/modules/statistics/application/assert-statistics-read-policy';
 
 @QueryHandler(GetGrowthStatsQuery)
 export class GetGrowthStatsHandler {
   constructor(
-    private readonly userRepository: IUserRepository,
-    private readonly bookQueryProvider: IBookQueryProvider,
-    private readonly postRepository: IPostRepository,
+    private readonly statisticsReadRepository: StatisticsReadRepository,
   ) {}
 
-  async execute(
-    days: number = 30,
-    groupBy: 'day' | 'month' | 'year' = 'day',
-  ): Promise<GrowthMetric[]> {
+  async execute(query: GetGrowthStatsQuery): Promise<GrowthMetricReadModel[]> {
+    const { days, groupBy } = query;
+    assertStatisticsReadAllowed(query.actor);
     const startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
 
@@ -29,58 +25,34 @@ export class GetGrowthStatsHandler {
       startDate.setFullYear(startDate.getFullYear() - days / 365);
     }
 
-    const [userGrowth, bookGrowth, postGrowth] = await Promise.all([
-      this.userRepository.getGrowthMetrics(startDate, groupBy),
-      this.bookQueryProvider.getGrowthMetrics(startDate, groupBy),
-      this.postRepository.getGrowthMetrics(startDate, groupBy),
-    ]);
-
-    const metricsMap = new Map<string, GrowthMetric>();
-
-    // Helper to generate date ranges
+    const actualMetrics = await this.statisticsReadRepository.getGrowthStats(
+      startDate,
+      groupBy,
+    );
+    const metricsByDate = new Map(
+      actualMetrics.map((metric) => [metric.date, metric]),
+    );
+    const result: GrowthMetricReadModel[] = [];
     const now = new Date();
     const current = new Date(startDate);
 
     while (current <= now) {
-      let dateKey: string;
+      let date: string;
       if (groupBy === 'day') {
-        dateKey = current.toISOString().split('T')[0];
+        date = current.toISOString().split('T')[0];
         current.setDate(current.getDate() + 1);
       } else if (groupBy === 'month') {
-        dateKey = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
+        date = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}`;
         current.setMonth(current.getMonth() + 1);
       } else {
-        dateKey = `${current.getFullYear()}`;
+        date = `${current.getFullYear()}`;
         current.setFullYear(current.getFullYear() + 1);
       }
-
-      metricsMap.set(dateKey, {
-        date: dateKey,
-        users: 0,
-        books: 0,
-        posts: 0,
-      });
+      result.push(
+        metricsByDate.get(date) ?? { date, users: 0, books: 0, posts: 0 },
+      );
     }
 
-    // Merge actual data
-    for (const entry of userGrowth) {
-      if (metricsMap.has(entry._id)) {
-        metricsMap.get(entry._id)!.users = entry.count;
-      }
-    }
-    for (const entry of bookGrowth) {
-      if (metricsMap.has(entry._id)) {
-        metricsMap.get(entry._id)!.books = entry.count;
-      }
-    }
-    for (const entry of postGrowth) {
-      if (metricsMap.has(entry._id)) {
-        metricsMap.get(entry._id)!.posts = entry.count;
-      }
-    }
-
-    return Array.from(metricsMap.values()).sort((a, b) =>
-      a.date.localeCompare(b.date),
-    );
+    return result;
   }
 }

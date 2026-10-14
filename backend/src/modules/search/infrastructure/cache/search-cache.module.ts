@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { ITrendingKeywordCachePort } from '../../domain/interfaces/trending-keyword-cache.port';
+import { TrendingKeywordCachePort } from '../../application/ports/trending-keyword-cache.port';
 import { TrendingKeywordCacheAdapter } from './trending-keyword-cache.adapter';
 
 @Module({
   providers: [
     {
-      provide: ITrendingKeywordCachePort,
+      provide: TrendingKeywordCachePort,
       useClass: TrendingKeywordCacheAdapter,
     },
   ],
-  exports: [ITrendingKeywordCachePort],
+  exports: [TrendingKeywordCachePort],
 })
 export class SearchCacheModule {}

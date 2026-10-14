@@ -1,22 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { Prisma } from '@/core/database/generated/prisma/client';
+import { ConflictDomainException } from '@/shared/domain/common-exceptions';
+import { GenreErrorMessages } from '@/modules/genres/application/error-messages';
 import {
   PrismaTransactionClient,
   PrismaTransactionalAdapter,
 } from '@/core/database/postgres/prisma-transaction.types';
 import { Genre as GenreEntity } from '@/modules/genres/domain/entities/genre.entity';
-import {
-  GenreFilter,
-  IGenreRepository,
-} from '@/modules/genres/domain/repositories/genre.repository.interface';
+import { IGenreRepository } from '@/modules/genres/domain/repositories/genre.repository.interface';
 import { GenreId } from '@/modules/genres/domain/value-objects/genre-id.vo';
 import { GenreName } from '@/modules/genres/domain/value-objects/genre-name.vo';
-import {
-  PaginatedResult,
-  PaginationOptions,
-  buildPaginationMeta,
-} from '@/shared/domain/pagination.types';
 import { GenreMapper } from './genre.mapper';
 
 @Injectable()
@@ -36,65 +30,6 @@ export class GenresRepository implements IGenreRepository {
     return row ? GenreMapper.toDomain(row) : null;
   }
 
-  async findByName(name: GenreName): Promise<GenreEntity | null> {
-    const row = await this.prisma.genre.findUnique({
-      where: { name: name.toString() },
-    });
-    return row ? GenreMapper.toDomain(row) : null;
-  }
-
-  async findBySlugs(slugs: string[]): Promise<GenreEntity[]> {
-    const rows = await this.prisma.genre.findMany({
-      where: { slug: { in: slugs } },
-    });
-    return rows.map((row) => GenreMapper.toDomain(row));
-  }
-
-  async findAll(
-    filter: GenreFilter,
-    pagination: PaginationOptions,
-  ): Promise<PaginatedResult<GenreEntity>> {
-    const where: Prisma.GenreWhereInput = filter.name
-      ? { name: { contains: filter.name, mode: 'insensitive' } }
-      : {};
-    const offset = (pagination.page - 1) * pagination.limit;
-
-    const [rows, total] = await Promise.all([
-      this.prisma.genre.findMany({
-        where,
-        orderBy: [{ name: 'asc' }, { id: 'asc' }],
-        skip: offset,
-        take: pagination.limit,
-      }),
-      this.prisma.genre.count({ where }),
-    ]);
-
-    return {
-      data: rows.map((row) => GenreMapper.toDomain(row)),
-      meta: buildPaginationMeta(pagination.page, pagination.limit, total),
-    };
-  }
-
-  async findAllSimple(): Promise<GenreEntity[]> {
-    const rows = await this.prisma.genre.findMany({
-      orderBy: [{ name: 'asc' }, { id: 'asc' }],
-    });
-    return rows.map((row) => GenreMapper.toDomain(row));
-  }
-
-  async findByNames(names: string[]): Promise<GenreEntity[]> {
-    if (names.length === 0) return [];
-
-    const rows = await this.prisma.genre.findMany({
-      where: {
-        OR: names.map((name) => ({
-          name: { equals: name, mode: 'insensitive' },
-        })),
-      },
-    });
-    return rows.map((row) => GenreMapper.toDomain(row));
-  }
-
   async existsByName(name: GenreName, excludeId?: GenreId): Promise<boolean> {
     const row = await this.prisma.genre.findFirst({
       where: {
@@ -110,11 +45,21 @@ export class GenresRepository implements IGenreRepository {
     const data = GenreMapper.toPersistence(genre);
     const { id, createdAt: _createdAt, ...updateData } = data;
 
-    await this.prisma.genre.upsert({
-      where: { id },
-      create: data,
-      update: updateData,
-    });
+    try {
+      await this.prisma.genre.upsert({
+        where: { id },
+        create: data,
+        update: updateData,
+      });
+    } catch (error: unknown) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new ConflictDomainException(GenreErrorMessages.GENRE_EXISTS);
+      }
+      throw error;
+    }
   }
 
   async delete(id: GenreId): Promise<void> {

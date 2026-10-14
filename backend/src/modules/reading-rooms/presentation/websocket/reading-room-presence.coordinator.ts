@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
-  IPresenceCachePort,
+  PresenceCachePort,
   PresenceData,
 } from '@/modules/reading-rooms/application/ports/external/presence-cache.port';
-import { ReadingRoomServerEvent } from '../../reading-room.socket-events';
+import { ReadingRoomServerEvent } from './reading-room.socket-events';
 import { PRESENCE_BROADCAST_DEBOUNCE_MS } from './reading-room.constants';
 import { RoomSocket } from './reading-room.types';
 import { ReadingRoomNamespaceProvider } from './reading-room.namespace-provider';
@@ -19,7 +19,7 @@ export class ReadingRoomPresenceCoordinator {
   >();
 
   constructor(
-    private readonly presenceCache: IPresenceCachePort,
+    private readonly presenceCache: PresenceCachePort,
     private readonly namespaceProvider: ReadingRoomNamespaceProvider,
   ) {}
 
@@ -28,11 +28,6 @@ export class ReadingRoomPresenceCoordinator {
   }
 
   /**
-   * Gom delta đang chờ theo phòng; với cùng một user, change mới nhất thay change cũ.
-   * Sau đó đảm bảo phòng có lịch gọi `doBroadcast` để phát các delta đã gom:
-   * - `urgent` (mặc định): lên lịch sau 300 ms, thay thế timer `lazy` nếu đang chờ.
-   * - `lazy`: dùng debounce cấu hình, không tạo timer mới nếu phòng đã có lịch.
-   * Nếu không truyền `change`, hàm chỉ đảm bảo lịch broadcast được đặt.
    */
   scheduleBroadcast(
     roomId: string,
@@ -101,9 +96,6 @@ export class ReadingRoomPresenceCoordinator {
   }
 
   /**
-   * Đăng ký hoặc cập nhật presence của user khi vào phòng, rồi trả danh sách presence hiện tại.
-   * Sau khi lưu presence, hàm gom delta `upsert` và lên lịch broadcast urgent;
-   * event sẽ được emit sau khi timer chạy, không phải ngay tại đây.
    */
   async onJoin(
     roomId: string,
@@ -120,9 +112,6 @@ export class ReadingRoomPresenceCoordinator {
   }
 
   /**
-   * Xóa presence của user khỏi phòng khi họ rời đi, rồi trả danh sách presence hiện tại.
-   * Mặc định chỉ xóa nếu user không còn tab/socket nào trong phòng; `forceRemove`
-   * bỏ qua bước kiểm tra đó. Khi xóa, lên lịch broadcast delta `remove` khẩn cấp.
    */
   async onLeave(
     roomId: string,

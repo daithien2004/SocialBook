@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   HttpCode,
@@ -25,9 +26,10 @@ import { DeleteChapterAudioCommand } from '@/modules/text-to-speech/application/
 import { GenerateBookAudioCommand } from '@/modules/text-to-speech/application/commands/generate-book-audio/generate-book-audio.command';
 import { IncrementPlayCountCommand } from '@/modules/text-to-speech/application/commands/increment-play-count/increment-play-count.command';
 import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
-import { ApiNoContentResponse } from '@nestjs/swagger';
+import { ApiNoContentResponse, ApiOperation } from '@nestjs/swagger';
 
 @ApiProblemResponses()
+@ApiTags('Text to Speech')
 @Controller('text-to-speech')
 export class TextToSpeechController {
   constructor(
@@ -35,6 +37,7 @@ export class TextToSpeechController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Generate Chapter Audio' })
   @Roles('admin')
   @UseGuards(RolesGuard)
   @Post('chapter/:chapterId')
@@ -51,6 +54,7 @@ export class TextToSpeechController {
     return TextToSpeechResponseDto.fromEntity(result);
   }
 
+  @ApiOperation({ summary: 'Generate Book Audio' })
   @Roles('admin')
   @UseGuards(RolesGuard)
   @Post('book/:bookId/all')
@@ -67,6 +71,7 @@ export class TextToSpeechController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Get Chapter Audio' })
   @Public()
   @Get('chapter/:chapterId')
   async getChapterAudio(
@@ -82,6 +87,7 @@ export class TextToSpeechController {
     return TextToSpeechResponseDto.fromEntity(result);
   }
 
+  @ApiOperation({ summary: 'Delete Chapter Audio' })
   @HttpCode(204)
   @Roles('admin')
   @UseGuards(RolesGuard)
@@ -93,6 +99,7 @@ export class TextToSpeechController {
     await this.commandBus.execute(command);
   }
 
+  @ApiOperation({ summary: 'Increment Play Count' })
   @Public()
   @Post('chapter/:chapterId/play')
   @HttpCode(204)

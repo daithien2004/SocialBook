@@ -9,6 +9,9 @@ import {
   IsString,
   Length,
 } from 'class-validator';
+import type { MediaUploadFile } from '@/modules/media/domain/public-api';
+import { UpdateBookCommand } from '@/modules/books/application/books/commands/update-book/update-book.command';
+import type { Actor } from '@/shared/casl/actor';
 
 export class UpdateBookDto {
   @IsOptional()
@@ -17,17 +20,13 @@ export class UpdateBookDto {
   title?: string;
 
   @IsOptional()
-  @IsString()
-  slug?: string;
-
-  @IsOptional()
   @IsUUID('4', { message: 'Author ID không hợp lệ' })
   authorId?: string;
 
   @Transform(({ value }: { value: unknown }) => {
     if (!value || (typeof value === 'string' && value.trim() === ''))
       return undefined;
-    if (Array.isArray(value)) return value as string[];
+    if (Array.isArray(value)) return value.map((item: unknown) => item);
     if (typeof value === 'string') return [value.trim()];
     return undefined;
   })
@@ -55,7 +54,7 @@ export class UpdateBookDto {
   @Transform(({ value }: { value: unknown }) => {
     if (!value || (typeof value === 'string' && value.trim() === ''))
       return undefined;
-    if (Array.isArray(value)) return value as string[];
+    if (Array.isArray(value)) return value.map((item: unknown) => item);
     if (typeof value === 'string') {
       return value.includes(',')
         ? value.split(',').map((s) => s.trim())
@@ -71,4 +70,24 @@ export class UpdateBookDto {
   @IsOptional()
   @IsString()
   coverUrl?: string;
+
+  toCommand(
+    actor: Actor,
+    id: string,
+    coverFile?: MediaUploadFile,
+  ): UpdateBookCommand {
+    return new UpdateBookCommand({
+      actor,
+      id,
+      title: this.title,
+      authorId: this.authorId,
+      genres: this.genres,
+      description: this.description,
+      publishedYear: this.publishedYear,
+      coverUrl: this.coverUrl,
+      coverFile,
+      status: this.status,
+      tags: this.tags,
+    });
+  }
 }

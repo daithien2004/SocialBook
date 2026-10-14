@@ -6,7 +6,7 @@ import { DeleteChapterCommand } from '@/modules/chapters/application/chapters/co
 import { DeleteChapterHandler } from '@/modules/chapters/application/chapters/commands/delete-chapter/delete-chapter.handler';
 import { UpdateChapterCommand } from '@/modules/chapters/application/chapters/commands/update-chapter/update-chapter.command';
 import { UpdateChapterHandler } from '@/modules/chapters/application/chapters/commands/update-chapter/update-chapter.handler';
-import { IReadingRoomReferencePort } from '@/modules/reading-rooms/application/public-api';
+import { ReadingRoomReferencePort } from '@/modules/reading-rooms';
 import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
 
 const chapter = Chapter.reconstitute({
@@ -36,7 +36,7 @@ describe('chapter mutations while a reading room uses the chapter', () => {
           },
         },
         {
-          provide: IReadingRoomReferencePort,
+          provide: ReadingRoomReferencePort,
           useValue: {
             hasActiveRoomForChapter: jest.fn().mockResolvedValue(true),
           },
@@ -74,7 +74,7 @@ describe('chapter mutations while a reading room uses the chapter', () => {
           },
         },
         {
-          provide: IReadingRoomReferencePort,
+          provide: ReadingRoomReferencePort,
           useValue: {
             hasActiveRoomForChapter: jest.fn().mockResolvedValue(true),
           },

@@ -10,11 +10,10 @@ import {
 
 export class AddHighlightDto {
   /**
-   * Mã phòng là chuỗi ngắn do domain sinh, không phải entity UUID.
    * Xem DEC-01 trong docs/reading-room-hardening/DECISIONS.md.
    */
   @IsString()
-  @Matches(ROOM_ID_PATTERN, { message: 'Mã phòng không hợp lệ' })
+  @Matches(ROOM_ID_PATTERN, { message: 'Invalid value.' })
   roomId!: string;
 
   @IsString()
@@ -25,7 +24,6 @@ export class AddHighlightDto {
   @Length(1, PARAGRAPH_ID_MAX_LENGTH)
   paragraphId!: string;
 
-  /** Trim trước khi validate — domain cũng trim lại nữa (entity:230). */
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim() : value,
   )

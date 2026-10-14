@@ -1,9 +1,9 @@
 export { SearchModule } from './search.module';
-export { SearchApplicationModule } from './application/search-application.module';
-export { IntelligentSearchHandler } from './application/queries/intelligent-search/intelligent-search.handler';
 export { IntelligentSearchQuery } from './application/queries/intelligent-search/intelligent-search.query';
+export { RecordSearchCommand } from './application/commands/record-search/record-search.command';
+export { GetTrendingKeywordsQuery } from './application/queries/get-trending-keywords/get-trending-keywords.query';
 export type {
   SearchBookResult,
   PaginatedSearchBookResult,
 } from './application/dto/search-book-result.dto';
-export type { ITrendingKeywordCachePort } from './domain/interfaces/trending-keyword-cache.port';
+export { TrendingKeywordCachePort } from './application/ports/trending-keyword-cache.port';

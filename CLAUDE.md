@@ -216,19 +216,14 @@ export const getErrorMessage = (error: any): string => {
 
 Project craft rules at `.claude/rules/craftsman.md` (read before any task).
 
-`.claude/skills/` holds 11 curated skills. Available:
-
-- `.claude/skills/vercel-react-best-practices/` (index + 71 rules): Next.js, React, rendering
-- `.claude/skills/mongodb-query-optimizer/`: MongoDB queries, aggregation, indexes
-- `.claude/skills/shadcnui/`: shadcn/ui components and theming
-- Others: `api-design`, `nestjs-best-practices`, `redis-best-practices`, `jwt-auth-patterns`, `react-testing`, `tailwindcss-advanced`, `typescript-advanced`, `docker-best-practices`
+Each directory under `.claude/skills/` with a `SKILL.md` is an available local skill. The primary backend module standard is `nestjs-clean-module`; focused skills remain available for consistency design, flow audits, CQRS events/outbox and testing, realtime/queues, type safety, and legacy MongoDB work.
 
 `.claude/agents/` holds subagent definitions for delegated tasks (`backend.md`, `frontend.md`, `reviewer.md`).
 
 ## Backend Skill Routing
 
 - Before writing or changing backend write logic, use `backend-consistency-design` and provide a short design note.
-- Follow `nest-module-conventions` for feature structure, dependencies, modules, DTOs, and worker/API wiring.
+- Follow `nestjs-clean-module` as the primary standard for NestJS module structure, CQRS, Prisma, CASL, and transactions.
 - For Socket.IO, presence, Redis, or BullMQ work, use `realtime-queue-reliability`.
 - For backend flow reviews, use `backend-flow-audit`.
 ## Environment Variables

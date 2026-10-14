@@ -1,28 +1,30 @@
 import { QueryHandler } from '@nestjs/cqrs';
 import type { IQueryHandler } from '@nestjs/cqrs';
-import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
-import { IReadingRoomReadRepository } from '@/modules/reading-rooms/application/ports/persistence/reading-room-read.repository';
-import type { GetRoomHighlightsResult } from '@/modules/reading-rooms/application/reading-room.result';
+import { ReadingRoomNotFoundError } from '@/modules/reading-rooms/domain/errors/reading-room.errors';
+import { ReadingRoomQueryRepository } from '@/modules/reading-rooms/application/ports/persistence/reading-room-query.repository';
+import type { GetRoomHighlightsReadModel } from '@/modules/reading-rooms/application/read-models/reading-room.read-model';
 import { GetRoomHighlightsQuery } from './get-room-highlights.query';
 
 @QueryHandler(GetRoomHighlightsQuery)
 export class GetRoomHighlightsHandler implements IQueryHandler<
   GetRoomHighlightsQuery,
-  GetRoomHighlightsResult
+  GetRoomHighlightsReadModel
 > {
   constructor(
-    private readonly readingRoomReadRepository: IReadingRoomReadRepository,
+    private readonly readingRoomReadRepository: ReadingRoomQueryRepository,
   ) {}
 
   async execute(
     query: GetRoomHighlightsQuery,
-  ): Promise<GetRoomHighlightsResult> {
+  ): Promise<GetRoomHighlightsReadModel> {
     const page = await this.readingRoomReadRepository.findHighlightPage(
       query.code.toUpperCase(),
-      query.userId,
+      query.actor.userId,
       { offset: query.offset, limit: query.limit },
+      query.actor.ability,
     );
-    if (!page) throw new NotFoundDomainException('Phòng không tồn tại');
+    if (!page)
+      throw new ReadingRoomNotFoundError('Requested resource not found.');
     return page;
   }
 }

@@ -6,7 +6,6 @@ import { useModalStore } from '@/store/useModalStore';
 import { useShallow } from 'zustand/react/shallow';
 import { useCreatePost } from '@/features/posts/api/post.mutations';
 import { useReactivateRoom } from '@/features/reading-rooms/api/reading-rooms.mutations';
-import { useReadingRoomStore } from '@/store/useReadingRoomStore';
 
 interface UseReadingRoomActionsOptions {
   roomCode: string;
@@ -92,8 +91,7 @@ export function useReadingRoomActions({
   const handleReactivateRoom = useCallback(async () => {
     if (!roomCode) return;
     try {
-      const result = await reactivateRoom.mutateAsync(roomCode);
-      useReadingRoomStore.getState().setRoom(result);
+      await reactivateRoom.mutateAsync(roomCode);
       joinRoom();
       toast.success('Phòng đã được mở lại!');
       router.refresh();

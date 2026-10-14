@@ -17,7 +17,7 @@ import { WsRoomGuard } from './core/ws-room.guard';
 import { ReadingRoomConnectionHandler } from './reading-room-connection.handler';
 import { ReadingRoomNamespaceProvider } from './reading-room.namespace-provider';
 import { OnEvent } from '@nestjs/event-emitter';
-import { ReadingRoomClientEvent } from '../../reading-room.socket-events';
+import { ReadingRoomClientEvent } from './reading-room.socket-events';
 import type {
   RoomSocket,
   SocketData,
@@ -83,9 +83,7 @@ export class ReadingRoomGateway
   // ==========================================
 
   /**
-   * LÆ°u namespace Ä‘á»ƒ cÃ¡c service cÃ³ thá»ƒ truy cáº­p, rá»“i Ä‘Äƒng kÃ½ middleware handshake.
-   * Middleware xÃ¡c thá»±c WebSocket ticket vÃ  Ä‘Äƒng kÃ½ connection slot trÆ°á»›c khi
-   * cho socket káº¿t ná»‘i; thÃ´ng tin user há»£p lá»‡ Ä‘Æ°á»£c gáº¯n vÃ o socket.data.
+   * Lưu namespace để các service có thể truy cập, rồi đăng ký middleware handshake.
    */
   afterInit(server: Namespace) {
     this.namespaceProvider.setServer(server);
@@ -102,8 +100,6 @@ export class ReadingRoomGateway
   }
 
   /**
-   * Hook cháº¡y khi user káº¿t ná»‘i thÃ nh cÃ´ng.
-   * GÃ¡n socket vÃ o room "user:{userId}" Ä‘á»ƒ tiá»‡n gá»­i thÃ´ng bÃ¡o cÃ¡ nhÃ¢n (vÃ­ dá»¥ bá»‹ kick).
    */
   async handleConnection(socket: RoomSocket): Promise<void> {
     await joinUserControlRoom(
@@ -117,13 +113,11 @@ export class ReadingRoomGateway
   }
 
   /**
-   * Dá»n cÃ¡c tráº¡ng thÃ¡i gáº¯n vá»›i socket khi káº¿t ná»‘i bá»‹ ngáº¯t:
+   * Dọn các trạng thái gắn với socket khi kết nối bị ngắt:
    * 1. Progress is enqueued in BullMQ when a heartbeat is accepted; no snapshot remains in process memory.
-   * 2. Náº¿u socket Ä‘ang á»Ÿ phÃ²ng Ä‘á»c, cáº­p nháº­t presence; chá»‰ xÃ³a presence khi user
-   *    khÃ´ng cÃ²n tab nÃ o khÃ¡c trong cÃ¹ng phÃ²ng.
-   * 3. LuÃ´n nháº£ slot cá»§a socket trong Redis Ä‘á»ƒ khÃ´ng tÃ­nh nÃ³ vÃ o giá»›i háº¡n káº¿t ná»‘i.
+   * 2. Nếu socket đang ở phòng đọc, cập nhật presence; chỉ xóa presence khi user
    *
-   * Má»—i bÆ°á»›c dá»n dáº¹p Ä‘Æ°á»£c báº¯t lá»—i riÃªng Ä‘á»ƒ lá»—i á»Ÿ bÆ°á»›c trÆ°á»›c khÃ´ng ngÄƒn cÃ¡c bÆ°á»›c sau.
+   * Mỗi bước dọn dẹp được bắt lỗi riêng để lỗi ở bước trước không ngăn các bước sau.
    */
   async handleDisconnect(@ConnectedSocket() socket: RoomSocket) {
     try {
@@ -140,8 +134,6 @@ export class ReadingRoomGateway
   // ==========================================
 
   /**
-   * Xá»­ lÃ½ hÃ nh Ä‘á»™ng ngÆ°á»i dÃ¹ng xin tham gia vÃ o má»™t PhÃ²ng Ä‘á»c sÃ¡ch.
-   * Tráº£ vá» chi tiáº¿t phÃ²ng, lá»‹ch sá»­ tin nháº¯n, vÃ  danh sÃ¡ch ngÆ°á»i Ä‘ang online.
    */
   @UseGuards(WsThrottleGuard)
   @WsThrottle({ event: 'join_room', limit: 10 })
@@ -155,8 +147,6 @@ export class ReadingRoomGateway
   }
 
   /**
-   * Xá»­ lÃ½ hÃ nh Ä‘á»™ng ngÆ°á»i dÃ¹ng chá»§ Ä‘á»™ng rá»i phÃ²ng.
-   * Náº¿u lÃ  chá»§ phÃ²ng rá»i Ä‘i, há»‡ thá»‘ng sáº½ tá»± báº§u chá»n ngÆ°á»i khÃ¡c lÃ m chá»§ phÃ²ng má»›i.
    */
   @UseGuards(WsRoomGuard)
   @SubscribeMessage('leave_room')
@@ -173,8 +163,7 @@ export class ReadingRoomGateway
   // ==========================================
 
   /**
-   * Nhá»‹p tim (Heartbeat) bÃ¡o hiá»‡u user váº«n Ä‘ang online.
-   * Ghi nháº­n % tiáº¿n Ä‘á»™ Ä‘á»c vÃ  cáº­p nháº­t tháº» Presence Ä‘á»ƒ khÃ´ng bá»‹ tá»± Ä‘á»™ng Ä‘Ã¡ ra.
+   * Nhịp tim (Heartbeat) báo hiệu user vẫn đang online.
    */
   @UseGuards(WsRoomGuard, WsThrottleGuard)
   @WsThrottle({ event: 'heartbeat', limit: 90 })
@@ -192,7 +181,6 @@ export class ReadingRoomGateway
   // ==========================================
 
   /**
-   * ThÃªm Highlight (TÃ´ sÃ¡ng) vÃ o má»™t Ä‘oáº¡n vÄƒn báº£n.
    */
   @UseGuards(WsRoomGuard)
   @SubscribeMessage('add_highlight')
@@ -205,7 +193,7 @@ export class ReadingRoomGateway
   }
 
   /**
-   * XÃ³a má»™t Highlight do chÃ­nh mÃ¬nh táº¡o.
+   * Xóa một Highlight do chính mình tạo.
    */
   @UseGuards(WsRoomGuard)
   @SubscribeMessage(ReadingRoomClientEvent.REMOVE_HIGHLIGHT)
@@ -218,7 +206,7 @@ export class ReadingRoomGateway
   }
 
   /**
-   * YÃªu cáº§u AI sinh ra má»™t thÃ´ng tin chi tiáº¿t (Insight) vá» Ä‘oáº¡n vá»«a Highlight.
+   * Yêu cầu AI sinh ra một thông tin chi tiết (Insight) về đoạn vừa Highlight.
    */
   @UseGuards(WsRoomGuard)
   @SubscribeMessage(ReadingRoomClientEvent.GENERATE_HIGHLIGHT_INSIGHT)
@@ -235,8 +223,8 @@ export class ReadingRoomGateway
   }
 
   /**
-   * Láº¯ng nghe sá»± kiá»‡n tá»« Event Bus ná»™i bá»™ cá»§a NestJS khi AI Ä‘Ã£ xá»­ lÃ½ xong Insight,
-   * Ä‘á»ƒ Ä‘áº©y (emit) káº¿t quáº£ vá» cho cÃ¡c user trong phÃ²ng.
+   * Lắng nghe sự kiện từ Event Bus nội bộ của NestJS khi AI đã xử lý xong Insight,
+   * để đẩy (emit) kết quả về cho các user trong phòng.
    */
   @OnEvent(EventNames.READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED)
   handleHighlightInsightUpdated(payload: {

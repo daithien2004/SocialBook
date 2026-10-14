@@ -26671,7 +26671,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReadingRoomResponseDto"
+                  "$ref": "#/components/schemas/CreateRoomResponseDto"
                 }
               }
             }
@@ -27280,15 +27280,8 @@
           }
         ],
         "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReadingRoomResponseDto"
-                }
-              }
-            }
+          "204": {
+            "description": "Room reactivated."
           },
           "400": {
             "content": {
@@ -31690,6 +31683,17 @@
           "avatar",
           "score"
         ]
+      },
+      "CreateRoomResponseDto": {
+        "type": "object",
+        "required": [
+          "roomId"
+        ],
+        "properties": {
+          "roomId": {
+            "type": "string"
+          }
+        }
       }
     }
   }

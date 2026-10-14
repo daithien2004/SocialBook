@@ -3,12 +3,11 @@ import { UUID_PATTERN, ROOM_ID_PATTERN } from '../reading-room.constants';
 
 export class LeaveRoomDto {
   @IsString()
-  @Matches(ROOM_ID_PATTERN, { message: 'Mã phòng không hợp lệ' })
+  @Matches(ROOM_ID_PATTERN, { message: 'Invalid value.' })
   roomId!: string;
 
-  /** `newHostId` là user ID dạng UUID. */
   @IsOptional()
   @IsString()
-  @Matches(UUID_PATTERN, { message: 'Người nhận quyền không hợp lệ' })
+  @Matches(UUID_PATTERN, { message: 'Invalid value.' })
   newHostId?: string;
 }

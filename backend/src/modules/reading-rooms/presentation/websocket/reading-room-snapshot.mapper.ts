@@ -1,9 +1,9 @@
-import { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.result';
+import { ReadingRoomReadModel } from '@/modules/reading-rooms/application/read-models/reading-room.read-model';
 import { PresenceData } from '@/modules/reading-rooms/application/ports/external/presence-cache.port';
 import { RoomSnapshot } from './reading-room.types';
 
 export function toReadingRoomSnapshot(
-  room: ReadingRoomResult,
+  room: ReadingRoomReadModel,
   presences: PresenceData[],
 ): RoomSnapshot {
   return {

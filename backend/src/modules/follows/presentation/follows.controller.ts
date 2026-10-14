@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
 import {
@@ -39,9 +40,11 @@ import {
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
+  ApiOperation,
 } from '@nestjs/swagger';
 
 @ApiProblemResponses()
+@ApiTags('Follows')
 @Controller('follows')
 export class FollowsController {
   constructor(
@@ -49,6 +52,7 @@ export class FollowsController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Get Following List' })
   @Public()
   @Get('following')
   @ApiPaginatedResponse(FollowResponseDto, 'offset')
@@ -62,6 +66,7 @@ export class FollowsController {
     };
   }
 
+  @ApiOperation({ summary: 'Get Followers List' })
   @Get('followers')
   @ApiPaginatedResponse(FollowResponseDto, 'offset')
   async getFollowersList(@Query('targetUserId') targetUserId: string) {
@@ -74,6 +79,7 @@ export class FollowsController {
     };
   }
 
+  @ApiOperation({ summary: 'Get Status' })
   @Get('status')
   @ApiOkResponse({ type: FollowStatusResponseDto })
   async getStatus(
@@ -92,6 +98,7 @@ export class FollowsController {
     );
   }
 
+  @ApiOperation({ summary: 'Create' })
   @Post()
   @ApiCreatedResponse({ type: FollowResponseDto })
   async create(
@@ -104,6 +111,7 @@ export class FollowsController {
     return new FollowResponseDto(follow);
   }
 
+  @ApiOperation({ summary: 'Unfollow' })
   @HttpCode(204)
   @Delete(':targetId')
   @ApiNoContentResponse()
@@ -117,6 +125,7 @@ export class FollowsController {
     return undefined;
   }
 
+  @ApiOperation({ summary: 'Get Stats' })
   @Get('stats')
   @Public()
   @ApiOkResponse({ type: FollowStatsResponseDto })
@@ -124,6 +133,7 @@ export class FollowsController {
     return new FollowStatsResponseDto(0, 0, 0, 0, []);
   }
 
+  @ApiOperation({ summary: 'Get All' })
   @Get('all')
   @Public()
   @ApiPaginatedResponse(FollowResponseDto, 'offset')

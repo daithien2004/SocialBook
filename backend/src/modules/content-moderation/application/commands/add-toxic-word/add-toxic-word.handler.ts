@@ -17,10 +17,10 @@ export class AddToxicWordHandler {
   ) {}
 
   async execute(command: AddToxicWordCommand): Promise<ToxicWord> {
-    const isRegex = /[[\]\\^$|?*+]/.test((command as any).pattern);
+    const isRegex = /[[\]\\^$|?*+]/.test(command.pattern);
     const finalPattern = isRegex
-      ? (command as any).pattern
-      : VietnameseRegexBuilder.buildRegex((command as any).pattern);
+      ? command.pattern
+      : VietnameseRegexBuilder.buildRegex(command.pattern);
 
     const exists = await this.toxicWordRepository.existsByPattern(finalPattern);
     if (exists) {
@@ -32,8 +32,8 @@ export class AddToxicWordHandler {
     const toxicWord = ToxicWord.create({
       id: this.idGenerator.generate(),
       pattern: finalPattern,
-      group: (command as any).group,
-      originalWord: (command as any).pattern,
+      group: command.group,
+      originalWord: command.originalWord ?? command.pattern,
     });
 
     const savedWord = await this.toxicWordRepository.create(toxicWord);

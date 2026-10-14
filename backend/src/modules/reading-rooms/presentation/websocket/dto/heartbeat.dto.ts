@@ -20,7 +20,7 @@ import {
 
 export class HeartbeatDto {
   @IsString()
-  @Matches(ROOM_ID_PATTERN, { message: 'Mã phòng không hợp lệ' })
+  @Matches(ROOM_ID_PATTERN, { message: 'Invalid value.' })
   roomId!: string;
 
   @IsString()
@@ -29,23 +29,17 @@ export class HeartbeatDto {
 
   @IsOptional()
   @IsString()
-  @Matches(UUID_PATTERN, { message: 'chapterId không hợp lệ' })
+  @Matches(UUID_PATTERN, { message: 'Invalid value.' })
   chapterId?: string;
 
-  /** Client gửi `null` khi không có đoạn đang đọc — `@IsOptional` bỏ qua null. */
   @IsOptional()
   @IsString()
   @MaxLength(PARAGRAPH_ID_MAX_LENGTH)
   paragraphId?: string | null;
 
   /**
-   * Phần trăm 0–100; handler vẫn clamp thêm (phòng thủ nhiều lớp).
-   * Xem DEC-05 về việc client gửi thang 0–1.
    *
-   * KHÔNG dùng `@Type(() => Number)`: class-transformer biến `undefined` thành
-   * `NaN`, mà `@IsOptional()` chỉ bỏ qua `null`/`undefined` ⇒ heartbeat thiếu
-   * `progress` (client gửi `progress` kiểu `number | undefined`) sẽ bị chặn oan.
-   * `@Transform` bên dưới vẫn nhận chuỗi số như handler cũ (`Number(body.progress)`).
+   * `progress` (client g?i `progress` ki?u `number | undefined`) s? b? ch?n oan.
    */
   @IsOptional()
   @Transform(({ value }: { value: unknown }) => {

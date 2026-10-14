@@ -1,46 +1,42 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { ForbiddenError } from '@casl/ability';
+import { Transactional } from '@nestjs-cls/transactional';
 import {
-  ConflictDomainException,
-  ConcurrencyException,
-  NotFoundDomainException,
-} from '@/shared/domain/common-exceptions';
+  ReadingRoomConflictError,
+  ReadingRoomConcurrencyError,
+  ReadingRoomNotFoundError,
+} from '@/modules/reading-rooms/domain/errors/reading-room.errors';
 import { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
 import { DEFAULT_MAX_MEMBERS } from '@/modules/reading-rooms/domain/constants/reading-room.constants';
 import {
   CreateRoomWriteCollision,
-  ICreateRoomStore,
+  CreateRoomStore,
 } from '@/modules/reading-rooms/application/ports/persistence/create-room.store';
-import type { CreateRoomWriteResult } from '@/modules/reading-rooms/application/ports/persistence/create-room.store';
 import {
   createIdempotencyFingerprint,
   matchesIdempotencyFingerprint,
 } from '@/shared/application/idempotency/create-idempotency-fingerprint';
-import { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.result';
-import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
-import { toReadingRoomResult } from '../../mappers/reading-room-result.mapper';
 import { CreateRoomCommand } from './create-room.command';
-import { BookId, IBookRepository } from '@/modules/books/domain/public-api';
-import {
-  IChapterRepository,
-  BookId as ChapterBookId,
-  ChapterId,
-} from '@/modules/chapters/domain/public-api';
+import { TouchBookForReadingRoomCommand } from '@/modules/books';
+import { TouchChapterForReadingRoomCommand } from '@/modules/chapters';
 
 const MAX_CREATE_ATTEMPTS = 5;
 
 @CommandHandler(CreateRoomCommand)
 export class CreateRoomHandler implements ICommandHandler<
   CreateRoomCommand,
-  ReadingRoomResult
+  string
 > {
   constructor(
-    private readonly createRoomStore: ICreateRoomStore,
-    private readonly bookRepository: IBookRepository,
-    private readonly chapterRepository: IChapterRepository,
-    private readonly unitOfWork: UnitOfWorkPort,
+    private readonly createRoomStore: CreateRoomStore,
+    private readonly commandBus: CommandBus,
   ) {}
 
-  async execute(command: CreateRoomCommand): Promise<ReadingRoomResult> {
+  async execute(command: CreateRoomCommand): Promise<string> {
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'create',
+      'ReadingRoom',
+    );
     const maxMembers = command.maxMembers ?? DEFAULT_MAX_MEMBERS;
     const fingerprintPayload = {
       bookId: command.bookId,
@@ -54,8 +50,9 @@ export class CreateRoomHandler implements ICommandHandler<
       fingerprintPayload,
     );
 
+    // Resolve a retry before touching Books or Chapters; the persisted key is the source of truth.
     const existingRequest = await this.createRoomStore.findByRequestKey(
-      command.hostId,
+      command.actor.userId,
       command.idempotencyKey,
     );
     if (existingRequest) {
@@ -63,34 +60,30 @@ export class CreateRoomHandler implements ICommandHandler<
         fingerprintPayload,
         existingRequest.fingerprint,
       );
-      return toReadingRoomResult(existingRequest.room);
+      return existingRequest.roomId;
     }
 
     for (let attempt = 1; attempt <= MAX_CREATE_ATTEMPTS; attempt += 1) {
       try {
-        const result = await this.unitOfWork.execute(() =>
-          this.createRoomOnce(command, maxMembers, fingerprint),
-        );
-        if (result.kind === 'replayed') {
-          this.assertFingerprintMatches(fingerprintPayload, result.fingerprint);
-        }
-        return toReadingRoomResult(result.room);
+        // Each attempt gets its own transaction and newly generated room code.
+        return await this.createRoomOnce(command, maxMembers, fingerprint);
       } catch (error: unknown) {
         if (!(error instanceof CreateRoomWriteCollision)) throw error;
+        // Only a room-code collision is safe to solve by creating a fresh aggregate.
         if (error.kind === 'room-code') {
           if (attempt < MAX_CREATE_ATTEMPTS) continue;
-          throw new ConflictDomainException(
+          throw new ReadingRoomConflictError(
             'Could not generate a unique room code after multiple attempts.',
           );
         }
 
         const concurrentRequest = await this.createRoomStore.findByRequestKey(
-          command.hostId,
+          command.actor.userId,
           command.idempotencyKey,
         );
         if (!concurrentRequest) {
           if (attempt < MAX_CREATE_ATTEMPTS) continue;
-          throw new ConcurrencyException(
+          throw new ReadingRoomConcurrencyError(
             'Room creation is still being resolved; retry with the same idempotency key.',
           );
         }
@@ -98,43 +91,44 @@ export class CreateRoomHandler implements ICommandHandler<
           fingerprintPayload,
           concurrentRequest.fingerprint,
         );
-        return toReadingRoomResult(concurrentRequest.room);
+        return concurrentRequest.roomId;
       }
     }
 
-    throw new ConflictDomainException(
+    throw new ReadingRoomConflictError(
       'Could not generate a unique room code after multiple attempts.',
     );
   }
 
+  @Transactional()
   private async createRoomOnce(
     command: CreateRoomCommand,
     maxMembers: number,
     fingerprint: string,
-  ): Promise<CreateRoomWriteResult> {
-    const bookIsActive = await this.bookRepository.touchIfActive(
-      BookId.create(command.bookId),
+  ): Promise<string> {
+    // Touching the references makes their active-state check conflict with a concurrent soft delete.
+    const bookIsActive = await this.commandBus.execute(
+      new TouchBookForReadingRoomCommand(command.actor, command.bookId),
     );
     if (!bookIsActive) {
-      throw new NotFoundDomainException(
-        'Book does not exist or is no longer active.',
-      );
+      throw new ReadingRoomNotFoundError('Requested resource not found.');
     }
 
-    const chapterSlug = await this.chapterRepository.touchIfInBook(
-      ChapterId.create(command.chapterId),
-      ChapterBookId.create(command.bookId),
+    const chapterSlug = await this.commandBus.execute(
+      new TouchChapterForReadingRoomCommand(
+        command.actor,
+        command.bookId,
+        command.chapterId,
+      ),
     );
     if (!chapterSlug) {
-      throw new NotFoundDomainException(
-        'Chapter does not exist in the selected book.',
-      );
+      throw new ReadingRoomNotFoundError('Requested resource not found.');
     }
 
     const room = ReadingRoom.create({
       bookId: command.bookId,
       currentChapterId: command.chapterId,
-      hostId: command.hostId,
+      hostId: command.actor.userId,
       mode: command.mode,
       maxMembers,
       currentChapterSlug: chapterSlug,
@@ -163,7 +157,7 @@ export class CreateRoomHandler implements ICommandHandler<
         existingFingerprint,
       )
     ) {
-      throw new ConflictDomainException(
+      throw new ReadingRoomConflictError(
         'Idempotency-Key was already used with a different room request.',
       );
     }

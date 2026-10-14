@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Public } from '@/shared/platform/decorators/custom.decorator';
 import { Roles } from '@/shared/platform/decorators/roles.decorator';
@@ -55,10 +56,12 @@ import {
   ApiHeader,
   ApiNoContentResponse,
   ApiOkResponse,
+  ApiOperation,
 } from '@nestjs/swagger';
 import type { JwtValidatedUser } from '@/shared/platform/interfaces/jwt-validated-user.interface';
 
 @ApiProblemResponses()
+@ApiTags('Chapters')
 @Controller('books/:bookSlug/chapters')
 export class ChaptersController {
   constructor(
@@ -66,6 +69,7 @@ export class ChaptersController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Get Knowledge' })
   @Get(':chapterId/knowledge')
   async getKnowledge(
     @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
@@ -76,6 +80,7 @@ export class ChaptersController {
     return ChapterKnowledgeResponseDto.fromEntity(result);
   }
 
+  @ApiOperation({ summary: 'Ask AI' })
   @UseGuards(AIThrottleGuard)
   @Post(':chapterId/ask-ai')
   @HttpCode(HttpStatus.OK)
@@ -102,6 +107,7 @@ export class ChaptersController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Import Preview' })
   @Post('import/preview')
   @Roles('admin')
   @UseGuards(RolesGuard)
@@ -134,6 +140,7 @@ export class ChaptersController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Start Import' })
   @Post('import/start')
   @Roles('admin')
   @UseGuards(RolesGuard)
@@ -170,6 +177,7 @@ export class ChaptersController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Get Import Status' })
   @Get('import/status/:jobId')
   @Roles('admin')
   @UseGuards(RolesGuard)
@@ -179,6 +187,7 @@ export class ChaptersController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Get Chapters' })
   @Public()
   @Get()
   async getChapters(
@@ -198,6 +207,7 @@ export class ChaptersController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Get All Chapters' })
   @Public()
   @Get('all')
   async getAllChapters(@Param('bookSlug') bookSlug: string) {
@@ -208,6 +218,7 @@ export class ChaptersController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Get All Chapters Admin' })
   @Roles('admin')
   @UseGuards(RolesGuard)
   @Get('admin/list')
@@ -242,6 +253,7 @@ export class ChaptersController {
     };
   }
 
+  @ApiOperation({ summary: 'Get Chapter By Id With Prefix' })
   @Get('id/:chapterId')
   @Roles('admin')
   @UseGuards(RolesGuard)
@@ -253,6 +265,7 @@ export class ChaptersController {
     return new ChapterResponseDto(chapter);
   }
 
+  @ApiOperation({ summary: 'Get Chapter By Slug' })
   @Public()
   @Get(':chapterSlug')
   async getChapterBySlug(
@@ -264,6 +277,7 @@ export class ChaptersController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Record Chapter View' })
   @Public()
   @Post(':chapterSlug/view')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -284,6 +298,7 @@ export class ChaptersController {
     return undefined;
   }
 
+  @ApiOperation({ summary: 'Create' })
   @Post()
   @Roles('admin')
   @UseGuards(RolesGuard)
@@ -300,6 +315,7 @@ export class ChaptersController {
     return ChapterResponseDto.fromResult(chapterResult);
   }
 
+  @ApiOperation({ summary: 'Update' })
   @Put(':chapterId')
   @Roles('admin')
   @UseGuards(RolesGuard)
@@ -320,6 +336,7 @@ export class ChaptersController {
     return ChapterResponseDto.fromResult(chapterResult);
   }
 
+  @ApiOperation({ summary: 'Delete' })
   @HttpCode(204)
   @Delete(':chapterId')
   @Roles('admin')

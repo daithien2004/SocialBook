@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Body, Controller, Get, HttpCode, Post, Query } from '@nestjs/common';
@@ -12,7 +13,7 @@ import {
   ApiPaginatedResponse,
   ApiProblemResponses,
 } from '@/shared/platform/decorators/api-response.decorators';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiOperation } from '@nestjs/swagger';
 
 class TrendingBookResponseDto {
   @ApiProperty()
@@ -46,6 +47,7 @@ class ActiveReaderResponseDto {
 }
 
 @ApiProblemResponses()
+@ApiTags('Analytics')
 @Controller('analytics')
 export class AnalyticsController {
   constructor(
@@ -53,6 +55,7 @@ export class AnalyticsController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Track Event' })
   @HttpCode(204)
   @Post('events')
   async trackEvent(
@@ -74,6 +77,7 @@ export class AnalyticsController {
     await this.commandBus.execute(command);
   }
 
+  @ApiOperation({ summary: 'Get Trending Books' })
   @Public()
   @Get('trending-books')
   @ApiPaginatedResponse(TrendingBookResponseDto, 'offset')
@@ -92,6 +96,7 @@ export class AnalyticsController {
     };
   }
 
+  @ApiOperation({ summary: 'Get Top Active Readers' })
   @Public()
   @Get('top-readers')
   @ApiPaginatedResponse(ActiveReaderResponseDto, 'offset')

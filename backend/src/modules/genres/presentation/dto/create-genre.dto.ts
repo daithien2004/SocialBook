@@ -1,4 +1,6 @@
 import { IsString, IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
+import type { Actor } from '@/shared/casl/actor';
+import { CreateGenreCommand } from '../../application/commands/create-genre/create-genre.command';
 
 export class CreateGenreDto {
   @IsString()
@@ -10,4 +12,8 @@ export class CreateGenreDto {
   @IsOptional()
   @MaxLength(500, { message: 'Mô tả không được vượt quá 500 ký tự' })
   description?: string;
+
+  toCommand(actor: Actor): CreateGenreCommand {
+    return new CreateGenreCommand(actor, this.name, this.description);
+  }
 }

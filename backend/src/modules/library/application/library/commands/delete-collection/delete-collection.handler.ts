@@ -1,7 +1,10 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DeleteCollectionCommand } from './delete-collection.command';
 import { ICollectionRepository } from '@/modules/library/domain/library/repositories/collection.repository.interface';
-import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  ForbiddenDomainException,
+  NotFoundDomainException,
+} from '@/shared/domain/common-exceptions';
 import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
 
@@ -16,7 +19,7 @@ export class DeleteCollectionHandler implements ICommandHandler<
     const collection = await this.collectionRepository.findById(command.id);
 
     if (!collection) {
-      throw new NotFoundException('Collection not found');
+      throw new NotFoundDomainException('Collection not found');
     }
 
     if (
@@ -25,7 +28,7 @@ export class DeleteCollectionHandler implements ICommandHandler<
         subject(Subject.Collection, { userId: collection.userId.getValue() }),
       )
     ) {
-      throw new ForbiddenException(
+      throw new ForbiddenDomainException(
         'You do not have permission to delete this collection',
       );
     }

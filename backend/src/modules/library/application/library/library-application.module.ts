@@ -14,7 +14,7 @@ import { UpdateStatusHandler } from './commands/update-status/update-status.hand
 import { LibraryRepositoryModule } from '@/modules/library/infrastructure/repositories/library/library-repository.module';
 import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api';
 import { UsersRepositoryModule } from '@/modules/users/infrastructure/public-api';
-import { GenresInfrastructureModule } from '@/modules/genres/infrastructure/public-api';
+import { GenresInfrastructureModule } from '@/modules/genres';
 import { AIInfrastructureModule } from '@/modules/ai/infrastructure/public-api';
 import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 

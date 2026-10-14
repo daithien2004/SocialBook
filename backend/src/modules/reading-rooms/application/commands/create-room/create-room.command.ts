@@ -1,10 +1,10 @@
 import { Command } from '@nestjs/cqrs';
 
-import { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.result';
+import type { Actor } from '@/shared/casl/actor';
 
-export class CreateRoomCommand extends Command<ReadingRoomResult> {
+export class CreateRoomCommand extends Command<string> {
   constructor(
-    public readonly hostId: string,
+    public readonly actor: Actor,
     public readonly bookId: string,
     public readonly chapterId: string,
     public readonly mode: 'sync' | 'free',

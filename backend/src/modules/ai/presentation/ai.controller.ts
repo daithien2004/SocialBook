@@ -1,3 +1,5 @@
+import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation } from '@nestjs/swagger';
 import { CommandBus } from '@nestjs/cqrs';
 import {
   Controller,
@@ -17,10 +19,12 @@ import { AIThrottleGuard } from './ai-throttle.guard';
 import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
 
 @ApiProblemResponses()
+@ApiTags('AI')
 @Controller('ai')
 export class AIController {
   constructor(private readonly commandBus: CommandBus) {}
 
+  @ApiOperation({ summary: 'Generate Text' })
   @Public()
   @UseGuards(AIThrottleGuard)
   @Post('generate-text')
@@ -38,6 +42,7 @@ export class AIController {
     return await this.commandBus.execute(command);
   }
 
+  @ApiOperation({ summary: 'Summarize Chapter' })
   @Public()
   @UseGuards(AIThrottleGuard)
   @Post('summarize-chapter/:chapterId')

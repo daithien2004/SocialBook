@@ -1,6 +1,9 @@
 import { DeleteUserHighlightCommand } from './delete-user-highlight.command';
 import { CommandHandler } from '@nestjs/cqrs';
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenDomainException,
+  NotFoundDomainException,
+} from '@/shared/domain/common-exceptions';
 import { IUserHighlightRepository } from '@/modules/user-highlights/domain/repositories/user-highlight.repository.interface';
 import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
@@ -15,7 +18,7 @@ export class DeleteUserHighlightHandler {
     );
 
     if (!highlight) {
-      throw new NotFoundException('Highlight not found');
+      throw new NotFoundDomainException('Highlight not found');
     }
 
     if (
@@ -24,7 +27,7 @@ export class DeleteUserHighlightHandler {
         subject(Subject.UserHighlight, highlight),
       )
     ) {
-      throw new UnauthorizedException(
+      throw new ForbiddenDomainException(
         'You can only delete your own highlights',
       );
     }

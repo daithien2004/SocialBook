@@ -1,8 +1,10 @@
 import { Query } from '@nestjs/cqrs';
+import type { Actor } from '@/shared/casl/actor';
 import { PaginatedResult } from '@/shared/domain/pagination.types';
-import { BookListReadModel } from '@/modules/books/domain/books/read-models/book-list.read-model';
+import { BookListReadModel } from '@/modules/books/application/read-models/book-list.read-model';
 
 export class GetBooksQuery extends Query<PaginatedResult<BookListReadModel>> {
+  public readonly actor: Actor;
   public readonly page: number;
   public readonly limit: number;
   public readonly title?: string;
@@ -17,6 +19,7 @@ export class GetBooksQuery extends Query<PaginatedResult<BookListReadModel>> {
   public readonly order?: 'asc' | 'desc';
 
   constructor(props: {
+    actor: Actor;
     page?: number;
     limit?: number;
     title?: string;
@@ -30,6 +33,7 @@ export class GetBooksQuery extends Query<PaginatedResult<BookListReadModel>> {
     order?: 'asc' | 'desc';
   }) {
     super();
+    this.actor = props.actor;
     this.page = props.page ?? 1;
     this.limit = props.limit ?? 10;
     this.title = props.title;
@@ -47,17 +51,9 @@ export class GetBooksQuery extends Query<PaginatedResult<BookListReadModel>> {
       'views',
       'likes',
       'publishedYear',
-    ];
+    ] as const;
     this.sortBy =
-      props.sortBy && validSortFields.includes(props.sortBy)
-        ? (props.sortBy as
-            | 'createdAt'
-            | 'updatedAt'
-            | 'title'
-            | 'views'
-            | 'likes'
-            | 'publishedYear')
-        : 'createdAt';
+      validSortFields.find((field) => field === props.sortBy) ?? 'createdAt';
 
     this.order = props.order ?? 'desc';
   }

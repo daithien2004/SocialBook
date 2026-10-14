@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { BadRequestException } from '@nestjs/common';
 import {
+  BadRequestDomainException,
   NotFoundDomainException,
   ConflictDomainException,
 } from '@/shared/domain/common-exceptions';
@@ -12,7 +12,7 @@ import { UpdateChapterCommand } from './update-chapter.command';
 import { ChapterErrorMessages } from '@/modules/chapters/application/error-messages';
 import { ChapterResult } from '../../queries/get-chapters/get-chapters.result';
 import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
-import { IReadingRoomReferencePort } from '@/modules/reading-rooms/application/public-api';
+import { ReadingRoomReferencePort } from '@/modules/reading-rooms';
 import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
 
 @CommandHandler(UpdateChapterCommand)
@@ -22,7 +22,7 @@ export class UpdateChapterHandler implements ICommandHandler<
 > {
   constructor(
     private readonly chapterRepository: IChapterRepository,
-    private readonly readingRoomReferences: IReadingRoomReferencePort,
+    private readonly readingRoomReferences: ReadingRoomReferencePort,
     private readonly unitOfWork: UnitOfWorkPort,
   ) {}
 
@@ -77,7 +77,7 @@ export class UpdateChapterHandler implements ICommandHandler<
 
     if (command.paragraphs !== undefined) {
       if (command.paragraphs.length === 0) {
-        throw new BadRequestException(
+        throw new BadRequestDomainException(
           'Chapter must have at least one paragraph',
         );
       }

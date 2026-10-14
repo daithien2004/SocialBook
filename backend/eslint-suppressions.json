@@ -28,11 +28,6 @@
       "count": 1
     }
   },
-  "src/modules/ai/infrastructure/repositories/ai-requests/ai-request.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
   "src/modules/auth/application/auth/commands/resend-otp/resend-otp.handler.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
@@ -121,31 +116,8 @@
       "count": 1
     }
   },
-  "src/modules/books/application/books/queries/get-book-filters/get-book-filters.handler.ts": {
-    "@typescript-eslint/no-unused-expressions": {
-      "count": 1
-    }
-  },
-  "src/modules/books/application/books/queries/get-book-filters/get-book-filters.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/modules/books/application/books/queries/get-books/get-books.query.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/modules/books/application/books/queries/get-filters/get-filters.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
   "src/modules/books/application/books/queries/get-top-read-books/get-top-read-books.handler.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-type-conversion": {
       "count": 1
     },
     "@typescript-eslint/return-await": {
@@ -159,25 +131,10 @@
   },
   "src/modules/books/presentation/books/books.controller.ts": {
     "@typescript-eslint/no-misused-spread": {
-      "count": 5
+      "count": 3
     },
     "@typescript-eslint/no-unnecessary-type-conversion": {
       "count": 1
-    }
-  },
-  "src/modules/books/presentation/books/dto/create-book.dto.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
-  "src/modules/books/presentation/books/dto/filter-book.dto.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    }
-  },
-  "src/modules/books/presentation/books/dto/update-book.dto.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
     }
   },
   "src/modules/chapters/application/chapters/commands/create-chapter/create-chapter.handler.ts": {
@@ -192,11 +149,6 @@
   },
   "src/modules/chapters/application/chapters/commands/update-chapter/update-chapter.handler.ts": {
     "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
-    }
-  },
-  "src/modules/chapters/application/chapters/mappers/chapter.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
       "count": 1
     }
   },
@@ -227,16 +179,6 @@
     },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 6
-    }
-  },
-  "src/modules/chapters/infrastructure/repositories/chapters/chapter-knowledge.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/modules/chapters/infrastructure/repositories/chapters/chapter.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
     }
   },
   "src/modules/chapters/presentation/chapters/chapters.controller.ts": {
@@ -391,59 +333,8 @@
       "count": 1
     }
   },
-  "src/modules/comments/infrastructure/repositories/comment.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
   "src/modules/comments/presentation/comments.controller.ts": {
     "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
-  "src/modules/content-moderation/application/commands/add-toxic-word/add-toxic-word.command.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/modules/content-moderation/application/commands/add-toxic-word/add-toxic-word.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 5
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 5
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 3
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 4
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 5
-    }
-  },
-  "src/modules/content-moderation/application/commands/check-content/check-content.command.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/modules/content-moderation/application/commands/delete-toxic-word/delete-toxic-word.command.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/modules/content-moderation/application/commands/delete-toxic-word/delete-toxic-word.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
       "count": 1
     }
   },
@@ -470,26 +361,15 @@
       "count": 2
     }
   },
-  "src/modules/content-moderation/domain/utils/vietnamese-regex-builder.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
   "src/modules/content-moderation/presentation/admin-toxic-words.controller.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
     "@typescript-eslint/no-explicit-any": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-argument": {
       "count": 1
     },
     "@typescript-eslint/no-unsafe-assignment": {
-      "count": 10
+      "count": 5
     },
     "@typescript-eslint/no-unsafe-member-access": {
-      "count": 10
+      "count": 5
     }
   },
   "src/modules/follows/application/commands/create-follow/create-follow.handler.ts": {
@@ -512,26 +392,7 @@
       "count": 1
     }
   },
-  "src/modules/follows/infrastructure/repositories/follow.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
-  "src/modules/genres/infrastructure/repositories/genre.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
   "src/modules/library/application/library/commands/process-reading-session/process-reading-session.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 1
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1
     }
@@ -539,9 +400,6 @@
   "src/modules/library/application/library/mappers/library.mapper.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 2
-    },
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
     },
     "@typescript-eslint/no-unnecessary-type-conversion": {
       "count": 3
@@ -561,11 +419,6 @@
   "src/modules/library/presentation/library/library.controller.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 2
-    }
-  },
-  "src/modules/likes/infrastructure/repositories/like.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
     }
   },
   "src/modules/likes/presentation/likes.controller.ts": {
@@ -603,20 +456,6 @@
       "count": 1
     }
   },
-  "src/modules/notifications/application/commands/mark-notification/mark-notification-read.handler.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unsafe-member-access": {
-      "count": 1
-    }
-  },
   "src/modules/notifications/application/queries/get-user-notification/get-user-notifications.handler.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 5
@@ -629,11 +468,6 @@
     },
     "@typescript-eslint/no-unsafe-member-access": {
       "count": 5
-    }
-  },
-  "src/modules/notifications/infrastructure/repositories/notification.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
     }
   },
   "src/modules/notifications/presentation/dto/notification.response.dto.ts": {
@@ -685,11 +519,6 @@
       "count": 2
     }
   },
-  "src/modules/posts/infrastructure/repositories/posts/post.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
   "src/modules/posts/infrastructure/repositories/posts/post.repository.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
@@ -712,14 +541,6 @@
     },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 2
-    }
-  },
-  "src/modules/reading-rooms/application/commands/generate-highlight-insight/generate-highlight-insight.handler.ts": {
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 2
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 1
     }
   },
   "src/modules/reading-rooms/presentation/websocket/reading-room.gateway.ts": {
@@ -779,11 +600,6 @@
       "count": 1
     }
   },
-  "src/modules/roles/infrastructure/repositories/role.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    }
-  },
   "src/modules/search/application/queries/intelligent-search/intelligent-search.handler.ts": {
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 2
@@ -798,11 +614,6 @@
       "count": 1
     }
   },
-  "src/modules/search/application/queries/intelligent-search/intelligent-search.query.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    }
-  },
   "src/modules/search/application/services/search-ranking.service.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 2
@@ -811,75 +622,16 @@
       "count": 1
     }
   },
-  "src/modules/statistics/application/commands/check-user-locations/check-user-locations.command.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/modules/statistics/application/queries/get-book-stats/get-book-stats.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
   "src/modules/statistics/application/queries/get-growth-stats/get-growth-stats.handler.ts": {
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 3
-    },
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
-    }
-  },
-  "src/modules/statistics/application/queries/get-growth-stats/get-growth-stats.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/modules/statistics/application/queries/get-overview-stats/get-overview-stats.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/modules/statistics/application/queries/get-user-stats/get-user-stats.query.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
-    }
-  },
-  "src/modules/statistics/presentation/statistics.controller.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 1
-    },
-    "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/modules/text-to-speech/application/commands/delete-chapter-audio/delete-chapter-audio.command.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
     }
   },
   "src/modules/text-to-speech/application/commands/generate-book-audio/generate-book-audio.handler.ts": {
     "@typescript-eslint/consistent-type-assertions": {
       "count": 2
     },
-    "@typescript-eslint/no-non-null-assertion": {
-      "count": 1
-    },
     "@typescript-eslint/no-unnecessary-condition": {
-      "count": 1
-    }
-  },
-  "src/modules/text-to-speech/application/commands/generate-chapter-audio/generate-chapter-audio.command.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/modules/text-to-speech/application/commands/increment-play-count/increment-play-count.command.ts": {
-    "@typescript-eslint/no-explicit-any": {
-      "count": 1
-    }
-  },
-  "src/modules/text-to-speech/application/queries/get-chapter-audio/get-chapter-audio.query.ts": {
-    "@typescript-eslint/no-explicit-any": {
       "count": 1
     }
   },
@@ -889,19 +641,8 @@
     }
   },
   "src/modules/text-to-speech/presentation/dto/text-to-speech.dto.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
-    },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 1
-    }
-  },
-  "src/modules/text-to-speech/presentation/text-to-speech.controller.ts": {
-    "@typescript-eslint/no-unsafe-argument": {
-      "count": 2
-    },
-    "@typescript-eslint/no-unsafe-assignment": {
-      "count": 2
     }
   },
   "src/modules/user-highlights/presentation/user-highlights.controller.ts": {
@@ -913,11 +654,6 @@
     },
     "@typescript-eslint/no-unsafe-member-access": {
       "count": 18
-    }
-  },
-  "src/modules/users/application/users/commands/check-user-exist/check-user-exist.command.ts": {
-    "@typescript-eslint/no-useless-constructor": {
-      "count": 1
     }
   },
   "src/modules/users/application/users/commands/search-users/search-users.command.ts": {
@@ -936,11 +672,6 @@
     },
     "@typescript-eslint/no-unnecessary-condition": {
       "count": 3
-    }
-  },
-  "src/modules/users/infrastructure/repositories/users/user.mapper.ts": {
-    "@typescript-eslint/no-extraneous-class": {
-      "count": 1
     }
   },
   "src/seeds/book-post-likes.seeder.ts": {

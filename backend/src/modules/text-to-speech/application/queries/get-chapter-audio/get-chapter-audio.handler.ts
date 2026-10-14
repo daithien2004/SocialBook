@@ -7,7 +7,7 @@ import { TextToSpeech } from '@/modules/text-to-speech/domain/entities/text-to-s
 export class GetChapterAudioHandler {
   constructor(private readonly ttsRepository: ITextToSpeechRepository) {}
 
-  async execute(chapterId: string): Promise<TextToSpeech | null> {
-    return this.ttsRepository.findCompletedByChapterId(chapterId);
+  async execute(query: GetChapterAudioQuery): Promise<TextToSpeech | null> {
+    return this.ttsRepository.findCompletedByChapterId(query.chapterId);
   }
 }

@@ -10,10 +10,8 @@ import {
   SortOptions,
 } from '@/shared/domain/pagination.types';
 import { Book as BookEntity } from '@/modules/books/domain/books/entities/book.entity';
-import { BookListReadModel } from '@/modules/books/domain/books/read-models/book-list.read-model';
 import {
   BookFilter,
-  BookFilters,
   BookSearchCandidate,
   IBookRepository,
 } from '@/modules/books/domain/books/repositories/book.repository.interface';
@@ -22,7 +20,7 @@ import { BookTitle } from '@/modules/books/domain/books/value-objects/book-title
 import { GenreId } from '@/modules/books/domain/books/value-objects/genre-id.vo';
 import { BOOK_WITH_RELATIONS, PrismaBookMapper } from './prisma-book.mapper';
 
-const MAX_PAGE_SIZE = 10_000;
+const MAX_PAGE_SIZE = 100;
 
 export function buildBookFilter(filter: BookFilter): Prisma.BookWhereInput {
   return {
@@ -36,7 +34,18 @@ export function buildBookFilter(filter: BookFilter): Prisma.BookWhereInput {
         ? { authorId: filter.authorId }
         : {}),
     ...(filter.genres?.length
-      ? { genres: { some: { genreId: { in: filter.genres } } } }
+      ? {
+          genres: {
+            some: {
+              genre: {
+                OR: [
+                  { id: { in: filter.genres } },
+                  { slug: { in: filter.genres } },
+                ],
+              },
+            },
+          },
+        }
       : {}),
     ...(filter.tags?.length ? { tags: { hasSome: filter.tags } } : {}),
     ...(filter.status ? { status: filter.status } : {}),
@@ -335,38 +344,6 @@ export class BookRepository implements IBookRepository {
     return this.client.book.count({ where: { isDeleted: false } });
   }
 
-  async countByGenreName(): Promise<
-    Array<{ id: string; name: string; slug: string; count: number }>
-  > {
-    const groups = await this.client.bookGenre.groupBy({
-      by: ['genreId'],
-      where: { book: { isDeleted: false } },
-      _count: { _all: true },
-    });
-    const genres = await this.client.genre.findMany({
-      where: { id: { in: groups.map((group) => group.genreId) } },
-      select: { id: true, name: true, slug: true },
-    });
-    const counts = new Map(
-      groups.map((group) => [group.genreId, group._count._all]),
-    );
-    return genres
-      .map((genre) => ({
-        ...genre,
-        count: counts.get(genre.id) ?? 0,
-      }))
-      .sort((left, right) => right.count - left.count);
-  }
-
-  countByTags(): Promise<Array<{ name: string; count: number }>> {
-    return this.client.$queryRaw<Array<{ name: string; count: number }>>(
-      Prisma.sql`SELECT tag AS name, COUNT(*)::int AS count
-        FROM "books" CROSS JOIN LATERAL unnest("tags") AS tag
-        WHERE "isDeleted" = false
-        GROUP BY tag ORDER BY count DESC`,
-    );
-  }
-
   async findByIds(ids: BookId[]): Promise<BookEntity[]> {
     if (ids.length === 0) return [];
     const rows = await this.client.book.findMany({
@@ -409,66 +386,5 @@ export class BookRepository implements IBookRepository {
       description: row.description,
       authorName: row.author.name,
     }));
-  }
-
-  async getFilters(): Promise<BookFilters> {
-    const [genres, tags] = await Promise.all([
-      this.client.bookGenre.groupBy({
-        by: ['genreId'],
-        where: { book: { isDeleted: false, status: 'published' } },
-        _count: { _all: true },
-        orderBy: { _count: { genreId: 'desc' } },
-        take: 20,
-      }),
-      this.client.$queryRaw<Array<{ name: string; count: number }>>(
-        Prisma.sql`SELECT tag AS name, COUNT(*)::int AS count
-          FROM "books" CROSS JOIN LATERAL unnest("tags") AS tag
-          WHERE "isDeleted" = false AND "status" = 'published'
-          GROUP BY tag ORDER BY count DESC LIMIT 20`,
-      ),
-    ]);
-    const genreRows = await this.client.genre.findMany({
-      where: { id: { in: genres.map((item) => item.genreId) } },
-      select: { id: true, name: true, slug: true },
-    });
-    const counts = new Map(
-      genres.map((item) => [item.genreId, item._count._all]),
-    );
-    const genreById = new Map(genreRows.map((genre) => [genre.id, genre]));
-
-    return {
-      genres: genres.flatMap((item) => {
-        const genre = genreById.get(item.genreId);
-        return genre ? [{ ...genre, count: counts.get(genre.id) ?? 0 }] : [];
-      }),
-      tags,
-    };
-  }
-
-  async findAllList(
-    filter: BookFilter,
-    pagination: PaginationOptions,
-    sort?: SortOptions,
-  ): Promise<PaginatedResult<BookListReadModel>> {
-    const page = Math.max(1, Math.trunc(pagination.page || 1));
-    const limit = Math.min(
-      Math.max(1, Math.trunc(pagination.limit || 10)),
-      MAX_PAGE_SIZE,
-    );
-    const where = buildBookFilter(filter);
-    const [rows, total] = await Promise.all([
-      this.client.book.findMany({
-        where,
-        include: BOOK_WITH_RELATIONS,
-        orderBy: buildBookSort(sort),
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      this.client.book.count({ where }),
-    ]);
-    return {
-      data: rows.map((row) => PrismaBookMapper.toListReadModel(row)),
-      meta: buildPaginationMeta(page, limit, total),
-    };
   }
 }

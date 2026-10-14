@@ -1,34 +1,44 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
-import { IReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
+import { ForbiddenError, subject } from '@casl/ability';
+import { Transactional } from '@nestjs-cls/transactional';
+import { ReadingRoomNotFoundError } from '@/modules/reading-rooms/domain/errors/reading-room.errors';
+import { ReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository';
 import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
-import { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.result';
-import { toReadingRoomResult } from '../../mappers/reading-room-result.mapper';
 import { ReactivateRoomCommand } from './reactivate-room.command';
 import { withOptimisticRetry } from '@/shared/application/with-optimistic-retry';
 
 @CommandHandler(ReactivateRoomCommand)
 export class ReactivateRoomHandler implements ICommandHandler<
   ReactivateRoomCommand,
-  ReadingRoomResult
+  void
 > {
-  constructor(private readonly roomRepository: IReadingRoomRepository) {}
+  constructor(private readonly roomRepository: ReadingRoomRepository) {}
 
-  async execute(command: ReactivateRoomCommand): Promise<ReadingRoomResult> {
-    const room = await withOptimisticRetry(async () => {
-      const room = await this.roomRepository.findById(
-        RoomId.create(command.roomId),
-      );
-      if (!room) {
-        throw new NotFoundDomainException('Phòng không tồn tại');
-      }
+  async execute(command: ReactivateRoomCommand): Promise<void> {
+    await withOptimisticRetry(() => this.executeInTransaction(command));
+  }
 
-      room.reactivate(command.userId);
-      await this.roomRepository.save(room);
+  @Transactional()
+  private async executeInTransaction(
+    command: ReactivateRoomCommand,
+  ): Promise<void> {
+    const room = await this.roomRepository.findById(
+      RoomId.create(command.roomId),
+    );
+    if (!room) {
+      throw new ReadingRoomNotFoundError('Requested resource not found.');
+    }
 
-      return room;
-    });
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'update',
+      subject('ReadingRoom', {
+        id: room.roomId,
+        hostId: room.hostId,
+        status: room.status,
+      }),
+    );
 
-    return toReadingRoomResult(room);
+    room.reactivate();
+    await this.roomRepository.save(room);
   }
 }

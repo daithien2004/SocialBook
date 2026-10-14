@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { UpdateStatusCommand } from '@/modules/library/application/library/commands/update-status/update-status.command';
@@ -37,13 +38,19 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
-import { ApiExtraModels, ApiOkResponse, getSchemaPath } from '@nestjs/swagger';
+import {
+  ApiExtraModels,
+  ApiOkResponse,
+  getSchemaPath,
+  ApiOperation,
+} from '@nestjs/swagger';
 import {
   ApiPaginatedResponse,
   ApiProblemResponses,
 } from '@/shared/platform/decorators/api-response.decorators';
 
 @ApiProblemResponses()
+@ApiTags('Library')
 @Controller('library')
 export class LibraryController {
   constructor(
@@ -51,6 +58,7 @@ export class LibraryController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Get Library' })
   @Get()
   @ApiPaginatedResponse(LibraryItemResponseDto, 'offset')
   async getLibrary(
@@ -80,6 +88,7 @@ export class LibraryController {
     };
   }
 
+  @ApiOperation({ summary: 'Get Knowledge Graph' })
   @Get('knowledge-graph')
   @ApiOkResponse({ schema: { type: 'object', additionalProperties: true } })
   async getKnowledgeGraph(@CurrentUser('id') userId: string) {
@@ -89,6 +98,7 @@ export class LibraryController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Update Status' })
   @Post('status')
   @HttpCode(200)
   @ApiOkResponse({ type: LibraryItemResponseDto })
@@ -102,6 +112,7 @@ export class LibraryController {
     return LibraryItemResponseDto.fromReadModel(readingList);
   }
 
+  @ApiOperation({ summary: 'Get Chapter Progress' })
   @Get('progress')
   @ApiOkResponse({ type: ChapterProgressResponseDto })
   async getChapterProgress(
@@ -114,6 +125,7 @@ export class LibraryController {
     return ChapterProgressResponseDto.fromResult(result);
   }
 
+  @ApiOperation({ summary: 'Update Progress' })
   @Post('progress')
   @HttpCode(200)
   @ApiExtraModels(LibraryItemResponseDto, ChapterProgressResponseDto)
@@ -147,6 +159,7 @@ export class LibraryController {
     };
   }
 
+  @ApiOperation({ summary: 'Record Reading Time' })
   @Post('reading-time')
   @HttpCode(200)
   @ApiOkResponse({ type: RecordReadingTimeResponseDto })
@@ -165,6 +178,7 @@ export class LibraryController {
     return RecordReadingTimeResponseDto.fromResult(result.timeSpentMinutes);
   }
 
+  @ApiOperation({ summary: 'Update Collections' })
   @Patch('collections')
   @ApiOkResponse({ type: LibraryItemResponseDto })
   async updateCollections(
@@ -181,6 +195,7 @@ export class LibraryController {
     return LibraryItemResponseDto.fromReadModel(readingList);
   }
 
+  @ApiOperation({ summary: 'Delete' })
   @HttpCode(204)
   @Delete(':bookId')
   async remove(
@@ -193,6 +208,7 @@ export class LibraryController {
     return undefined;
   }
 
+  @ApiOperation({ summary: 'Get Book Library Info' })
   @Get('book/:bookId')
   @ApiOkResponse({ type: BookLibraryInfoResponseDto })
   async getBookLibraryInfo(

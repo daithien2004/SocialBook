@@ -1,13 +1,9 @@
 import type { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
 
 export interface CreateRoomRequestRecord {
-  room: ReadingRoom;
+  roomId: string;
   fingerprint: string;
 }
-
-export type CreateRoomWriteResult =
-  | { kind: 'created'; room: ReadingRoom }
-  | { kind: 'replayed'; room: ReadingRoom; fingerprint: string };
 
 export class CreateRoomWriteCollision extends Error {
   constructor(public readonly kind: 'room-code' | 'idempotency-key') {
@@ -15,7 +11,7 @@ export class CreateRoomWriteCollision extends Error {
   }
 }
 
-export abstract class ICreateRoomStore {
+export abstract class CreateRoomStore {
   abstract findByRequestKey(
     hostId: string,
     idempotencyKey: string,
@@ -25,5 +21,5 @@ export abstract class ICreateRoomStore {
     room: ReadingRoom,
     idempotencyKey: string,
     fingerprint: string,
-  ): Promise<CreateRoomWriteResult>;
+  ): Promise<string>;
 }

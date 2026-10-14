@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { buildPaginationMeta } from '@/shared/domain/pagination.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
@@ -33,9 +34,11 @@ import {
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
+  ApiOperation,
 } from '@nestjs/swagger';
 
 @ApiProblemResponses()
+@ApiTags('Reviews')
 @Controller('reviews')
 export class ReviewsController {
   constructor(
@@ -43,6 +46,7 @@ export class ReviewsController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Find All By Book' })
   @Public()
   @Get('book/:bookId')
   @ApiPaginatedResponse(ReviewResponseDto, 'offset')
@@ -72,6 +76,7 @@ export class ReviewsController {
     };
   }
 
+  @ApiOperation({ summary: 'Create' })
   @Post()
   @ApiCreatedResponse({ type: ReviewResponseDto })
   async create(
@@ -84,6 +89,7 @@ export class ReviewsController {
     return this.toResponse(review);
   }
 
+  @ApiOperation({ summary: 'Update' })
   @Patch(':id')
   @ApiOkResponse({ type: ReviewResponseDto })
   async update(
@@ -97,6 +103,7 @@ export class ReviewsController {
     return this.toResponse(review);
   }
 
+  @ApiOperation({ summary: 'Toggle like' })
   @Patch(':id/like')
   @ApiOkResponse({
     schema: {
@@ -122,6 +129,7 @@ export class ReviewsController {
     };
   }
 
+  @ApiOperation({ summary: 'Delete' })
   @HttpCode(204)
   @Delete(':id')
   @ApiNoContentResponse()

@@ -1,35 +1,41 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Author } from '@/modules/authors/domain/entities/author.entity';
+import type { AuthorReadModel } from '../../application/read-models/author.read-model';
 
 export class AuthorResponseDto {
-  constructor(author: Author) {
-    this.id = author.id.toString();
-    this.name = author.name.toString();
-    this.slug = author.slug;
-    this.bio = author.bio;
-    this.photoUrl = author.photoUrl;
-    this.createdAt = author.createdAt;
-    this.updatedAt = author.updatedAt;
+  static fromReadModel(author: AuthorReadModel): AuthorResponseDto {
+    const response = new AuthorResponseDto();
+    response.id = author.id;
+    response.name = author.name;
+    response.slug = author.slug;
+    response.bio = author.bio;
+    response.photoUrl = author.photoUrl;
+    response.createdAt = author.createdAt;
+    response.updatedAt = author.updatedAt;
+    return response;
+  }
+
+  static fromArray(authors: AuthorReadModel[]): AuthorResponseDto[] {
+    return authors.map((author) => this.fromReadModel(author));
   }
 
   @ApiProperty()
-  id: string;
+  id!: string;
 
   @ApiProperty()
-  name: string;
+  name!: string;
 
   @ApiProperty()
-  slug: string;
+  slug!: string;
 
   @ApiProperty()
-  bio: string;
+  bio!: string;
 
   @ApiProperty()
-  photoUrl: string;
+  photoUrl!: string;
 
   @ApiProperty()
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

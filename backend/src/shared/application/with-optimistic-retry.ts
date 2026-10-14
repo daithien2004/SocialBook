@@ -1,6 +1,10 @@
 import { ConcurrencyException } from '@/shared/domain/common-exceptions';
 
-/** Retries optimistic conflicts; the callback must reload state on every attempt. */
+/**
+ * Retries optimistic conflicts; the callback must reload state on every attempt.
+ * If each attempt needs a transaction, start it inside the callback so a retry
+ * never reuses a transaction that already failed with a concurrency conflict.
+ */
 export async function withOptimisticRetry<T>(
   fn: () => Promise<T>,
   maxAttempts = 3,

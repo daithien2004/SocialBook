@@ -1,30 +1,24 @@
-import { Injectable } from '@nestjs/common';
+﻿import { Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { Prisma } from '@/core/database/generated/prisma/client';
 import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
-import { IBookmarkRepository } from '@/modules/bookmarks/domain/repositories/bookmark.repository.interface';
+import { BookmarkRepository } from '@/modules/bookmarks/domain/repositories/bookmark.repository';
 import { Bookmark as BookmarkEntity } from '@/modules/bookmarks/domain/entities/bookmark.entity';
-import { BookmarkMapper } from './bookmark.mapper';
+import { BookmarkPersistenceMapper } from './bookmark.mapper';
 
 @Injectable()
-export class PrismaBookmarkRepository implements IBookmarkRepository {
+export class PrismaBookmarkRepository extends BookmarkRepository {
   constructor(
     private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
-  ) {}
+  ) {
+    super();
+  }
 
   async save(bookmark: BookmarkEntity): Promise<void> {
     try {
-      await this.transactionHost.tx.bookmark.upsert({
-        where: { id: bookmark.id },
-        create: BookmarkMapper.toCreateInput(bookmark),
-        update: {
-          bookId: bookmark.bookId,
-          chapterId: bookmark.chapterId,
-          chapterSlug: bookmark.chapterSlug,
-          textPreview: bookmark.textPreview,
-          updatedAt: bookmark.updatedAt,
-        },
+      await this.transactionHost.tx.bookmark.create({
+        data: BookmarkPersistenceMapper.toCreateInput(bookmark),
       });
     } catch (error: unknown) {
       if (
@@ -46,15 +40,7 @@ export class PrismaBookmarkRepository implements IBookmarkRepository {
     const row = await this.transactionHost.tx.bookmark.findUnique({
       where: { userId_paragraphId: { userId, paragraphId } },
     });
-    return row ? BookmarkMapper.toDomain(row) : null;
-  }
-
-  async findByBook(userId: string, bookId: string): Promise<BookmarkEntity[]> {
-    const rows = await this.transactionHost.tx.bookmark.findMany({
-      where: { userId, bookId },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-    });
-    return rows.map((row) => BookmarkMapper.toDomain(row));
+    return row ? BookmarkPersistenceMapper.toDomain(row) : null;
   }
 
   async deleteByParagraph(userId: string, paragraphId: string): Promise<void> {

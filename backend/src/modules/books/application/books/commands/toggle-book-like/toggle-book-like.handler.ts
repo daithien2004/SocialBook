@@ -1,10 +1,12 @@
 import { Logger } from '@nestjs/common';
+import { ForbiddenError, subject } from '@casl/ability';
 import { IBookRepository } from '@/modules/books/domain/books/repositories/book.repository.interface';
 import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
 import { TargetType, ToggleLikeCommand } from '@/modules/likes';
 import { IBookCachePort } from '@/modules/books/domain/books/interfaces/book-cache.port';
 import { ToggleBookLikeCommand } from './toggle-book-like.command';
 import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 
 export interface ToggleBookLikeResult {
   isLiked: boolean;
@@ -27,6 +29,18 @@ export class ToggleBookLikeHandler implements ICommandHandler<
   async execute(command: ToggleBookLikeCommand): Promise<ToggleBookLikeResult> {
     try {
       const bookId = BookId.create(command.bookId);
+      const book = await this.bookRepository.findById(bookId);
+      if (!book) {
+        throw new NotFoundDomainException('Book not found');
+      }
+      ForbiddenError.from(command.actor.ability).throwUnlessCan(
+        'like',
+        subject('Book', {
+          id: book.id.toString(),
+          status: book.status.toString(),
+          isDeleted: false,
+        }),
+      );
 
       const likeResult = await this.commandBus.execute(
         new ToggleLikeCommand(command.userId, command.bookId, TargetType.BOOK),

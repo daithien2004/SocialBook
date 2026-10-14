@@ -9,6 +9,7 @@ import { TextToSpeechInfrastructureModule } from '../infrastructure/text-to-spee
 import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/public-api';
 import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { LanguageDetectorService } from './services/language-detector.service';
+import { ChapterAudioGenerationService } from './services/chapter-audio-generation.service';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { LanguageDetectorService } from './services/language-detector.service';
     GetChapterAudioHandler,
     IncrementPlayCountHandler,
     LanguageDetectorService,
+    ChapterAudioGenerationService,
   ],
   exports: [
     DeleteChapterAudioHandler,

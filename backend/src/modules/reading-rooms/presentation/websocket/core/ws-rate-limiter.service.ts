@@ -3,9 +3,6 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import { RATE_LIMIT_WINDOW_SECONDS } from '../reading-room.constants';
 
 /**
- * Cổng hẹp cho Redis (xem .agents/skills/nestjs-type-safety-boundaries §10):
- * service chỉ cần `multi().set().incr().exec()`, nên khai báo đúng từng đó —
- * test cài interface này được mà không cần mock toàn bộ ioredis (không cast).
  */
 export interface RateLimitPipeline {
   set(
@@ -23,7 +20,6 @@ export interface RateLimitStore {
 
 @Injectable()
 export class WsRateLimiter {
-  // @InjectRedis() trả instance ioredis — ioredis cài RateLimitStore theo cấu trúc
   constructor(@InjectRedis() private readonly redis: RateLimitStore) {}
 
   async isLimited(

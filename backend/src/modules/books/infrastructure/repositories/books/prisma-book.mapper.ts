@@ -1,7 +1,7 @@
 import { Prisma } from '@/core/database/generated/prisma/client';
 import { Book as BookEntity } from '@/modules/books/domain/books/entities/book.entity';
-import { BookDetailReadModel } from '@/modules/books/domain/books/read-models/book-detail.read-model';
-import { BookListReadModel } from '@/modules/books/domain/books/read-models/book-list.read-model';
+import { BookDetailReadModel } from '@/modules/books/application/read-models/book-detail.read-model';
+import { BookListReadModel } from '@/modules/books/application/read-models/book-list.read-model';
 
 export const BOOK_WITH_RELATIONS = {
   author: true,

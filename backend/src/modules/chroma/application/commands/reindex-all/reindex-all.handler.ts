@@ -2,7 +2,7 @@ import { ReindexAllCommand } from './reindex-all.command';
 import { CommandHandler } from '@nestjs/cqrs';
 import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { Logger } from '@nestjs/common';
-import { IAuthorRepository } from '@/modules/authors/domain/public-api';
+import { AuthorIndexReadRepository } from '@/modules/authors';
 import { IBookRepository } from '@/modules/books/domain/public-api';
 import { IVectorRepository } from '@/modules/chroma/domain/repositories/vector.repository.interface';
 import { VectorDocument } from '@/modules/chroma/domain/entities/vector-document.entity';
@@ -28,7 +28,7 @@ export class ReindexAllHandler {
   private readonly MAX_ERRORS_IN_STATS = 100;
 
   constructor(
-    private readonly authorRepository: IAuthorRepository,
+    private readonly authorRepository: AuthorIndexReadRepository,
     private readonly bookRepository: IBookRepository,
     private readonly vectorRepository: IVectorRepository,
     private readonly idGenerator: IIdGenerator,
@@ -47,6 +47,7 @@ export class ReindexAllHandler {
       // 2. Run Reindexing in Parallel for performance
       this.logger.log('âš¡ Running Author and Book reindexing in parallel...');
       const [authorStats, bookStats] = await Promise.all([
+        this.reindexAuthors(),
         this.reindexAuthors(),
         this.reindexBooks(),
       ]);
@@ -78,10 +79,10 @@ export class ReindexAllHandler {
     this.logger.log('ðŸ“š Starting author reindexing...');
 
     do {
-      const result = await this.authorRepository.findAll(
-        {},
-        { offset, limit: this.PAGE_LIMIT },
-      );
+      const result = await this.authorRepository.findIndexPage({
+        offset,
+        limit: this.PAGE_LIMIT,
+      });
       const authors = result.items;
       total = result.total;
 
@@ -93,13 +94,13 @@ export class ReindexAllHandler {
       for (const author of authors) {
         try {
           const bioClean = this.stripHtml(author.bio);
-          const content = `TÃ¡c giáº£: ${author.name.toString()}\nTiá»ƒu sá»­: ${bioClean}`;
+          const content = `Tác giả: ${author.name}\nTiểu sử: ${bioClean}`;
 
           const document = VectorDocument.createAuthorDocument(
             this.idGenerator.generate(),
-            author.id.toString(),
+            author.id,
             content,
-            { name: author.name.toString(), type: 'author' },
+            { name: author.name, type: 'author' },
             [],
           );
           batchBuffer.push(document);
@@ -109,10 +110,10 @@ export class ReindexAllHandler {
             batchBuffer = [];
           }
         } catch (error: unknown) {
-          failedEntityIds.add(author.id.toString());
+          failedEntityIds.add(author.id);
           this.addError(
             stats.errors,
-            `Author ${String(author.id)}: ${getErrorMessage(error)}`,
+            `Author ${author.id}: ${getErrorMessage(error)}`,
           );
         }
       }

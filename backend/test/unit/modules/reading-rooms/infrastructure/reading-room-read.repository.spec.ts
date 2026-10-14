@@ -1,10 +1,108 @@
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { Test } from '@nestjs/testing';
-import { ReadingRoomReadRepository } from '@/modules/reading-rooms/infrastructure/postgres/reading-room-read.repository';
+import { PrismaReadingRoomQueryRepository } from '@/modules/reading-rooms/infrastructure/persistence/prisma-reading-room-query.repository';
+import { createReadingRoomActor } from '@/modules/reading-rooms/application/policies/reading-room.ability';
 
-describe('ReadingRoomReadRepository', () => {
+describe('PrismaReadingRoomQueryRepository', () => {
+  it('loads a highlight only for an active room member', async () => {
+    const roomFindFirst = jest.fn().mockResolvedValue({
+      highlights: [
+        {
+          id: 'highlight-1',
+          userId: 'user-1',
+          displayName: 'Reader',
+          avatarUrl: null,
+          chapterSlug: 'chapter-one',
+          paragraphId: 'paragraph-1',
+          content: 'A saved passage',
+          aiInsight: null,
+          createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        },
+      ],
+    });
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        PrismaReadingRoomQueryRepository,
+        {
+          provide: TransactionHost,
+          useValue: {
+            tx: {
+              readingRoom: { findFirst: roomFindFirst },
+            },
+          },
+        },
+      ],
+    }).compile();
+
+    const result = await moduleRef
+      .get(PrismaReadingRoomQueryRepository)
+      .findHighlightById(
+        'ROOM01',
+        'highlight-1',
+        'user-1',
+        createReadingRoomActor('user-1', 'user').ability,
+      );
+
+    expect(roomFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ AND: expect.any(Array) }),
+        select: expect.objectContaining({
+          highlights: expect.objectContaining({
+            where: { id: 'highlight-1' },
+            take: 1,
+          }),
+        }),
+      }),
+    );
+    expect(roomFindFirst).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({
+      id: 'highlight-1',
+      userId: 'user-1',
+      aiInsight: undefined,
+    });
+    await moduleRef.close();
+  });
+
+  it('loads highlight pages and their count through one authorized room query', async () => {
+    const roomFindFirst = jest.fn().mockResolvedValue({
+      highlights: [],
+      _count: { highlights: 0 },
+    });
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        PrismaReadingRoomQueryRepository,
+        {
+          provide: TransactionHost,
+          useValue: { tx: { readingRoom: { findFirst: roomFindFirst } } },
+        },
+      ],
+    }).compile();
+
+    const result = await moduleRef
+      .get(PrismaReadingRoomQueryRepository)
+      .findHighlightPage(
+        'ROOM01',
+        'user-1',
+        { offset: 20, limit: 10 },
+        createReadingRoomActor('user-1', 'user').ability,
+      );
+
+    expect(roomFindFirst).toHaveBeenCalledTimes(1);
+    expect(roomFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ AND: expect.any(Array) }),
+        select: expect.objectContaining({
+          highlights: expect.objectContaining({ skip: 20, take: 10 }),
+          _count: { select: { highlights: true } },
+        }),
+      }),
+    );
+    expect(result).toEqual({ items: [], total: 0 });
+    await moduleRef.close();
+  });
+
   it('joins the current chapter slug when loading room details', async () => {
-    const findUnique = jest.fn().mockResolvedValue({
+    const findFirst = jest.fn().mockResolvedValue({
       id: 'ROOM01',
       bookId: 'book-1',
       hostId: 'user-1',
@@ -15,30 +113,38 @@ describe('ReadingRoomReadRepository', () => {
       maxMembers: 10,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       chapter: { slug: 'latest-slug' },
-      members: [{ userId: 'user-1', role: 'host', leftAt: null }],
+      members: [{ userId: 'user-1', role: 'host' }],
     });
     const moduleRef = await Test.createTestingModule({
       providers: [
-        ReadingRoomReadRepository,
+        PrismaReadingRoomQueryRepository,
         {
           provide: TransactionHost,
-          useValue: { tx: { readingRoom: { findUnique } } },
+          useValue: { tx: { readingRoom: { findFirst } } },
         },
       ],
     }).compile();
 
     const result = await moduleRef
-      .get(ReadingRoomReadRepository)
-      .findDetailsById('ROOM01');
+      .get(PrismaReadingRoomQueryRepository)
+      .findDetailsById(
+        'ROOM01',
+        createReadingRoomActor('user-1', 'user').ability,
+      );
 
-    expect(findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 'ROOM01' } }),
+    expect(findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ AND: expect.any(Array) }),
+        select: expect.objectContaining({
+          members: expect.objectContaining({ where: { leftAt: null } }),
+        }),
+      }),
     );
     expect(result).toMatchObject({
       roomId: 'ROOM01',
       currentChapterId: 'chapter-1',
       currentChapterSlug: 'latest-slug',
-      members: [{ userId: 'user-1', role: 'host' }],
+      activeMembers: [{ userId: 'user-1', role: 'host' }],
     });
     await moduleRef.close();
   });
@@ -65,7 +171,7 @@ describe('ReadingRoomReadRepository', () => {
     const count = jest.fn().mockResolvedValue(1);
     const moduleRef = await Test.createTestingModule({
       providers: [
-        ReadingRoomReadRepository,
+        PrismaReadingRoomQueryRepository,
         {
           provide: TransactionHost,
           useValue: { tx: { readingRoom: { findMany, count } } },
@@ -74,8 +180,12 @@ describe('ReadingRoomReadRepository', () => {
     }).compile();
 
     const result = await moduleRef
-      .get(ReadingRoomReadRepository)
-      .findActiveSummariesByUser('user-1', { offset: 0, limit: 10 });
+      .get(PrismaReadingRoomQueryRepository)
+      .findActiveSummariesByUser(
+        'user-1',
+        { offset: 0, limit: 10 },
+        createReadingRoomActor('user-1', 'user').ability,
+      );
 
     expect(result.total).toBe(1);
     expect(result.items[0]).toMatchObject({

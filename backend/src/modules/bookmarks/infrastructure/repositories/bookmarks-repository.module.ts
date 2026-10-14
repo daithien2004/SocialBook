@@ -1,16 +1,22 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
 import { PostgresDatabaseModule } from '@/core/database/postgres/postgres-database.module';
-import { IBookmarkRepository } from '../../domain/repositories/bookmark.repository.interface';
+import { BookmarkRepository } from '../../domain/repositories/bookmark.repository';
 import { PrismaBookmarkRepository } from './prisma-bookmark.repository';
+import { BookmarkReadRepository } from '../../application/ports/bookmark-read.repository';
+import { PrismaBookmarkReadRepository } from './prisma-bookmark-read.repository';
 
 @Module({
   imports: [PostgresDatabaseModule],
   providers: [
     {
-      provide: IBookmarkRepository,
+      provide: BookmarkRepository,
       useClass: PrismaBookmarkRepository,
     },
+    {
+      provide: BookmarkReadRepository,
+      useClass: PrismaBookmarkReadRepository,
+    },
   ],
-  exports: [IBookmarkRepository],
+  exports: [BookmarkRepository, BookmarkReadRepository],
 })
 export class BookmarksRepositoryModule {}

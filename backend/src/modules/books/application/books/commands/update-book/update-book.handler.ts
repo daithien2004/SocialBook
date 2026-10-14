@@ -1,8 +1,9 @@
-import { BadRequestException } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { ForbiddenError, subject } from '@casl/ability';
 import { randomUUID } from 'node:crypto';
 import {
+  BadRequestDomainException,
   ConflictDomainException,
   NotFoundDomainException,
 } from '@/shared/domain/common-exceptions';
@@ -13,33 +14,49 @@ import { IBookRepository } from '@/modules/books/domain/books/repositories/book.
 import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/modules/books/domain/books/value-objects/book-title.vo';
 import { IBookCachePort } from '@/modules/books/domain/books/interfaces/book-cache.port';
+import { IMediaPort } from '@/modules/media/domain/public-api';
 import { UpdateBookCommand } from './update-book.command';
 
 @CommandHandler(UpdateBookCommand)
 export class UpdateBookHandler implements ICommandHandler<
   UpdateBookCommand,
-  Book
+  string
 > {
   constructor(
     private readonly bookRepository: IBookRepository,
     private readonly bookCache: IBookCachePort,
     private readonly bookOutbox: BookOutboxPort,
+    private readonly media: IMediaPort,
   ) {}
 
-  async execute(command: UpdateBookCommand): Promise<Book> {
-    const book = await this.updateBook(command);
+  async execute(command: UpdateBookCommand): Promise<string> {
+    const coverUrl = command.coverFile
+      ? await this.media.uploadImage(command.coverFile)
+      : command.coverUrl;
+    const book = await this.updateBook(command, coverUrl);
     await this.bookCache.setDetail(book);
     await this.bookCache.invalidateDetail(book.id.toString(), book.slug);
-    return book;
+    return book.id.toString();
   }
 
   @Transactional()
-  private async updateBook(command: UpdateBookCommand): Promise<Book> {
+  private async updateBook(
+    command: UpdateBookCommand,
+    coverUrl?: string,
+  ): Promise<Book> {
     const bookId = BookId.create(command.id);
     const book = await this.bookRepository.findById(bookId);
     if (!book) {
       throw new NotFoundDomainException(BookErrorMessages.BOOK_NOT_FOUND);
     }
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'update',
+      subject('Book', {
+        id: book.id.toString(),
+        status: book.status.toString(),
+        isDeleted: false,
+      }),
+    );
 
     if (command.title && command.title.trim() !== book.title.toString()) {
       const newTitle = BookTitle.create(command.title);
@@ -54,10 +71,14 @@ export class UpdateBookHandler implements ICommandHandler<
 
     if (command.genres !== undefined) {
       if (command.genres.length === 0) {
-        throw new BadRequestException('Book must have at least one genre');
+        throw new BadRequestDomainException(
+          'Book must have at least one genre',
+        );
       }
       if (command.genres.length > 5) {
-        throw new BadRequestException('Book cannot have more than 5 genres');
+        throw new BadRequestDomainException(
+          'Book cannot have more than 5 genres',
+        );
       }
       book.updateGenres(command.genres);
     }
@@ -67,7 +88,7 @@ export class UpdateBookHandler implements ICommandHandler<
     if (command.publishedYear !== undefined) {
       book.updatePublishedYear(command.publishedYear);
     }
-    if (command.coverUrl !== undefined) book.updateCoverUrl(command.coverUrl);
+    if (coverUrl !== undefined) book.updateCoverUrl(coverUrl);
     if (command.status !== undefined) book.changeStatus(command.status);
     if (command.tags !== undefined) book.updateTags(command.tags);
 

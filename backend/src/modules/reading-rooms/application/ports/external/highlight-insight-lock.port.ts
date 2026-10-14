@@ -1,4 +1,4 @@
-export abstract class IHighlightInsightLockPort {
+export abstract class HighlightInsightLockPort {
   abstract tryAcquire(
     roomId: string,
     highlightId: string,

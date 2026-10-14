@@ -1,0 +1,16 @@
+import { Command } from '@nestjs/cqrs';
+import type { Actor } from '@/shared/casl/actor';
+import type { MediaUploadFile } from '@/modules/media/domain/public-api';
+
+export class UpdateAuthorCommand extends Command<void> {
+  constructor(
+    readonly actor: Actor,
+    readonly id: string,
+    readonly name?: string,
+    readonly bio?: string,
+    readonly photoUrl?: string,
+    readonly photo?: MediaUploadFile,
+  ) {
+    super();
+  }
+}

@@ -1,6 +1,6 @@
 import { GenerateTextCommand } from './generate-text.command';
 import { CommandHandler } from '@nestjs/cqrs';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { IAIPort } from '@/modules/ai/domain/interfaces/ai.port';
 import { IAIRequestRepository } from '@/modules/ai/domain/repositories/ai-request.repository.interface';
 import {
@@ -40,7 +40,7 @@ export class GenerateTextHandler {
     });
 
     if (!aiRequest.hasValidPrompt()) {
-      throw new BadRequestException(
+      throw new BadRequestDomainException(
         'Prompt must be between 1 and 10000 characters',
       );
     }

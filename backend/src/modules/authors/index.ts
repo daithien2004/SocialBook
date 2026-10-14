@@ -1,7 +1,8 @@
 export { AuthorsModule } from './authors.module';
 export { AuthorsInfrastructureModule } from './infrastructure/authors-infrastructure.module';
-export { Author as AuthorEntity } from './domain/entities/author.entity';
-export { AuthorId } from './domain/value-objects/author-id.vo';
-export { AuthorName } from './domain/value-objects/author-name.vo';
-export { IAuthorRepository } from './domain/repositories/author.repository.interface';
-export type { AuthorFilter } from './domain/repositories/author.repository.interface';
+export { AuthorReadRepository } from './application/ports/author-read.repository';
+export { AuthorIndexReadRepository } from './application/ports/author-index-read.repository';
+export type { AuthorReadModel } from './application/read-models/author.read-model';
+export type { AuthorSearchReadModel } from './application/read-models/author-search.read-model';
+export { CreateAuthorCommand } from './application/commands/create-author/create-author.command';
+export { FindAuthorByNameQuery } from './application/queries/find-author-by-name/find-author-by-name.query';

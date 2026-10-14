@@ -1,7 +1,6 @@
 import { ForgotPasswordCommand } from './forgot-password.command';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler } from '@nestjs/cqrs';
 import { IUserRepository, UserEmail } from '@/modules/users/domain/public-api';
-import { SendOtpHandler } from '@/modules/auth/application/otp/commands/send-otp/send-otp.handler';
 import { SendOtpCommand } from '@/modules/auth/application/otp/commands/send-otp/send-otp.command';
 
 const RECOVERY_REQUEST_MESSAGE =
@@ -11,7 +10,7 @@ const RECOVERY_REQUEST_MESSAGE =
 export class ForgotPasswordHandler {
   constructor(
     private readonly userRepository: IUserRepository,
-    private readonly sendOtpUseCase: SendOtpHandler,
+    private readonly commandBus: CommandBus,
   ) {}
 
   async execute(command: ForgotPasswordCommand): Promise<string> {
@@ -22,7 +21,7 @@ export class ForgotPasswordHandler {
       return RECOVERY_REQUEST_MESSAGE;
     }
 
-    await this.sendOtpUseCase.execute(new SendOtpCommand(command.email));
+    await this.commandBus.execute(new SendOtpCommand(command.email));
     return RECOVERY_REQUEST_MESSAGE;
   }
 }

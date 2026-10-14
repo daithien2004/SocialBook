@@ -1,8 +1,5 @@
 import { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
-import {
-  ForbiddenDomainException,
-  InternalServerDomainException,
-} from '@/shared/domain/common-exceptions';
+import { InternalServerDomainException } from '@/shared/domain/common-exceptions';
 
 type MemberProps = {
   userId: string;
@@ -39,12 +36,12 @@ const otherUserId = '00000000-0000-4000-8000-000000000014';
 const joinedAt = new Date('2026-01-01T00:00:00.000Z');
 
 describe('ReadingRoom.reactivate', () => {
-  it('treats a repeated host request for an active room as a no-op', () => {
+  it('treats reactivating an active room as a no-op', () => {
     const room = createRoom('active', [
       { userId: hostId, role: 'host', joinedAt },
     ]);
 
-    room.reactivate(hostId);
+    room.reactivate();
 
     expect(room.status).toBe('active');
     expect(room.isDirty).toBe(false);
@@ -56,7 +53,7 @@ describe('ReadingRoom.reactivate', () => {
     ]);
 
     expect(() => {
-      room.reactivate(hostId);
+      room.reactivate();
     }).toThrow(InternalServerDomainException);
   });
 
@@ -65,22 +62,12 @@ describe('ReadingRoom.reactivate', () => {
       { userId: hostId, role: 'host', joinedAt, leftAt: new Date() },
     ]);
 
-    room.reactivate(hostId);
+    room.reactivate();
 
     expect(room.status).toBe('active');
     expect(room.endedAt).toBeUndefined();
     expect(room.isMember(hostId)).toBe(true);
     expect(room.members[0].role).toBe('host');
     expect(room.isDirty).toBe(true);
-  });
-
-  it('checks host authorization before room state', () => {
-    const room = createRoom('active', [
-      { userId: hostId, role: 'host', joinedAt },
-    ]);
-
-    expect(() => {
-      room.reactivate(otherUserId);
-    }).toThrow(ForbiddenDomainException);
   });
 });

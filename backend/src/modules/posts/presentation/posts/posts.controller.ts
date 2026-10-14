@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetModerationStatsQuery } from '@/modules/posts/application/posts/queries/get-moderation-stats/get-moderation-stats.query';
 
@@ -55,6 +56,7 @@ import {
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
+  ApiOperation,
 } from '@nestjs/swagger';
 
 export class FlaggedPostsQueryDto extends PaginationQueryDto {
@@ -76,6 +78,7 @@ export class FlaggedPostsQueryDto extends PaginationQueryDto {
 }
 
 @ApiProblemResponses()
+@ApiTags('Posts')
 @Controller('posts')
 export class PostsController {
   constructor(
@@ -83,6 +86,7 @@ export class PostsController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'List' })
   @Public()
   @ApiPaginatedResponse(PostResponseDto, 'cursor')
   @Get()
@@ -96,6 +100,7 @@ export class PostsController {
     return { data: PostResponseDto.fromArray(result.data), meta: result.meta };
   }
 
+  @ApiOperation({ summary: 'Find All By User' })
   @Public()
   @ApiPaginatedResponse(PostResponseDto, 'cursor')
   @Get('user')
@@ -114,6 +119,7 @@ export class PostsController {
     return { data: PostResponseDto.fromArray(result.data), meta: result.meta };
   }
 
+  @ApiOperation({ summary: 'Get' })
   @Public()
   @Get(':id')
   @ApiOkResponse({ type: PostResponseDto })
@@ -126,6 +132,7 @@ export class PostsController {
     return new PostResponseDto(data);
   }
 
+  @ApiOperation({ summary: 'Create' })
   @Post()
   @ApiCreatedResponse({ type: PostResponseDto })
   @UseInterceptors(
@@ -161,6 +168,7 @@ export class PostsController {
     );
   }
 
+  @ApiOperation({ summary: 'Update' })
   @Patch(':id')
   @ApiOkResponse({ type: PostResponseDto })
   @UseInterceptors(
@@ -199,6 +207,7 @@ export class PostsController {
     );
   }
 
+  @ApiOperation({ summary: 'Delete' })
   @HttpCode(204)
   @Delete(':id')
   @ApiNoContentResponse()
@@ -212,6 +221,7 @@ export class PostsController {
     return undefined;
   }
 
+  @ApiOperation({ summary: 'Delete Hard' })
   @HttpCode(204)
   @Delete(':id/permanent')
   @ApiNoContentResponse()
@@ -227,6 +237,7 @@ export class PostsController {
     return undefined;
   }
 
+  @ApiOperation({ summary: 'Delete Image' })
   @HttpCode(204)
   @Delete(':id/images')
   @ApiNoContentResponse()
@@ -244,6 +255,7 @@ export class PostsController {
 
   // ===== ADMIN ENDPOINTS =====
 
+  @ApiOperation({ summary: 'Get Flagged Posts' })
   @Get('admin/flagged')
   @ApiPaginatedResponse(PostResponseDto, 'offset')
   @UseGuards(RolesGuard)
@@ -262,6 +274,7 @@ export class PostsController {
     return { data: PostResponseDto.fromArray(result.data), meta: result.meta };
   }
 
+  @ApiOperation({ summary: 'Get Moderation Stats' })
   @Get('admin/moderation/stats')
   @ApiOkResponse({
     schema: {
@@ -282,6 +295,7 @@ export class PostsController {
     return data;
   }
 
+  @ApiOperation({ summary: 'Approve Post' })
   @Patch('admin/:id/approve')
   @HttpCode(204)
   @ApiNoContentResponse()
@@ -295,6 +309,7 @@ export class PostsController {
     return undefined;
   }
 
+  @ApiOperation({ summary: 'Reject Post' })
   @HttpCode(204)
   @Delete('admin/:id/reject')
   @ApiNoContentResponse()
@@ -308,6 +323,7 @@ export class PostsController {
     return undefined;
   }
 
+  @ApiOperation({ summary: 'Bulk Approve Posts' })
   @Post('admin/bulk-approve')
   @HttpCode(200)
   @ApiOkResponse({
@@ -334,6 +350,7 @@ export class PostsController {
     return { successCount, total: postIds.length };
   }
 
+  @ApiOperation({ summary: 'Bulk Reject Posts' })
   @Post('admin/bulk-reject')
   @HttpCode(200)
   @ApiOkResponse({

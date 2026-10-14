@@ -2,11 +2,8 @@ import { Socket, DefaultEventsMap } from 'socket.io';
 import { PresenceData } from '@/modules/reading-rooms/application/ports/external/presence-cache.port';
 
 /**
- * SocketData của namespace /reading-rooms.
+ * SocketData c?a namespace /reading-rooms.
  *
- * `userId` và `role` là BẮT BUỘC: middleware xác thực trong `afterInit`
- * chỉ cho phép kết nối qua khi đã verify token và gán 2 trường này
- * (thiếu thì `next(new Error('unauthorized'))` chặn từ đầu).
  */
 export interface SocketData {
   userId: string;
@@ -17,7 +14,6 @@ export interface SocketData {
   bookId?: string;
 }
 
-/** Socket đã được middleware điền `socket.data: SocketData`. */
 export type RoomSocket = Socket<
   DefaultEventsMap,
   DefaultEventsMap,

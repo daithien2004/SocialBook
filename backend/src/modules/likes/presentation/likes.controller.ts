@@ -1,3 +1,5 @@
+import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ToggleLikeCommand } from '@/modules/likes/application/commands/toggle-like/toggle-like.command';
 import { GetLikeCountQuery } from '@/modules/likes/application/queries/get-like-count/get-like-count.query';
@@ -20,6 +22,7 @@ import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator
 import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
 
 @ApiProblemResponses()
+@ApiTags('Likes')
 @Controller('likes')
 export class LikesController {
   constructor(
@@ -27,6 +30,7 @@ export class LikesController {
     private readonly queryBus: QueryBus,
   ) {}
 
+  @ApiOperation({ summary: 'Toggle' })
   @Post('toggle')
   @RequireAuth()
   @HttpCode(HttpStatus.OK)
@@ -41,6 +45,7 @@ export class LikesController {
     return result;
   }
 
+  @ApiOperation({ summary: 'Get Count' })
   @Public()
   @Get('count')
   @HttpCode(HttpStatus.OK)
@@ -51,6 +56,7 @@ export class LikesController {
     return data;
   }
 
+  @ApiOperation({ summary: 'Get Status' })
   @Get('status')
   @RequireAuth()
   @HttpCode(HttpStatus.OK)

@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { QueryBus } from '@nestjs/cqrs';
 
 import { Controller, Get, Query, Req } from '@nestjs/common';
@@ -5,13 +6,15 @@ import type { Request } from 'express';
 import { GetRecommendationsDto } from './dto/get-recommendations.dto';
 import { GetPersonalizedRecommendationsQuery } from '@/modules/recommendations/application/queries/get-personalized-recommendations/get-personalized-recommendations.query';
 import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
-import { ApiOkResponse } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 
 @ApiProblemResponses()
+@ApiTags('Recommendations')
 @Controller('recommendations')
 export class RecommendationsController {
   constructor(private readonly queryBus: QueryBus) {}
 
+  @ApiOperation({ summary: 'Get Personalized Recommendations' })
   @Get('personalized')
   @ApiOkResponse({
     schema: {

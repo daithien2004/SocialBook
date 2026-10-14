@@ -1,131 +1,194 @@
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
-  ApiFileUpload,
-  Public,
-} from '@/shared/platform/decorators/custom.decorator';
-import { Roles } from '@/shared/platform/decorators/roles.decorator';
-import { RolesGuard } from '@/shared/platform/guards/roles.guard';
-import {
-  HttpCode,
   Body,
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
+  ParseUUIDPipe,
   Post,
   Put,
   Query,
   UploadedFile,
   UseGuards,
-  ParseUUIDPipe,
 } from '@nestjs/common';
-
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import type { Actor } from '@/shared/casl/actor';
+import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
+import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
+import {
+  ApiFileUpload,
+  Public,
+} from '@/shared/platform/decorators/custom.decorator';
+import {
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
+import { paginate } from '@/shared/domain/pagination.types';
+import { GetAuthorQuery } from '../application/queries/get-author/get-author.query';
+import { ListAuthorsQuery } from '../application/queries/list-authors/list-authors.query';
+import type { AuthorReadModel } from '../application/read-models/author.read-model';
+import { AuthorIdRequestDto } from './dto/author-id.request.dto';
 import { AuthorResponseDto } from './dto/author.response.dto';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { FilterAuthorDto } from './dto/filter-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 
-import { IMediaPort } from '@/modules/media/domain/public-api';
-import { AuthorsService } from '../application/authors.service';
-import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
-import {
-  ApiCreatedResponse,
-  ApiNoContentResponse,
-  ApiOkResponse,
-} from '@nestjs/swagger';
-import { ApiPaginatedResponse } from '@/shared/platform/decorators/api-response.decorators';
-import { paginate } from '@/shared/domain/pagination.types';
-
-@ApiProblemResponses()
+@ApiTags('Authors')
+@ApiProblemResponses([500])
+@UseGuards(PoliciesGuard)
 @Controller('authors')
 export class AuthorsController {
   constructor(
-    private readonly authorsService: AuthorsService,
-    private readonly mediaService: IMediaPort,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
   ) {}
 
   @Post()
+  @CheckPolicy('create', 'Author')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create an author' })
+  @ApiProblemResponses([400, 409, 413])
   @ApiCreatedResponse({ type: AuthorResponseDto })
-  @Roles('admin')
-  @UseGuards(RolesGuard)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['name'],
+      properties: {
+        name: { type: 'string', maxLength: 100 },
+        bio: { type: 'string', maxLength: 500 },
+        photoUrl: {
+          oneOf: [{ type: 'string' }, { type: 'string', format: 'binary' }],
+        },
+      },
+    },
+  })
+  @ApiProblemResponses([401, 403])
   @ApiFileUpload('photoUrl')
   async create(
-    @Body() createAuthorDto: CreateAuthorDto,
-    @UploadedFile() file?: Express.Multer.File,
-  ) {
-    const author = await this.authorsService.create(
-      createAuthorDto.name,
-      createAuthorDto.bio,
-      file ? await this.uploadFile(file) : createAuthorDto.photoUrl,
+    @CurrentActor() actor: Actor,
+    @Body() request: CreateAuthorDto,
+    @UploadedFile() photo?: Express.Multer.File,
+  ): Promise<AuthorResponseDto> {
+    const id = await this.commandBus.execute<string>(
+      request.toCommand(actor, photo),
     );
-    return new AuthorResponseDto(author);
+    const result = await this.queryBus.execute<AuthorReadModel>(
+      new GetAuthorQuery(actor, id),
+    );
+    return AuthorResponseDto.fromReadModel(result);
   }
 
   @Get('admin')
+  @CheckPolicy('read', 'AuthorAdministration')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List authors for administration' })
+  @ApiProblemResponses([400, 401, 403])
   @ApiPaginatedResponse(AuthorResponseDto, 'offset')
-  @Roles('admin')
-  @UseGuards(RolesGuard)
-  async findAll(@Query() filter: FilterAuthorDto) {
-    const result = await this.authorsService.findAll(
-      { offset: filter.effectiveOffset, limit: filter.actualLimit },
-      filter.name,
-      filter.bio,
-    );
-
-    return paginate(result.items, result.total, filter, (authors) =>
-      authors.map((author) => new AuthorResponseDto(author)),
+  async findAll(
+    @CurrentActor() actor: Actor,
+    @Query() request: FilterAuthorDto,
+  ) {
+    const page = await this.queryBus.execute<{
+      items: AuthorReadModel[];
+      total: number;
+    }>(request.toQuery(actor));
+    return paginate(page.items, page.total, request, (authors) =>
+      AuthorResponseDto.fromArray(authors),
     );
   }
 
   @Get(':id')
   @Public()
+  @CheckPolicy('read', 'Author')
+  @ApiOperation({ summary: 'Get an author' })
+  @ApiProblemResponses([400, 404])
   @ApiOkResponse({ type: AuthorResponseDto })
-  async findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    const author = await this.authorsService.findById(id);
-    return new AuthorResponseDto(author);
+  async findOne(
+    @CurrentActor() actor: Actor,
+    @Param() request: AuthorIdRequestDto,
+  ): Promise<AuthorResponseDto> {
+    const result = await this.queryBus.execute<AuthorReadModel>(
+      request.toQuery(actor),
+    );
+    return AuthorResponseDto.fromReadModel(result);
   }
 
   @Put(':id')
+  @CheckPolicy('update', 'Author')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update an author' })
+  @ApiProblemResponses([400, 404, 409, 413])
   @ApiOkResponse({ type: AuthorResponseDto })
-  @Roles('admin')
-  @UseGuards(RolesGuard)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', maxLength: 100 },
+        bio: { type: 'string', maxLength: 500 },
+        photoUrl: {
+          oneOf: [{ type: 'string' }, { type: 'string', format: 'binary' }],
+        },
+      },
+    },
+  })
+  @ApiProblemResponses([401, 403])
   @ApiFileUpload('photoUrl')
   async update(
+    @CurrentActor() actor: Actor,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @Body() updateAuthorDto: UpdateAuthorDto,
-    @UploadedFile() file?: Express.Multer.File,
-  ) {
-    const author = await this.authorsService.update(
-      id,
-      updateAuthorDto.name,
-      updateAuthorDto.bio,
-      file ? await this.uploadFile(file) : updateAuthorDto.photoUrl,
+    @Body() request: UpdateAuthorDto,
+    @UploadedFile() photo?: Express.Multer.File,
+  ): Promise<AuthorResponseDto> {
+    await this.commandBus.execute(request.toCommand(actor, id, photo));
+    const result = await this.queryBus.execute<AuthorReadModel>(
+      new GetAuthorQuery(actor, id),
     );
-    return new AuthorResponseDto(author);
+    return AuthorResponseDto.fromReadModel(result);
   }
 
-  @HttpCode(204)
   @Delete(':id')
+  @CheckPolicy('delete', 'Author')
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete an author' })
+  @ApiProblemResponses([400, 401, 403, 404])
   @ApiNoContentResponse()
-  @Roles('admin')
-  @UseGuards(RolesGuard)
-  async remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    await this.authorsService.delete(id);
-    return undefined;
+  async remove(
+    @CurrentActor() actor: Actor,
+    @Param() request: AuthorIdRequestDto,
+  ): Promise<void> {
+    await this.commandBus.execute(request.toDeleteCommand(actor));
   }
 
   @Get()
   @Public()
+  @CheckPolicy('read', 'Author')
+  @ApiOperation({ summary: 'List authors for selection' })
+  @ApiProblemResponses([400])
   @ApiPaginatedResponse(AuthorResponseDto, 'offset')
-  async getForSelect() {
+  async getForSelect(@CurrentActor() actor: Actor) {
     const pagination = { actualPage: 1, actualLimit: 100 };
-    const result = await this.authorsService.findAll({ offset: 0, limit: 100 });
-
-    return paginate(result.items, result.total, pagination, (authors) =>
-      authors.map((author) => new AuthorResponseDto(author)),
+    const page = await this.queryBus.execute<{
+      items: AuthorReadModel[];
+      total: number;
+    }>(new ListAuthorsQuery(actor, {}, { offset: 0, limit: 100 }));
+    return paginate(page.items, page.total, pagination, (authors) =>
+      AuthorResponseDto.fromArray(authors),
     );
-  }
-
-  private async uploadFile(file: Express.Multer.File): Promise<string> {
-    return await this.mediaService.uploadImage(file);
   }
 }

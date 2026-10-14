@@ -1,5 +1,5 @@
-import { IsString, IsNotEmpty } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional, IsString, IsNotEmpty } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class AddToxicWordDto {
   @ApiProperty({ description: 'Từ khóa hoặc Regex pattern' })
@@ -11,4 +11,9 @@ export class AddToxicWordDto {
   @IsString()
   @IsNotEmpty()
   group!: string;
+
+  @ApiPropertyOptional({ description: 'Từ gốc tương ứng với pattern' })
+  @IsOptional()
+  @IsString()
+  originalWord?: string;
 }

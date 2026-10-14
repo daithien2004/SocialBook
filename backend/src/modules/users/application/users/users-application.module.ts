@@ -1,6 +1,6 @@
 import { CqrsModule } from '@nestjs/cqrs';
 import { Module } from '@nestjs/common';
-import { CheckUserExistHandler } from './commands/check-user-exist/check-user-exist.handler';
+import { CheckUserExistHandler } from './queries/check-user-exist/check-user-exist.handler';
 import { CreateUserHandler } from './commands/create-user/create-user.handler';
 import { CreateUserService } from './commands/create-user/create-user.service';
 import { UserCreationPort } from '../user-creation.port';
@@ -8,6 +8,7 @@ import { DeleteUserHandler } from './commands/delete-user/delete-user.handler';
 import { GetReadingPreferencesHandler } from './queries/get-reading-preferences/get-reading-preferences.handler';
 import { GetUserByIdHandler } from './queries/get-user-by-id/get-user-by-id.handler';
 import { GetUserProfileHandler } from './queries/get-user-profile/get-user-profile.handler';
+import { GetCurrentUserHandler } from '../queries/get-current-user/get-current-user.handler';
 import { GetUsersHandler } from './queries/get-users/get-users.handler';
 import { SearchUsersHandler } from './commands/search-users/search-users.handler';
 import { ToggleBanHandler } from './commands/toggle-ban/toggle-ban.handler';
@@ -42,6 +43,7 @@ import { CaslCacheListener } from './listeners/casl-cache.listener';
     GetReadingPreferencesHandler,
     GetUserByIdHandler,
     GetUserProfileHandler,
+    GetCurrentUserHandler,
     GetUsersHandler,
     SearchUsersHandler,
     ToggleBanHandler,

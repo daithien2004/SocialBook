@@ -2,7 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Collection } from '@/modules/library/domain/library/entities/collection.entity';
 import { ICollectionRepository } from '@/modules/library/domain/library/repositories/collection.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
-import { ConflictException } from '@nestjs/common';
+import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { CreateCollectionCommand } from './create-collection.command';
 
 export interface CollectionResult {
@@ -32,7 +32,7 @@ export class CreateCollectionHandler implements ICommandHandler<
     );
 
     if (existing) {
-      throw new ConflictException('Tên bộ sưu tập này đã tồn tại');
+      throw new ConflictDomainException('Tên bộ sưu tập này đã tồn tại');
     }
 
     const collection = Collection.create({

@@ -3,11 +3,10 @@ import { ROOM_ID_PATTERN, UUID_PATTERN } from '../reading-room.constants';
 
 export class GenerateInsightDto {
   @IsString()
-  @Matches(ROOM_ID_PATTERN, { message: 'Mã phòng không hợp lệ' })
+  @Matches(ROOM_ID_PATTERN, { message: 'Invalid value.' })
   roomId!: string;
 
-  /** Highlight ID là UUID v4 do domain sinh. */
   @IsString()
-  @Matches(UUID_PATTERN, { message: 'Highlight không hợp lệ' })
+  @Matches(UUID_PATTERN, { message: 'Invalid value.' })
   highlightId!: string;
 }

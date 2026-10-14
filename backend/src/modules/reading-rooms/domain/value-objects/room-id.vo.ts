@@ -1,8 +1,8 @@
 import { randomInt } from 'crypto';
 import { Identifier } from '@/shared/domain/identifier.base';
-import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+import { ReadingRoomInvalidError } from '@/modules/reading-rooms/domain/errors/reading-room.errors';
 
-const ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ'; // 31 ký tự, loại bỏ các ký tự dễ nhầm lẫn: 0, O, 1, I, L
+const ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 
 export class RoomId extends Identifier {
   private constructor(id: string) {
@@ -13,8 +13,8 @@ export class RoomId extends Identifier {
     if (value) {
       const sanitized = value.trim().toUpperCase();
       if (!this.isValid(sanitized)) {
-        throw new BadRequestDomainException(
-          'Mã phòng không hợp lệ. Phải gồm từ 6 đến 10 ký tự chữ hoặc số.',
+        throw new ReadingRoomInvalidError(
+          'Mã phòng không hợp lệ. Phải gồm 6 đến 10 ký tự chữ hoặc số.',
         );
       }
       return new RoomId(sanitized);

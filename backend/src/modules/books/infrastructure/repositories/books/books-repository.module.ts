@@ -1,7 +1,7 @@
-import { IBookQueryProvider } from '@/modules/books/domain/books/repositories/book-query.provider.interface';
+import { BookReadRepository } from '@/modules/books/application/ports/book-read.repository';
 import { IBookRepository } from '@/modules/books/domain/books/repositories/book.repository.interface';
 import { Module } from '@nestjs/common';
-import { BookQueryProvider } from './book-query.provider';
+import { PrismaBookReadRepository } from './prisma-book-read.repository';
 import { BookRepository } from './book.repository';
 
 import { ChromaInfrastructureModule } from '@/modules/chroma/infrastructure/public-api';
@@ -30,13 +30,13 @@ import { BookOutboxRepository } from '../../outbox/book-outbox.repository';
       useClass: BookRepository,
     },
     {
-      provide: IBookQueryProvider,
-      useClass: BookQueryProvider,
+      provide: BookReadRepository,
+      useClass: PrismaBookReadRepository,
     },
   ],
   exports: [
     IBookRepository,
-    IBookQueryProvider,
+    BookReadRepository,
     IBookCachePort,
     IViewRankingCachePort,
     BookOutboxPort,

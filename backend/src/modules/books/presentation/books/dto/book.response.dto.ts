@@ -1,8 +1,7 @@
-import { Book } from '@/modules/books/domain/books/entities/book.entity';
 import {
   BookListReadModel,
   GenreSummary,
-} from '@/modules/books/domain/books/read-models/book-list.read-model';
+} from '@/modules/books/application/read-models/book-list.read-model';
 import { SearchBookResult } from '@/modules/search/application/public-api';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -82,39 +81,6 @@ export class BookResponseDto {
       authorName?: string;
     },
   ): BookResponseDto {
-    return new BookResponseDto(readModel);
-  }
-
-  static fromEntity(book: Book): BookResponseDto {
-    const readModel: BookListReadModel & {
-      chapterCount?: number;
-      authorName?: string;
-    } = {
-      id: book.id.toString(),
-      title: book.title.toString(),
-      slug: book.slug,
-      authorId: book.authorId.toString(),
-      genres: book.genres.map((id) => ({
-        id: id.toString(),
-        name: '',
-        slug: '',
-      })),
-      description: book.description,
-      publishedYear: book.publishedYear,
-      coverUrl: book.coverUrl,
-      status: book.status.toString(),
-      tags: book.tags,
-      likedBy: book.likedBy,
-      stats: {
-        views: book.views,
-        likes: book.likes,
-        chapterCount: 0,
-      },
-      createdAt: book.createdAt,
-      updatedAt: book.updatedAt,
-      authorName: book.authorName,
-      chapterCount: book.chapterCount,
-    };
     return new BookResponseDto(readModel);
   }
 

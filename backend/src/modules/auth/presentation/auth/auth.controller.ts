@@ -1,4 +1,5 @@
-import { CommandBus } from '@nestjs/cqrs';
+import { ApiTags } from '@nestjs/swagger';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Public } from '@/shared/platform/decorators/custom.decorator';
 import { User } from '@/modules/users/domain/public-api';
 
@@ -14,7 +15,11 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ApiNoContentResponse, ApiOkResponse } from '@nestjs/swagger';
+import {
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 
 import type { Response } from 'express';
 
@@ -35,8 +40,11 @@ import { VerifyOtpCommand } from '@/modules/auth/application/otp/commands/verify
 
 import type { JwtValidatedUser } from '@/shared/platform/interfaces/jwt-validated-user.interface';
 import type { JwtPayload } from '@/modules/auth/infrastructure/auth/strategies/jwt.strategy';
-import { IUserRepository } from '@/modules/users/domain/public-api';
-import { UserId } from '@/modules/users/domain/public-api';
+import { GetCurrentUserQuery } from '@/modules/users/application/public-api';
+import type { Actor } from '@/shared/casl/actor';
+import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
+import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
 import { AuthCookieService } from '@/modules/auth/application/auth/services/auth-cookie.service';
 import type { SetCookieSpec } from '@/modules/auth/application/auth/services/auth-cookie.service';
 import {
@@ -57,12 +65,12 @@ import {
 import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
 
 @ApiProblemResponses()
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly commandBus: CommandBus,
-
-    private readonly userRepository: IUserRepository,
+    private readonly queryBus: QueryBus,
     private readonly cookieService: AuthCookieService,
   ) {}
 
@@ -76,6 +84,7 @@ export class AuthController {
     });
   }
 
+  @ApiOperation({ summary: 'Log in' })
   @Public()
   @Throttle({ global: { limit: 5 } })
   @UseGuards(LoginGuard)
@@ -98,6 +107,7 @@ export class AuthController {
     return { accessToken: result.accessToken };
   }
 
+  @ApiOperation({ summary: 'Get Profile' })
   @Get('profile')
   @ApiOkResponse({ type: ProfileResponseDto })
   getProfile(@Req() req: { user: JwtValidatedUser }): ProfileResponseDto {
@@ -109,19 +119,26 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({ summary: 'Get Me' })
+  @UseGuards(PoliciesGuard)
+  @CheckPolicy('read', 'User')
   @Get('me')
   @ApiOkResponse({ type: MeResponseDto })
-  async getMe(@Req() req: { user: JwtValidatedUser }): Promise<MeResponseDto> {
-    const user = await this.userRepository.findById(UserId.create(req.user.id));
+  async getMe(
+    @CurrentActor() actor: Actor,
+    @Req() req: { user: JwtValidatedUser },
+  ): Promise<MeResponseDto> {
+    const user = await this.queryBus.execute(new GetCurrentUserQuery(actor));
     return {
-      id: req.user.id,
+      id: user.id,
       email: req.user.email,
       role: req.user.role,
-      username: user?.username ?? '',
-      image: user?.image,
+      username: user.username,
+      image: user.image,
     };
   }
 
+  @ApiOperation({ summary: 'Log out' })
   @HttpCode(204)
   @Post('logout')
   @ApiNoContentResponse()
@@ -138,6 +155,7 @@ export class AuthController {
     res.clearCookie(oauthState.name, { path: oauthState.path });
   }
 
+  @ApiOperation({ summary: 'Get Ws Ticket' })
   @UseGuards(AuthGuard('jwt'))
   @Post('ws-ticket')
   @HttpCode(HttpStatus.OK)
@@ -150,6 +168,7 @@ export class AuthController {
     return { ticket };
   }
 
+  @ApiOperation({ summary: 'Sign up' })
   @Public()
   @Throttle({ global: { limit: 5 } })
   @Post('signup')
@@ -162,6 +181,7 @@ export class AuthController {
     return undefined;
   }
 
+  @ApiOperation({ summary: 'Verify Otp' })
   @Public()
   @Throttle({ global: { limit: 5 } })
   @Post('verify-otp')
@@ -173,6 +193,7 @@ export class AuthController {
     return undefined;
   }
 
+  @ApiOperation({ summary: 'Resend Otp' })
   @Public()
   @Throttle({ global: { limit: 3 } })
   @Post('resend-otp')
@@ -186,6 +207,7 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({ summary: 'Refresh' })
   @UseGuards(AuthGuard('jwt-refresh'))
   @Public()
   @Throttle({ global: { limit: 10 } })
@@ -230,6 +252,7 @@ export class AuthController {
     return { accessToken };
   }
 
+  @ApiOperation({ summary: 'Request password reset Password' })
   @Public()
   @Throttle({ global: { limit: 3 } })
   @Post('forgot-password')
@@ -241,6 +264,7 @@ export class AuthController {
     return undefined;
   }
 
+  @ApiOperation({ summary: 'Reset Password' })
   @Public()
   @Throttle({ global: { limit: 3 } })
   @Post('reset-password')

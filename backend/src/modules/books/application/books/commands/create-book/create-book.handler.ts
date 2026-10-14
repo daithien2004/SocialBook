@@ -1,13 +1,13 @@
-import { BadRequestException } from '@nestjs/common';
 import { Transactional } from '@nestjs-cls/transactional';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { randomUUID } from 'node:crypto';
 import {
-  IAuthorRepository,
-  AuthorEntity,
-  AuthorId,
-  AuthorName,
-} from '@/modules/authors';
+  CommandBus,
+  CommandHandler,
+  ICommandHandler,
+  QueryBus,
+} from '@nestjs/cqrs';
+import { ForbiddenError } from '@casl/ability';
+import { randomUUID } from 'node:crypto';
+import { CreateAuthorCommand, FindAuthorByNameQuery } from '@/modules/authors';
 import { BookOutboxPort } from '@/modules/books/application/public-api';
 import { IBookRepository } from '@/modules/books/domain/books/repositories/book.repository.interface';
 import { Book } from '@/modules/books/domain/books/entities/book.entity';
@@ -15,51 +15,60 @@ import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
 import { BookTitle } from '@/modules/books/domain/books/value-objects/book-title.vo';
 import { IBookCachePort } from '@/modules/books/domain/books/interfaces/book-cache.port';
 import { CreateBookCommand } from './create-book.command';
-import {
-  IGenreRepository,
-  GenreEntity,
-  GenreId,
-  GenreName,
-} from '@/modules/genres';
+import { CreateGenreCommand, FindGenreByNameQuery } from '@/modules/genres';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
-import { ConflictDomainException } from '@/shared/domain/common-exceptions';
+import {
+  BadRequestDomainException,
+  ConflictDomainException,
+} from '@/shared/domain/common-exceptions';
+import { IMediaPort } from '@/modules/media/domain/public-api';
 
 @CommandHandler(CreateBookCommand)
 export class CreateBookHandler implements ICommandHandler<
   CreateBookCommand,
-  Book
+  string
 > {
   constructor(
     private readonly bookRepository: IBookRepository,
-    private readonly authorRepository: IAuthorRepository,
-    private readonly genreRepository: IGenreRepository,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
     private readonly idGenerator: IIdGenerator,
     private readonly bookCache: IBookCachePort,
     private readonly bookOutbox: BookOutboxPort,
+    private readonly media: IMediaPort,
   ) {}
 
-  async execute(command: CreateBookCommand): Promise<Book> {
+  async execute(command: CreateBookCommand): Promise<string> {
+    ForbiddenError.from(command.actor.ability).throwUnlessCan('create', 'Book');
     if (command.genres.length === 0) {
-      throw new BadRequestException('Book must have at least one genre');
+      throw new BadRequestDomainException('Book must have at least one genre');
     }
     if (command.genres.length > 5) {
-      throw new BadRequestException('Book cannot have more than 5 genres');
+      throw new BadRequestDomainException(
+        'Book cannot have more than 5 genres',
+      );
     }
 
-    const book = await this.createBook(command);
+    const coverUrl = command.coverFile
+      ? await this.media.uploadImage(command.coverFile)
+      : command.coverUrl;
+    const book = await this.createBook(command, coverUrl);
     await this.bookCache.setDetail(book);
-    return book;
+    return book.id.toString();
   }
 
   @Transactional()
-  private async createBook(command: CreateBookCommand): Promise<Book> {
+  private async createBook(
+    command: CreateBookCommand,
+    coverUrl?: string,
+  ): Promise<Book> {
     const title = BookTitle.create(command.title);
     if (await this.bookRepository.existsByTitle(title)) {
       throw new ConflictDomainException('Book with this title already exists');
     }
 
     const authorId = await this.resolveAuthorId(command);
-    const genreIds = await this.resolveGenreIds(command.genres);
+    const genreIds = await this.resolveGenreIds(command);
     const book = Book.create({
       id: BookId.create(this.idGenerator.generate()),
       title: command.title,
@@ -67,7 +76,7 @@ export class CreateBookHandler implements ICommandHandler<
       genres: genreIds,
       description: command.description,
       publishedYear: command.publishedYear,
-      coverUrl: command.coverUrl,
+      coverUrl,
       status: command.status,
       tags: command.tags,
     });
@@ -82,48 +91,42 @@ export class CreateBookHandler implements ICommandHandler<
   }
 
   private async resolveAuthorId(command: CreateBookCommand): Promise<string> {
-    let authorId = command.authorId;
+    const authorId = command.authorId;
     if (!command.authorName || (authorId && !authorId.startsWith('new:'))) {
       return authorId ?? '';
     }
 
-    const authorName = AuthorName.create(command.authorName);
-    const existing = await this.authorRepository.findByName(authorName);
-    if (existing) return existing.id.toString();
+    const existing = await this.queryBus.execute(
+      new FindAuthorByNameQuery(command.actor, command.authorName),
+    );
+    if (existing) return existing.id;
 
-    const author = AuthorEntity.create({
-      id: AuthorId.create(this.idGenerator.generate()),
-      name: command.authorName,
-      bio: '',
-      photoUrl: '',
-    });
-    await this.authorRepository.save(author);
-    authorId = author.id.toString();
-    return authorId;
+    return this.commandBus.execute(
+      new CreateAuthorCommand(command.actor, command.authorName, '', ''),
+    );
   }
 
-  private async resolveGenreIds(genreIdsOrNames: string[]): Promise<string[]> {
+  private async resolveGenreIds(command: CreateBookCommand): Promise<string[]> {
     const genreIds: string[] = [];
-    for (const idOrName of genreIdsOrNames) {
+    for (const idOrName of command.genres) {
       if (!idOrName.startsWith('new:')) {
         genreIds.push(idOrName);
         continue;
       }
 
       const name = idOrName.replace('new:', '');
-      const genreName = GenreName.create(name);
-      const existing = await this.genreRepository.findByName(genreName);
+      const existing = await this.queryBus.execute(
+        new FindGenreByNameQuery(command.actor, name),
+      );
       if (existing) {
-        genreIds.push(existing.id.toString());
+        genreIds.push(existing.id);
         continue;
       }
 
-      const genre = GenreEntity.create({
-        id: GenreId.create(this.idGenerator.generate()),
-        name,
-      });
-      await this.genreRepository.save(genre);
-      genreIds.push(genre.id.toString());
+      const created = await this.commandBus.execute(
+        new CreateGenreCommand(command.actor, name),
+      );
+      genreIds.push(created.id);
     }
     return genreIds;
   }

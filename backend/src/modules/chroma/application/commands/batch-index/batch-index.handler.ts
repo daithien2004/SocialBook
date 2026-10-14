@@ -1,6 +1,7 @@
 import { BatchIndexCommand } from './batch-index.command';
 import { CommandHandler } from '@nestjs/cqrs';
-import { Logger, BadRequestException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
+import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { IVectorRepository } from '@/modules/chroma/domain/repositories/vector.repository.interface';
 
 @CommandHandler(BatchIndexCommand)
@@ -32,7 +33,7 @@ export class BatchIndexHandler {
           case 'chapter':
             return this.vectorRepository.indexChapters(command.contentIds);
           default:
-            throw new BadRequestException(
+            throw new BadRequestDomainException(
               `Unsupported content type: ${String(command.contentType)}`,
             );
         }

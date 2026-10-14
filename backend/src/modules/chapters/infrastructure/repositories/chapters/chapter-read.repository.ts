@@ -10,7 +10,7 @@ import {
 } from '@/modules/books/infrastructure/public-api';
 import { ChapterResult } from '@/modules/chapters/application/chapters/queries/get-chapters/get-chapters.result';
 import { IChapterReadRepository } from '@/modules/chapters/application/ports/chapter-read.repository';
-import { ChapterDetailReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-detail.read-model';
+import { ChapterDetailReadModel } from '@/modules/chapters/application/read-models/chapter-detail.read-model';
 import { ChapterListReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-list.read-model';
 import {
   ChapterFilter,
@@ -92,6 +92,26 @@ export class ChapterReadRepository implements IChapterReadRepository {
       }),
     ]);
     if (!book || !chapter) return null;
+
+    const navigation = await this.findNavigation(book.id, chapter.orderIndex);
+    return this.toDetail(book, chapter, navigation.previous, navigation.next);
+  }
+
+  async findDetailByBookIdAndSlug(
+    bookId: string,
+    chapterSlug: string,
+  ): Promise<ChapterDetailReadModel | null> {
+    const book = await this.prisma.book.findFirst({
+      where: { id: bookId, isDeleted: false },
+      include: BOOK_WITH_RELATIONS,
+    });
+    if (!book) return null;
+
+    const chapter = await this.prisma.chapter.findFirst({
+      where: { bookId, slug: chapterSlug, isDeleted: false },
+      include: CHAPTER_WITH_PARAGRAPHS,
+    });
+    if (!chapter) return null;
 
     const navigation = await this.findNavigation(book.id, chapter.orderIndex);
     return this.toDetail(book, chapter, navigation.previous, navigation.next);

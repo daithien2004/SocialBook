@@ -20,6 +20,15 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   [ErrorCode.TOKEN_REVOKED]:
     'Phiên đăng nhập đã bị thu hồi, vui lòng đăng nhập lại',
   [ErrorCode.TOO_MANY_CONNECTIONS]: 'Bạn đang mở quá nhiều kết nối',
+  [ErrorCode.READING_ROOM_NOT_FOUND]: 'Không tìm thấy phòng đọc',
+  [ErrorCode.READING_ROOM_INVALID]: 'Yêu cầu phòng đọc không hợp lệ',
+  [ErrorCode.READING_ROOM_FORBIDDEN]:
+    'Bạn không có quyền thao tác với phòng đọc',
+  [ErrorCode.READING_ROOM_CONFLICT]:
+    'Yêu cầu xung đột với trạng thái hiện tại của phòng đọc',
+  [ErrorCode.READING_ROOM_CONCURRENCY_CONFLICT]:
+    'Phòng đọc vừa được thay đổi bởi thao tác khác, vui lòng thử lại',
+  [ErrorCode.READING_ROOM_FULL]: 'Phòng đọc đã đầy',
 };
 
 // Tra message cho code dạng string tự do (vd code đến từ WsException payload)

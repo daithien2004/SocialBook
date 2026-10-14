@@ -3,13 +3,13 @@ import {
   PaginationOptions,
   SortOptions,
 } from '@/shared/domain/pagination.types';
-import { IBookQueryProvider } from '@/modules/books/domain/books/repositories/book-query.provider.interface';
+import { BookReadRepository } from '@/modules/books/application/ports/book-read.repository';
 import { BookFilter } from '@/modules/books/domain/books/repositories/book.repository.interface';
 import { GetBooksQuery } from './get-books.query';
 
 @QueryHandler(GetBooksQuery)
 export class GetBooksHandler implements IQueryHandler<GetBooksQuery> {
-  constructor(private readonly bookQueryProvider: IBookQueryProvider) {}
+  constructor(private readonly bookQueryProvider: BookReadRepository) {}
 
   async execute(query: GetBooksQuery) {
     const filter: BookFilter = {
@@ -32,6 +32,11 @@ export class GetBooksHandler implements IQueryHandler<GetBooksQuery> {
       order: query.order,
     };
 
-    return await this.bookQueryProvider.findAllList(filter, pagination, sort);
+    return this.bookQueryProvider.findAllList(
+      query.actor.ability,
+      filter,
+      pagination,
+      sort,
+    );
   }
 }

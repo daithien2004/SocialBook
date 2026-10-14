@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRedis } from '@nestjs-modules/ioredis';
 import type { Redis } from 'ioredis';
-import { IHighlightInsightLockPort } from '../../application/ports/external/highlight-insight-lock.port';
+import { HighlightInsightLockPort } from '../../application/ports/external/highlight-insight-lock.port';
 
 const HIGHLIGHT_INSIGHT_LOCK_TTL_SECONDS = 60;
 
@@ -13,7 +13,7 @@ const RELEASE_LOCK_SCRIPT = `
 `;
 
 @Injectable()
-export class HighlightInsightLockAdapter implements IHighlightInsightLockPort {
+export class HighlightInsightLockAdapter implements HighlightInsightLockPort {
   constructor(@InjectRedis() private readonly redis: Redis) {}
 
   async tryAcquire(

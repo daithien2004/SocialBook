@@ -1,11 +1,12 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { ForbiddenError, subject } from '@casl/ability';
+import { Transactional } from '@nestjs-cls/transactional';
+import { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
 import {
-  NotFoundDomainException,
-  ForbiddenDomainException,
-} from '@/shared/domain/common-exceptions';
-import { IReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
-import { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.result';
-import { toReadingRoomResult } from '../../mappers/reading-room-result.mapper';
+  ReadingRoomNotFoundError,
+  ReadingRoomForbiddenError,
+} from '@/modules/reading-rooms/domain/errors/reading-room.errors';
+import { ReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository';
 import { JoinRoomCommand } from './join-room.command';
 import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
 
@@ -14,29 +15,48 @@ import { withOptimisticRetry } from '@/shared/application/with-optimistic-retry'
 @CommandHandler(JoinRoomCommand)
 export class JoinRoomHandler implements ICommandHandler<
   JoinRoomCommand,
-  ReadingRoomResult
+  string
 > {
-  constructor(private readonly roomRepository: IReadingRoomRepository) {}
+  constructor(private readonly roomRepository: ReadingRoomRepository) {}
 
-  async execute(command: JoinRoomCommand): Promise<ReadingRoomResult> {
-    return withOptimisticRetry(async () => {
-      const room = await this.roomRepository.findById(
-        RoomId.create(command.roomCode),
-      );
-      if (!room) {
-        throw new NotFoundDomainException('Phòng không tồn tại');
+  async execute(command: JoinRoomCommand): Promise<string> {
+    const room = await withOptimisticRetry(() =>
+      this.executeInTransaction(command),
+    );
+    return room.roomId;
+  }
+
+  @Transactional()
+  private async executeInTransaction(
+    command: JoinRoomCommand,
+  ): Promise<ReadingRoom> {
+    const room = await this.roomRepository.findById(
+      RoomId.create(command.roomCode),
+    );
+    if (!room) {
+      throw new ReadingRoomNotFoundError('Requested resource not found.');
+    }
+
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'join',
+      subject('ReadingRoom', {
+        id: room.roomId,
+        hostId: room.hostId,
+        status: room.status,
+      }),
+    );
+
+    if (room.status === 'ended') {
+      if (!room.isMember(command.actor.userId)) {
+        throw new ReadingRoomForbiddenError(
+          'Bạn không phải là thành viên của phòng này',
+        );
       }
+    } else {
+      room.addMember(command.actor.userId);
+      await this.roomRepository.save(room);
+    }
 
-      if (room.status === 'ended') {
-        if (!room.isMember(command.userId)) {
-          throw new ForbiddenDomainException('Phòng đã kết thúc');
-        }
-      } else {
-        room.addMember(command.userId);
-        await this.roomRepository.save(room);
-      }
-
-      return toReadingRoomResult(room);
-    });
+    return room;
   }
 }

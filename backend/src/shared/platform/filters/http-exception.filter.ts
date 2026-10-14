@@ -230,7 +230,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
       case 'CONFLICT':
       case 'CONCURRENCY_CONFLICT':
       case 'ROOM_FULL':
+      case 'READING_ROOM_CONFLICT':
+      case 'READING_ROOM_CONCURRENCY_CONFLICT':
+      case 'READING_ROOM_FULL':
         return HttpStatus.CONFLICT;
+      case 'READING_ROOM_NOT_FOUND':
+        return HttpStatus.NOT_FOUND;
+      case 'READING_ROOM_FORBIDDEN':
+        return HttpStatus.FORBIDDEN;
+      case 'READING_ROOM_INVALID':
+        return HttpStatus.BAD_REQUEST;
       case 'RATE_LIMITED':
       case 'TOO_MANY_CONNECTIONS':
         return HttpStatus.TOO_MANY_REQUESTS;

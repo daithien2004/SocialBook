@@ -2,13 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ICachePort } from '@/shared/domain/cache.port';
 import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { PrismaService } from '@/core/database/postgres/prisma.service';
+import { AIRateLimitConfigPort } from '../../application/ports/ai-rate-limit-config.port';
+import type { AIRateLimitConfigReadModel } from '../../application/read-models/ai-rate-limit-config.read-model';
 
-export interface AIRateLimitConfig {
-  guestLimit: number;
-  userLimit: number;
-  ttl: number;
-  blockDuration: number;
-}
+export type AIRateLimitConfig = AIRateLimitConfigReadModel;
 
 const CACHE_KEY = 'config:rate_limit_ai';
 const LEGACY_CACHE_KEY = 'config:rate_limit_gemini';
@@ -43,15 +40,17 @@ function toPartialConfig(value: unknown): Partial<AIRateLimitConfig> | null {
 }
 
 @Injectable()
-export class RateLimitConfigService {
+export class RateLimitConfigService extends AIRateLimitConfigPort {
   private readonly logger = new Logger(RateLimitConfigService.name);
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly cacheService: ICachePort,
-  ) {}
+  ) {
+    super();
+  }
 
-  async getAIConfig(): Promise<AIRateLimitConfig> {
+  async get(): Promise<AIRateLimitConfig> {
     const cached = await this.cacheService.get<AIRateLimitConfig>(CACHE_KEY);
     if (cached) return cached;
 
@@ -64,9 +63,7 @@ export class RateLimitConfigService {
     return FALLBACK;
   }
 
-  async updateAIConfig(
-    data: Partial<AIRateLimitConfig>,
-  ): Promise<AIRateLimitConfig> {
+  async update(data: Partial<AIRateLimitConfig>): Promise<AIRateLimitConfig> {
     await this.prisma.systemConfig.upsert({
       where: { key: CONFIG_KEY },
       create: { key: CONFIG_KEY, value: data },
@@ -75,7 +72,7 @@ export class RateLimitConfigService {
 
     await this.cacheService.del(CACHE_KEY);
 
-    return this.getAIConfig();
+    return this.get();
   }
 
   private async readConfig(

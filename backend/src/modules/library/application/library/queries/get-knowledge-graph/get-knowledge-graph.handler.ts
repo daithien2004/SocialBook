@@ -1,5 +1,6 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Logger, NotFoundException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IReadingListRepository } from '@/modules/library/domain/library/repositories/reading-list.repository.interface';
 import { IBookRepository } from '@/modules/books/domain/public-api';
 import { IUserRepository } from '@/modules/users/domain/public-api';
@@ -8,7 +9,7 @@ import { BookId } from '@/modules/books/domain/public-api';
 import { ReadingStatus } from '@/modules/library/domain/library/enums/reading-status.enum';
 import { GetKnowledgeGraphQuery } from './get-knowledge-graph.query';
 import { IAIPort } from '@/modules/ai';
-import { IGenreRepository } from '@/modules/genres/domain/public-api';
+import { GenreId, GenreReadRepository } from '@/modules/genres';
 import slugify from 'slugify';
 
 export interface GraphNode {
@@ -46,7 +47,7 @@ export class GetKnowledgeGraphHandler implements IQueryHandler<
     private readonly readingListRepository: IReadingListRepository,
     private readonly bookRepository: IBookRepository,
     private readonly userRepository: IUserRepository,
-    private readonly genreRepository: IGenreRepository,
+    private readonly genreRepository: GenreReadRepository,
     private readonly aiService: IAIPort,
   ) {}
 
@@ -54,7 +55,7 @@ export class GetKnowledgeGraphHandler implements IQueryHandler<
     const userId = UserId.create(query.userId);
     const user = await this.userRepository.findById(userId);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundDomainException('User not found');
     }
 
     // 1. Fetch completed / reading reading list
@@ -192,7 +193,7 @@ export class GetKnowledgeGraphHandler implements IQueryHandler<
     // 3. AI Knowledge Gap Analysis
     try {
       const allGenres = await this.genreRepository.findAllSimple();
-      const availableGenres = allGenres.map((g) => g.name.getValue());
+      const availableGenres = allGenres.map((genre) => genre.name);
       const uniqueUserGenres = Array.from(new Set(userGenres));
 
       this.logger.log(
@@ -256,7 +257,7 @@ export class GetKnowledgeGraphHandler implements IQueryHandler<
         );
         // Fallback: Pick 2 genres the user hasn't read
         const missingGenreObjs = allGenres
-          .filter((g) => !uniqueUserGenres.includes(g.name.getValue()))
+          .filter((genre) => !uniqueUserGenres.includes(genre.name))
           .slice(0, 2);
 
         const fallbackGaps = await Promise.all(
@@ -267,7 +268,7 @@ export class GetKnowledgeGraphHandler implements IQueryHandler<
 
             try {
               const booksInGenre = await this.bookRepository.findByGenre(
-                g.id,
+                GenreId.create(g.id),
                 { page: 1, limit: 1 },
                 { sortBy: 'views', order: 'desc' },
               );
@@ -282,7 +283,7 @@ export class GetKnowledgeGraphHandler implements IQueryHandler<
             }
 
             return {
-              genre: g.name.getValue(),
+              genre: g.name,
               reason:
                 'Chúng tôi nhận thấy bạn chưa khám phá mảng này. Hãy thử để mở rộng góc nhìn nhé!',
               suggestedBook: suggestedBookTitle,

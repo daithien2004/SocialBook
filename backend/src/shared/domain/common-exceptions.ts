@@ -33,8 +33,11 @@ export class InternalServerDomainException extends DomainException {
 }
 
 export class ConcurrencyException extends DomainException {
-  constructor(details?: unknown) {
-    super(ErrorCode.CONCURRENCY_CONFLICT, undefined, details);
+  constructor(
+    details?: unknown,
+    code: ErrorCode = ErrorCode.CONCURRENCY_CONFLICT,
+  ) {
+    super(code, undefined, details);
   }
 }
 

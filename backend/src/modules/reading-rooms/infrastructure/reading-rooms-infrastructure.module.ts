@@ -1,32 +1,29 @@
 import { Module } from '@nestjs/common';
 
-import { IPresenceCachePort } from '../application/ports/external/presence-cache.port';
+import { PresenceCachePort } from '../application/ports/external/presence-cache.port';
 import { PresenceCacheAdapter } from './cache/presence-cache.adapter';
-import { ReadingRoomsPostgresModule } from './postgres/reading-rooms-postgres.module';
+import { ReadingRoomsPersistenceModule } from './persistence/reading-rooms-persistence.module';
 import { ReadingProgressQueueModule } from './queue/reading-progress-queue.module';
-import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
-import { ReadingRoomRealtimeListener } from './realtime/reading-room-realtime.listener';
-import { IHighlightInsightLockPort } from '../application/ports/external/highlight-insight-lock.port';
+import { HighlightInsightLockPort } from '../application/ports/external/highlight-insight-lock.port';
 import { HighlightInsightLockAdapter } from './cache/highlight-insight-lock.adapter';
 
 @Module({
-  imports: [ReadingRoomsPostgresModule, ReadingProgressQueueModule],
+  imports: [ReadingRoomsPersistenceModule, ReadingProgressQueueModule],
   providers: [
-    ...(isWorkerProcess() ? [ReadingRoomRealtimeListener] : []),
     {
-      provide: IPresenceCachePort,
+      provide: PresenceCachePort,
       useClass: PresenceCacheAdapter,
     },
     {
-      provide: IHighlightInsightLockPort,
+      provide: HighlightInsightLockPort,
       useClass: HighlightInsightLockAdapter,
     },
   ],
   exports: [
-    ReadingRoomsPostgresModule,
+    ReadingRoomsPersistenceModule,
     ReadingProgressQueueModule,
-    IPresenceCachePort,
-    IHighlightInsightLockPort,
+    PresenceCachePort,
+    HighlightInsightLockPort,
   ],
 })
 export class ReadingRoomsInfrastructureModule {}

@@ -1,5 +1,5 @@
 import { ReadingRoom } from '@/modules/reading-rooms/domain/entities/reading-room.entity';
-import { toReadingRoomCreateData } from '@/modules/reading-rooms/infrastructure/postgres/reading-room.mapper';
+import { ReadingRoomMapper } from '@/modules/reading-rooms/infrastructure/persistence/reading-room.mapper';
 
 describe('ReadingRoom persistence mapper', () => {
   it('maps the stable chapter ID and slug snapshot to PostgreSQL fields', () => {
@@ -11,7 +11,7 @@ describe('ReadingRoom persistence mapper', () => {
       currentChapterSlug: 'chapter-snapshot',
     });
 
-    const persisted = toReadingRoomCreateData(room);
+    const persisted = ReadingRoomMapper.toCreateData(room);
 
     expect(persisted.currentChapterId).toBe(
       '00000000-0000-4000-8000-000000000015',

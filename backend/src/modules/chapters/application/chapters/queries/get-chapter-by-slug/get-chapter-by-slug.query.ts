@@ -1,5 +1,5 @@
 import { Query } from '@nestjs/cqrs';
-import { ChapterDetailReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-detail.read-model';
+import { ChapterDetailReadModel } from '@/modules/chapters/application/read-models/chapter-detail.read-model';
 
 export class GetChapterBySlugQuery extends Query<ChapterDetailReadModel> {
   constructor(

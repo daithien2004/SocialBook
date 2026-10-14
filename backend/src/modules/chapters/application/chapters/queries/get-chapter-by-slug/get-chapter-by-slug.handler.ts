@@ -1,6 +1,6 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { ChapterErrorMessages } from '@/modules/chapters/application/error-messages';
-import { ChapterDetailReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-detail.read-model';
+import { ChapterDetailReadModel } from '@/modules/chapters/application/read-models/chapter-detail.read-model';
 import { IChapterReadRepository } from '@/modules/chapters/application/ports/chapter-read.repository';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { GetChapterBySlugQuery } from './get-chapter-by-slug.query';

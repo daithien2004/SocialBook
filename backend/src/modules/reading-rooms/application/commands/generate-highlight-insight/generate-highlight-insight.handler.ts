@@ -1,50 +1,23 @@
 import { randomUUID } from 'node:crypto';
+import { ForbiddenError, subject } from '@casl/ability';
 import { Logger } from '@nestjs/common';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler, QueryBus } from '@nestjs/cqrs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IAIPort } from '@/modules/ai';
-import { IBookRepository } from '@/modules/books/domain/public-api';
-import { getChapterContext } from '@/modules/chapters/application/public-api';
-import { IChapterRepository } from '@/modules/chapters/domain/public-api';
-import { IHighlightInsightLockPort } from '@/modules/reading-rooms/application/ports/external/highlight-insight-lock.port';
-import { IHighlightInsightStore } from '@/modules/reading-rooms/application/ports/persistence/highlight-insight.store';
-import { IReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository.interface';
+import { GetReadingRoomChapterContextQuery } from '@/modules/chapters';
+import { HighlightInsightLockPort } from '@/modules/reading-rooms/application/ports/external/highlight-insight-lock.port';
+import { HighlightInsightStore } from '@/modules/reading-rooms/application/ports/persistence/highlight-insight.store';
+import { ReadingRoomRepository } from '@/modules/reading-rooms/domain/repositories/reading-room.repository';
 import { RoomId } from '@/modules/reading-rooms/domain/value-objects/room-id.vo';
-import { BookId } from '@/modules/books/domain/public-api';
 import { GenerateHighlightInsightCommand } from './generate-highlight-insight.command';
 import {
-  ForbiddenDomainException,
-  NotFoundDomainException,
-} from '@/shared/domain/common-exceptions';
+  ReadingRoomForbiddenError,
+  ReadingRoomNotFoundError,
+} from '@/modules/reading-rooms/domain/errors/reading-room.errors';
 import { EventNames } from '@/shared/platform/constants/event-names.constant';
+import { runWithAbortTimeout } from './run-with-abort-timeout';
 
 const AI_REQUEST_TIMEOUT_MS = 15_000;
-
-async function withTimeout<T>(
-  operation: (signal: AbortSignal) => Promise<T>,
-  timeoutMs: number,
-): Promise<T> {
-  const controller = new AbortController();
-  let timeoutId: NodeJS.Timeout | undefined;
-  const timeoutError = new Error(`AI request timed out after ${timeoutMs}ms`);
-  const request = operation(controller.signal);
-  const timeout = new Promise<never>(() => {
-    timeoutId = setTimeout(() => {
-      controller.abort();
-    }, timeoutMs);
-  });
-
-  try {
-    const result = await Promise.race([request, timeout]);
-    if (controller.signal.aborted) throw timeoutError;
-    return result;
-  } catch (error: unknown) {
-    if (controller.signal.aborted) throw timeoutError;
-    throw error;
-  } finally {
-    if (timeoutId) clearTimeout(timeoutId);
-  }
-}
 
 @CommandHandler(GenerateHighlightInsightCommand)
 export class GenerateHighlightInsightHandler implements ICommandHandler<
@@ -54,11 +27,10 @@ export class GenerateHighlightInsightHandler implements ICommandHandler<
   private readonly logger = new Logger(GenerateHighlightInsightHandler.name);
 
   constructor(
-    private readonly readingRoomRepository: IReadingRoomRepository,
-    private readonly highlightInsightStore: IHighlightInsightStore,
-    private readonly insightLock: IHighlightInsightLockPort,
-    private readonly bookRepository: IBookRepository,
-    private readonly chapterRepository: IChapterRepository,
+    private readonly readingRoomRepository: ReadingRoomRepository,
+    private readonly highlightInsightStore: HighlightInsightStore,
+    private readonly insightLock: HighlightInsightLockPort,
+    private readonly queryBus: QueryBus,
     private readonly aiService: IAIPort,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -67,11 +39,19 @@ export class GenerateHighlightInsightHandler implements ICommandHandler<
     const roomId = RoomId.create(command.roomId);
     const room = await this.readingRoomRepository.findById(roomId);
     if (!room) {
-      throw new NotFoundDomainException('Phòng không tồn tại');
+      throw new ReadingRoomNotFoundError('Phòng không tồn tại');
     }
 
-    if (!room.isMember(command.userId)) {
-      throw new ForbiddenDomainException(
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'update',
+      subject('ReadingRoomMember', {
+        roomId: room.roomId,
+        userId: command.actor.userId,
+      }),
+    );
+
+    if (!room.isMember(command.actor.userId)) {
+      throw new ReadingRoomForbiddenError(
         'Bạn không phải là thành viên của phòng này',
       );
     }
@@ -80,13 +60,13 @@ export class GenerateHighlightInsightHandler implements ICommandHandler<
       (item) => item.id === command.highlightId,
     );
     if (!highlight) {
-      throw new NotFoundDomainException('Highlight không tồn tại');
+      throw new ReadingRoomNotFoundError('Highlight không tồn tại');
     }
 
     if (highlight.aiInsight) return;
 
     if (room.status === 'ended') {
-      throw new ForbiddenDomainException('Phòng đã kết thúc');
+      throw new ReadingRoomForbiddenError('Phòng đã kết thúc');
     }
 
     const lockToken = randomUUID();
@@ -98,17 +78,19 @@ export class GenerateHighlightInsightHandler implements ICommandHandler<
     if (!lockAcquired) return;
 
     try {
-      const bookId = BookId.create(room.bookId);
-      const [book, chapter] = await Promise.all([
-        this.bookRepository.findById(bookId),
-        this.chapterRepository.findBySlug(highlight.chapterSlug, bookId),
-      ]);
-
-      const bookTitle = book?.title?.getValue() ?? 'Không rõ tên sách';
-      const chapterTitle = chapter?.title?.getValue() ?? highlight.chapterSlug;
+      const chapter = await this.queryBus.execute(
+        new GetReadingRoomChapterContextQuery(
+          command.actor,
+          room.bookId,
+          highlight.chapterSlug,
+          highlight.content.slice(0, 500),
+        ),
+      );
+      const bookTitle = chapter?.bookTitle ?? 'Không rõ tên sách';
+      const chapterTitle = chapter?.chapterTitle ?? highlight.chapterSlug;
       const content = highlight.content.slice(0, 500);
-      const contextBlock = chapter?.paragraphs.length
-        ? `\nNgữ cảnh xung quanh đoạn văn:\n${getChapterContext(chapter.paragraphs, content)}\n`
+      const contextBlock = chapter?.context
+        ? `\nNgữ cảnh xung quanh đoạn văn:\n${chapter.context}\n`
         : '';
       const prompt = [
         `Phân tích đoạn văn sau từ cuốn sách "${bookTitle}" (chương: "${chapterTitle}").`,
@@ -124,7 +106,7 @@ export class GenerateHighlightInsightHandler implements ICommandHandler<
         '"""',
       ].join('\n');
 
-      const insight = await withTimeout(
+      const insight = await runWithAbortTimeout(
         (signal) => this.aiService.generateText(prompt, undefined, signal),
         AI_REQUEST_TIMEOUT_MS,
       );

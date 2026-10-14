@@ -1,8 +1,8 @@
 import { Bookmark as PrismaBookmark } from '@/core/database/generated/prisma/client';
 import { Bookmark as BookmarkEntity } from '@/modules/bookmarks/domain/entities/bookmark.entity';
 
-export const BookmarkMapper = {
-  toDomain(row: PrismaBookmark): BookmarkEntity {
+export class BookmarkPersistenceMapper {
+  static toDomain(row: PrismaBookmark): BookmarkEntity {
     return BookmarkEntity.reconstitute({
       id: row.id,
       userId: row.userId,
@@ -14,9 +14,9 @@ export const BookmarkMapper = {
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });
-  },
+  }
 
-  toCreateInput(bookmark: BookmarkEntity) {
+  static toCreateInput(bookmark: BookmarkEntity) {
     return {
       id: bookmark.id,
       userId: bookmark.userId,
@@ -28,5 +28,5 @@ export const BookmarkMapper = {
       createdAt: bookmark.createdAt,
       updatedAt: bookmark.updatedAt,
     };
-  },
-};
+  }
+}

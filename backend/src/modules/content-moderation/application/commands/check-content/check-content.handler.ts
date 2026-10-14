@@ -7,7 +7,7 @@ import { ModerationResult } from '@/modules/content-moderation/domain/interfaces
 export class CheckContentHandler {
   constructor(private readonly moderationService: ContentModerationService) {}
 
-  async execute(text: string): Promise<ModerationResult> {
-    return this.moderationService.checkContent(text);
+  async execute(command: CheckContentCommand): Promise<ModerationResult> {
+    return this.moderationService.checkContent(command.content);
   }
 }

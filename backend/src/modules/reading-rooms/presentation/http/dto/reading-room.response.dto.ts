@@ -1,10 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import type { ReadingRoomResult } from '@/modules/reading-rooms/application/reading-room.result';
-import type { ReadingRoomHighlightResult } from '@/modules/reading-rooms/application/reading-room.result';
-import type { ReadingRoomPreviewResult } from '@/modules/reading-rooms/application/reading-room.result';
+import type { ReadingRoomReadModel } from '@/modules/reading-rooms/application/read-models/reading-room.read-model';
+import type { ReadingRoomHighlightReadModel } from '@/modules/reading-rooms/application/read-models/reading-room.read-model';
+import type { ReadingRoomPreviewReadModel } from '@/modules/reading-rooms/application/read-models/reading-room.read-model';
+import type { GetRoomByCodeReadModel } from '@/modules/reading-rooms/application/read-models/reading-room.read-model';
 
 type ReadingRoomResponseSource = Pick<
-  ReadingRoomResult,
+  ReadingRoomReadModel,
   | 'roomId'
   | 'bookId'
   | 'hostId'
@@ -36,10 +37,10 @@ export class ReadingRoomResponseDto implements ReadingRoomResponseSource {
   hostId: string;
 
   @ApiProperty({ enum: ['sync', 'free'] })
-  mode: ReadingRoomResult['mode'];
+  mode: ReadingRoomReadModel['mode'];
 
   @ApiProperty({ enum: ['active', 'ended'] })
-  status: ReadingRoomResult['status'];
+  status: ReadingRoomReadModel['status'];
 
   @ApiProperty()
   currentChapterSlug: string;
@@ -120,7 +121,7 @@ export class ReadingRoomHighlightResponseDto implements ReadingRoomHighlightResp
   @ApiProperty({ format: 'date-time' })
   createdAt!: string;
 
-  constructor(source: ReadingRoomHighlightResult) {
+  constructor(source: ReadingRoomHighlightReadModel) {
     this.id = source.id;
     this.userId = source.userId;
     this.displayName = source.displayName ?? '';
@@ -133,7 +134,7 @@ export class ReadingRoomHighlightResponseDto implements ReadingRoomHighlightResp
   }
 
   static fromArray(
-    highlights: ReadingRoomHighlightResult[],
+    highlights: ReadingRoomHighlightReadModel[],
   ): ReadingRoomHighlightResponseDto[] {
     return highlights.map(
       (highlight) => new ReadingRoomHighlightResponseDto(highlight),
@@ -141,7 +142,7 @@ export class ReadingRoomHighlightResponseDto implements ReadingRoomHighlightResp
   }
 }
 
-export class ReadingRoomPreviewResponseDto implements ReadingRoomPreviewResult {
+export class ReadingRoomPreviewResponseDto implements ReadingRoomPreviewReadModel {
   @ApiProperty()
   roomId!: string;
 
@@ -149,10 +150,10 @@ export class ReadingRoomPreviewResponseDto implements ReadingRoomPreviewResult {
   bookId!: string;
 
   @ApiProperty({ enum: ['sync', 'free'] })
-  mode!: ReadingRoomResult['mode'];
+  mode!: ReadingRoomReadModel['mode'];
 
   @ApiProperty({ enum: ['active', 'ended'] })
-  status!: ReadingRoomResult['status'];
+  status!: ReadingRoomReadModel['status'];
 
   @ApiProperty()
   currentChapterSlug!: string;
@@ -172,7 +173,7 @@ export class ReadingRoomPreviewResponseDto implements ReadingRoomPreviewResult {
   @ApiProperty({ format: 'date-time' })
   createdAt!: Date;
 
-  constructor(result: ReadingRoomPreviewResult) {
+  constructor(result: ReadingRoomPreviewReadModel) {
     this.roomId = result.roomId;
     this.bookId = result.bookId;
     this.mode = result.mode;
@@ -186,8 +187,18 @@ export class ReadingRoomPreviewResponseDto implements ReadingRoomPreviewResult {
   }
 
   static fromResult(
-    result: ReadingRoomPreviewResult,
+    result: ReadingRoomPreviewReadModel,
   ): ReadingRoomPreviewResponseDto {
     return new ReadingRoomPreviewResponseDto(result);
   }
+}
+
+export function toReadingRoomResponseDto(
+  result: GetRoomByCodeReadModel,
+): ReadingRoomResponseDto | ReadingRoomPreviewResponseDto {
+  if (result.isMember) {
+    return ReadingRoomResponseDto.fromResult(result);
+  }
+
+  return ReadingRoomPreviewResponseDto.fromResult(result);
 }

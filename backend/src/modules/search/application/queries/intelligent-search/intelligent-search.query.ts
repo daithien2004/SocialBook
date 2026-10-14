@@ -2,22 +2,42 @@ import { Query } from '@nestjs/cqrs';
 
 import { PaginatedSearchBookResult } from '@/modules/search/application/dto/search-book-result.dto';
 
+type SearchSortField =
+  | 'views'
+  | 'likes'
+  | 'rating'
+  | 'popular'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'title'
+  | 'publishedYear'
+  | 'score';
+
+function parseSearchSortField(value?: string): SearchSortField {
+  switch (value) {
+    case 'views':
+    case 'likes':
+    case 'rating':
+    case 'popular':
+    case 'createdAt':
+    case 'updatedAt':
+    case 'title':
+    case 'publishedYear':
+    case 'score':
+      return value;
+    case undefined:
+    default:
+      return 'score';
+  }
+}
+
 export class IntelligentSearchQuery extends Query<PaginatedSearchBookResult> {
   public readonly query: string;
   public readonly page: number;
   public readonly limit: number;
   public readonly genres?: string[];
   public readonly mode: 'keyword' | 'semantic' | 'hybrid';
-  public readonly sortBy:
-    | 'views'
-    | 'likes'
-    | 'rating'
-    | 'popular'
-    | 'createdAt'
-    | 'updatedAt'
-    | 'title'
-    | 'publishedYear'
-    | 'score';
+  public readonly sortBy: SearchSortField;
   public readonly order: 'asc' | 'desc';
 
   constructor(props: {
@@ -37,31 +57,6 @@ export class IntelligentSearchQuery extends Query<PaginatedSearchBookResult> {
     this.mode = props.mode ?? 'hybrid';
     this.order = props.order ?? 'desc';
 
-    // Type-safe adaptation for search-specific sortBy
-    const validSearchSortFields = [
-      'views',
-      'likes',
-      'rating',
-      'popular',
-      'createdAt',
-      'updatedAt',
-      'title',
-      'publishedYear',
-      'score',
-    ];
-
-    this.sortBy =
-      props.sortBy && validSearchSortFields.includes(props.sortBy)
-        ? (props.sortBy as
-            | 'views'
-            | 'likes'
-            | 'rating'
-            | 'popular'
-            | 'createdAt'
-            | 'updatedAt'
-            | 'title'
-            | 'publishedYear'
-            | 'score')
-        : 'score';
+    this.sortBy = parseSearchSortField(props.sortBy);
   }
 }

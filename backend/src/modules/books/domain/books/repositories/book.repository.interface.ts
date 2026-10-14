@@ -23,11 +23,6 @@ export interface BookFilter {
   ids?: string[];
 }
 
-export interface BookFilters {
-  genres: Array<{ id: string; name: string; slug: string; count: number }>;
-  tags: Array<{ name: string; count: number }>;
-}
-
 export interface BookSearchCandidate {
   id: string;
   title: string;
@@ -72,16 +67,10 @@ export abstract class IBookRepository {
   abstract countByGenre(genreId: string): Promise<number>;
 
   abstract countTotal(): Promise<number>;
-  abstract countByGenreName(): Promise<
-    Array<{ id: string; name: string; slug: string; count: number }>
-  >;
-  abstract countByTags(): Promise<Array<{ name: string; count: number }>>;
-
   abstract findByIds(ids: BookId[]): Promise<Book[]>;
   abstract findIdsByFilter(filter: BookFilter): Promise<string[]>;
   abstract findSearchCandidates(
     filter: BookFilter,
     limit: number,
   ): Promise<BookSearchCandidate[]>;
-  abstract getFilters(): Promise<BookFilters>;
 }

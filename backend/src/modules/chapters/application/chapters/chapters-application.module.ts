@@ -18,36 +18,21 @@ import { FilesInfrastructureModule } from '@/modules/media/infrastructure/public
 import { StartChaptersImportHandler } from './commands/start-chapters-import/start-chapters-import.handler';
 import { GetChaptersImportStatusHandler } from './queries/get-chapters-import-status/get-chapters-import-status.handler';
 import { ChaptersImportModule } from '@/modules/chapters/infrastructure/queues/chapters-import/chapters-import.module';
-import { ReadingRoomsReferenceModule } from '@/modules/reading-rooms/infrastructure/integrations/public-api';
+import { ReadingRoomsReferenceModule } from '@/modules/reading-rooms';
 
 @Module({
   imports: [
     ChaptersRepositoryModule,
-    ReadingRoomsReferenceModule,
     IdGeneratorModule,
     AIApplicationModule,
     BooksRepositoryModule,
     FilesInfrastructureModule,
     ChaptersImportModule,
+    ReadingRoomsReferenceModule,
     CqrsModule,
   ],
 
   providers: [
-    CreateChapterHandler,
-    DeleteChapterHandler,
-    GetChapterByIdHandler,
-    GetChapterBySlugHandler,
-    GetChaptersHandler,
-    UpdateChapterHandler,
-    ImportEpubPreviewHandler,
-    RecordChapterViewHandler,
-    GetChapterKnowledgeHandler,
-    AskChapterAIHandler,
-    StartChaptersImportHandler,
-    GetChaptersImportStatusHandler,
-  ],
-
-  exports: [
     CreateChapterHandler,
     DeleteChapterHandler,
     GetChapterByIdHandler,

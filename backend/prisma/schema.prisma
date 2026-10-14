@@ -260,68 +260,6 @@ model BookOutbox {
   @@map("book_outbox")
 }
 
-model ReadingRoom {
-  id                       String                 @id @db.VarChar(6)
-  bookId                   String                 @db.Uuid
-  hostId                   String                 @db.Uuid
-  mode                     String
-  status                   String                 @default("active")
-  currentChapterId         String                 @db.Uuid
-  currentChapterSlug       String
-  maxMembers               Int                    @default(10)
-  endedAt                  DateTime?
-  version                  Int                    @default(0)
-  createRequestKey         String?
-  createRequestFingerprint String?
-  createdAt                DateTime               @default(now())
-  updatedAt                DateTime               @updatedAt
-  book                     Book                   @relation(fields: [bookId], references: [id], onDelete: Restrict)
-  chapter                  Chapter                @relation(fields: [currentChapterId], references: [id], onDelete: Restrict)
-  host                     User                   @relation("ReadingRoomHost", fields: [hostId], references: [id], onDelete: Restrict)
-  members                  ReadingRoomMember[]
-  highlights               ReadingRoomHighlight[]
-
-  @@unique([hostId, createRequestKey], map: "uniq_reading_rooms_host_create_request")
-  @@index([status, updatedAt, id])
-  @@index([bookId, status])
-  @@index([status, endedAt, id])
-  @@map("reading_rooms")
-}
-
-model ReadingRoomMember {
-  roomId   String      @db.VarChar(6)
-  userId   String      @db.Uuid
-  role     String
-  joinedAt DateTime    @default(now())
-  leftAt   DateTime?
-  room     ReadingRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user     User        @relation(fields: [userId], references: [id], onDelete: Restrict)
-
-  @@id([roomId, userId])
-  @@index([userId, leftAt, roomId])
-  @@index([userId, roomId])
-  @@map("reading_room_members")
-}
-
-model ReadingRoomHighlight {
-  id          String      @id @db.Uuid
-  roomId      String      @db.VarChar(6)
-  userId      String      @db.Uuid
-  displayName String?
-  avatarUrl   String?
-  chapterSlug String
-  paragraphId String      @db.Uuid
-  content     String
-  aiInsight   String?
-  createdAt   DateTime    @default(now())
-  room        ReadingRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user        User        @relation(fields: [userId], references: [id], onDelete: Restrict)
-
-  @@index([roomId, createdAt, id])
-  @@index([roomId, userId])
-  @@map("reading_room_highlights")
-}
-
 model ReadingProgress {
   id         String   @id @db.Uuid
   userId     String   @db.Uuid

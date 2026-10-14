@@ -28,7 +28,7 @@ export class AIThrottleGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const { req, res } = this.getRequestResponse(context);
 
-    const config = await this.configService.getAIConfig();
+    const config = await this.configService.get();
 
     const userId = req.user?.id ?? req.user?._id;
     const authenticatedUserId =

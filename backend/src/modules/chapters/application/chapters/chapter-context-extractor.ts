@@ -1,5 +1,3 @@
-import { Paragraph } from '@/modules/chapters/domain/chapters/value-objects/paragraph.vo';
-
 const MAX_CONTEXT_CHARS = 5000;
 
 export function extractKeywords(text: string): Set<string> {
@@ -13,7 +11,7 @@ export function extractKeywords(text: string): Set<string> {
 }
 
 export function selectRelevantContent(
-  paragraphs: Paragraph[],
+  paragraphs: ReadonlyArray<{ content: string }>,
   keywords: Set<string>,
 ): string {
   const scored = paragraphs.map((p, index) => {
@@ -58,7 +56,7 @@ export function selectRelevantContent(
 }
 
 export function getChapterContext(
-  paragraphs: Paragraph[],
+  paragraphs: ReadonlyArray<{ content: string }>,
   queryText: string,
 ): string {
   const totalContent = paragraphs.map((p) => p.content).join('\n');

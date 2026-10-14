@@ -38,10 +38,7 @@ type RoomHighlightsResponse = ApiResponse<
   'get'
 >;
 
-type ReactivatedRoomResponse = ApiResponse<
-  '/api/v1/reading-rooms/{code}/reactivate',
-  'patch'
->;
+export type CreateRoomResponse = ApiResponse<'/api/v1/reading-rooms', 'post'>;
 
 export async function getRoom(code: string): Promise<RoomResponse> {
   return apiRequest<RoomResponse>({
@@ -95,8 +92,8 @@ export async function getMyHistory(): Promise<RoomHistoryResponse> {
 export async function createRoom(
   body: CreateRoomPayload,
   idempotencyKey: string,
-): Promise<RoomResponse> {
-  return idempotentApiRequest<RoomResponse>(
+): Promise<CreateRoomResponse> {
+  return idempotentApiRequest<CreateRoomResponse>(
     {
       url: '/reading-rooms',
       method: 'POST',
@@ -106,8 +103,8 @@ export async function createRoom(
   );
 }
 
-export async function reactivateRoom(code: string): Promise<RoomResponse> {
-  return apiRequest<ReactivatedRoomResponse>({
+export async function reactivateRoom(code: string): Promise<void> {
+  return apiRequest<void>({
     url: `/reading-rooms/${code}/reactivate`,
     method: 'PATCH',
   });

@@ -1,7 +1,5 @@
-import { UserId } from '@/modules/users/domain/public-api';
-
 export interface RoomMemberProps {
-  userId: UserId;
+  userId: string;
   role: 'host' | 'member';
   joinedAt: Date;
   leftAt?: Date;
@@ -19,7 +17,7 @@ export class RoomMember {
     role?: 'host' | 'member';
   }): RoomMember {
     return new RoomMember({
-      userId: UserId.create(props.userId),
+      userId: props.userId,
       role: props.role || 'member',
       joinedAt: new Date(),
     });
@@ -32,7 +30,7 @@ export class RoomMember {
     leftAt?: Date;
   }): RoomMember {
     return new RoomMember({
-      userId: UserId.create(props.userId),
+      userId: props.userId,
       role: props.role,
       joinedAt: props.joinedAt,
       leftAt: props.leftAt,
@@ -40,7 +38,7 @@ export class RoomMember {
   }
 
   get userId(): string {
-    return this._props.userId.toString();
+    return this._props.userId;
   }
 
   get role(): 'host' | 'member' {

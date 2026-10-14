@@ -5,7 +5,7 @@ import { UserEventType } from '@/modules/analytics/domain/enums/user-event-type.
 import { ScoringService } from '../services/scoring.service';
 import { IBookRepository } from '@/modules/books/domain/public-api';
 import { BookId } from '@/modules/books/domain/public-api';
-import { IGenreRepository } from '@/modules/genres/domain/public-api';
+import { GenreReadRepository } from '@/modules/genres';
 import { IUserAnalyticsRepository } from '@/modules/analytics/domain/repositories/user-analytics.repository.interface';
 import { UserEvent } from '@/modules/analytics/domain/entities/user-event.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
@@ -16,7 +16,7 @@ export class AnalyticsListener {
   constructor(
     private readonly scoringService: ScoringService,
     private readonly bookRepository: IBookRepository,
-    private readonly genreRepository: IGenreRepository,
+    private readonly genreRepository: GenreReadRepository,
     private readonly analyticsRepository: IUserAnalyticsRepository,
     private readonly idGenerator: IIdGenerator,
     private readonly targetResolverRegistry: TargetResolverRegistry,
@@ -49,10 +49,10 @@ export class AnalyticsListener {
 
       const matchedGenreIds = allGenres
         .filter((genre) => {
-          const name = genre.name.getValue().toLowerCase();
+          const name = genre.name.toLowerCase();
           return name.includes(keyword) || keyword.includes(name);
         })
-        .map((genre) => genre.id.toString());
+        .map((genre) => genre.id);
 
       if (matchedGenreIds.length > 0) {
         await this.scoringService.calculateScore(

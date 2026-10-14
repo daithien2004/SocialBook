@@ -6,6 +6,9 @@ import { AIRequestRepositoryModule } from '@/modules/ai/infrastructure/repositor
 import { AIInfrastructureModule } from '@/modules/ai/infrastructure/public-api';
 import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/public-api';
+import { RateLimitConfigModule } from '../infrastructure/rate-limit/ai-rate-limit.module';
+import { GetRateLimitConfigHandler } from './queries/get-rate-limit-config/get-rate-limit-config.handler';
+import { UpdateRateLimitConfigHandler } from './commands/update-rate-limit-config/update-rate-limit-config.handler';
 
 @Module({
   imports: [
@@ -14,8 +17,14 @@ import { ChaptersRepositoryModule } from '@/modules/chapters/infrastructure/publ
     AIInfrastructureModule,
     IdGeneratorModule,
     ChaptersRepositoryModule,
+    RateLimitConfigModule,
   ],
-  providers: [GenerateTextHandler, SummarizeChapterHandler],
+  providers: [
+    GenerateTextHandler,
+    SummarizeChapterHandler,
+    GetRateLimitConfigHandler,
+    UpdateRateLimitConfigHandler,
+  ],
   exports: [
     AIRequestRepositoryModule,
     AIInfrastructureModule,

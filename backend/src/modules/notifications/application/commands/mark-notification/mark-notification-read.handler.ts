@@ -9,9 +9,6 @@ export class MarkNotificationReadHandler {
   ) {}
 
   async execute(command: MarkNotificationReadCommand): Promise<void> {
-    await this.notificationRepository.markAsRead(
-      command.userId,
-      (command as any).id,
-    );
+    await this.notificationRepository.markAsRead(command.userId, command.id);
   }
 }

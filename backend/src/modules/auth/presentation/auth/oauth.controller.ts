@@ -1,3 +1,4 @@
+import { ApiTags } from '@nestjs/swagger';
 import { CommandBus } from '@nestjs/cqrs';
 import {
   ConflictException,
@@ -30,10 +31,14 @@ import {
   UnauthorizedDomainException,
   UserBannedDomainException,
 } from '@/modules/auth/domain/auth/exceptions/auth-exceptions';
-import { ApiResponse } from '@nestjs/swagger';
+import { ConflictDomainException } from '@/shared/domain/common-exceptions';
+import { ApiResponse, ApiOperation } from '@nestjs/swagger';
 
 export function toErrorCode(error: unknown): OAuthErrorCode {
-  if (error instanceof ConflictException)
+  if (
+    error instanceof ConflictException ||
+    error instanceof ConflictDomainException
+  )
     return OAuthErrorCode.EmailUsedWithPassword;
   if (error instanceof UserBannedDomainException)
     return OAuthErrorCode.AccountBanned;
@@ -43,6 +48,7 @@ export function toErrorCode(error: unknown): OAuthErrorCode {
   return OAuthErrorCode.OAuthFailed;
 }
 
+@ApiTags('Authentication')
 @Controller('auth')
 export class OAuthController {
   constructor(
@@ -101,6 +107,7 @@ export class OAuthController {
     res.clearCookie(spec.name, { path: spec.path });
   }
 
+  @ApiOperation({ summary: 'Start Google' })
   @Public()
   @Version(VERSION_NEUTRAL)
   @Get('google')
@@ -116,6 +123,7 @@ export class OAuthController {
     return this.start('google', callbackUrl, res);
   }
 
+  @ApiOperation({ summary: 'Start Github' })
   @Public()
   @Version(VERSION_NEUTRAL)
   @Get('github')
@@ -156,6 +164,7 @@ export class OAuthController {
     }
   }
 
+  @ApiOperation({ summary: 'Callback Google' })
   @Public()
   @Version(VERSION_NEUTRAL)
   @Get('google/callback')
@@ -173,6 +182,7 @@ export class OAuthController {
     return this.callback('google', code, state, req, res);
   }
 
+  @ApiOperation({ summary: 'Callback Github' })
   @Public()
   @Version(VERSION_NEUTRAL)
   @Get('github/callback')

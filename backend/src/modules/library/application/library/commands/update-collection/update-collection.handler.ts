@@ -1,6 +1,9 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ICollectionRepository } from '@/modules/library/domain/library/repositories/collection.repository.interface';
-import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  ForbiddenDomainException,
+  NotFoundDomainException,
+} from '@/shared/domain/common-exceptions';
 import { UpdateCollectionCommand } from './update-collection.command';
 import { Collection } from '@/modules/library/domain/library/entities/collection.entity';
 import { Action, Subject } from '@socialbook/shared';
@@ -17,7 +20,7 @@ export class UpdateCollectionHandler implements ICommandHandler<
     const collection = await this.collectionRepository.findById(command.id);
 
     if (!collection) {
-      throw new NotFoundException('Collection not found');
+      throw new NotFoundDomainException('Collection not found');
     }
 
     if (
@@ -26,7 +29,7 @@ export class UpdateCollectionHandler implements ICommandHandler<
         subject(Subject.Collection, { userId: collection.userId.getValue() }),
       )
     ) {
-      throw new ForbiddenException(
+      throw new ForbiddenDomainException(
         'You do not have permission to update this collection',
       );
     }

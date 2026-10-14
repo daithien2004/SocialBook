@@ -14,7 +14,7 @@ export class FilterBookDto extends PaginationQueryDto {
   @Transform(({ value }: { value: unknown }) => {
     if (!value || (typeof value === 'string' && value.trim() === ''))
       return undefined;
-    if (Array.isArray(value)) return value as string[];
+    if (Array.isArray(value)) return value.map((item: unknown) => item);
     if (typeof value === 'string') {
       return value.includes(',')
         ? value.split(',').map((s) => s.trim())
@@ -33,7 +33,7 @@ export class FilterBookDto extends PaginationQueryDto {
   @Transform(({ value }: { value: unknown }) => {
     if (!value || (typeof value === 'string' && value.trim() === ''))
       return undefined;
-    if (Array.isArray(value)) return value as string[];
+    if (Array.isArray(value)) return value.map((item: unknown) => item);
     if (typeof value === 'string') {
       return value.includes(',')
         ? value.split(',').map((s) => s.trim())
@@ -66,29 +66,14 @@ export class FilterBookDto extends PaginationQueryDto {
 
   @IsOptional()
   @IsEnum(
-    [
-      'createdAt',
-      'updatedAt',
-      'title',
-      'views',
-      'likes',
-      'publishedYear',
-      'rating',
-      'score',
-    ],
+    ['createdAt', 'updatedAt', 'title', 'views', 'likes', 'publishedYear'],
     {
       message: 'TrÆ°á»ng sáº¯p xáº¿p khÃ´ng há»£p lá»‡',
     },
   )
   override sortBy?:
-    | 'createdAt'
-    | 'updatedAt'
-    | 'title'
-    | 'views'
-    | 'likes'
-    | 'publishedYear'
-    | 'rating'
-    | 'score' = undefined;
+    'createdAt' | 'updatedAt' | 'title' | 'views' | 'likes' | 'publishedYear' =
+    undefined;
 
   @IsOptional()
   @IsEnum(['asc', 'desc'], {

@@ -9,7 +9,7 @@ import { ChapterId } from '@/modules/chapters/domain/chapters/value-objects/chap
 import { DeleteChapterCommand } from './delete-chapter.command';
 import { ChapterErrorMessages } from '@/modules/chapters/application/error-messages';
 import { ErrorMessages } from '@/shared/platform/constants/error-messages';
-import { IReadingRoomReferencePort } from '@/modules/reading-rooms/application/public-api';
+import { ReadingRoomReferencePort } from '@/modules/reading-rooms';
 import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
 
 @CommandHandler(DeleteChapterCommand)
@@ -19,7 +19,7 @@ export class DeleteChapterHandler implements ICommandHandler<
 > {
   constructor(
     private readonly chapterRepository: IChapterRepository,
-    private readonly readingRoomReferences: IReadingRoomReferencePort,
+    private readonly readingRoomReferences: ReadingRoomReferencePort,
     private readonly unitOfWork: UnitOfWorkPort,
   ) {}
 

@@ -1,7 +1,7 @@
-export { IGenreRepository } from './domain/repositories/genre.repository.interface';
-export { Genre as GenreEntity } from './domain/entities/genre.entity';
+export { GenreReadRepository } from './application/ports/genre-read.repository';
+export type { GenreReadModel } from './application/read-models/genre.read-model';
 export { GenreId } from './domain/value-objects/genre-id.vo';
-export { GenreName } from './domain/value-objects/genre-name.vo';
 export { GenresInfrastructureModule } from './infrastructure/genres-infrastructure.module';
-export { GenresApplicationModule } from './application/genres-application.module';
 export { GenresModule } from './genres.module';
+export { CreateGenreCommand } from './application/commands/create-genre/create-genre.command';
+export { FindGenreByNameQuery } from './application/queries/find-genre-by-name/find-genre-by-name.query';

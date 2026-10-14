@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
-import { IReadingRoomReferencePort } from '@/modules/reading-rooms/application/public-api/reading-room-reference.port';
+import { ReadingRoomReferencePort } from '@/modules/reading-rooms/application/public-api/reading-room-reference.port';
 
 @Injectable()
-export class ReadingRoomReferenceAdapter implements IReadingRoomReferencePort {
+export class ReadingRoomReferenceAdapter implements ReadingRoomReferencePort {
   constructor(
     private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
   ) {}

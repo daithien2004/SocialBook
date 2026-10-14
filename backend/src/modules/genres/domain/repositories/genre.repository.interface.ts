@@ -1,29 +1,9 @@
-import {
-  PaginatedResult,
-  PaginationOptions,
-} from '@/shared/domain/pagination.types';
 import { Genre } from '../entities/genre.entity';
 import { GenreId } from '../value-objects/genre-id.vo';
 import { GenreName } from '../value-objects/genre-name.vo';
 
-export interface GenreFilter {
-  name?: string;
-  isActive?: boolean;
-  createdAfter?: Date;
-  createdBefore?: Date;
-}
-
 export abstract class IGenreRepository {
   abstract findById(id: GenreId): Promise<Genre | null>;
-  abstract findByName(name: GenreName): Promise<Genre | null>;
-  abstract findBySlugs(slugs: string[]): Promise<Genre[]>;
-  abstract findAll(
-    filter: GenreFilter,
-    pagination: PaginationOptions,
-  ): Promise<PaginatedResult<Genre>>;
-  abstract findAllSimple(): Promise<Genre[]>;
-  abstract findByNames(names: string[]): Promise<Genre[]>;
-
   abstract save(genre: Genre): Promise<void>;
   abstract delete(id: GenreId): Promise<void>;
 

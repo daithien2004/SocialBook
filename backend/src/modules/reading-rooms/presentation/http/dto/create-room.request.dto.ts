@@ -1,5 +1,7 @@
 import { IsEnum, IsInt, IsUUID, IsOptional, Max, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import type { Actor } from '@/shared/casl/actor';
+import { CreateRoomCommand } from '@/modules/reading-rooms/application/commands/create-room/create-room.command';
 
 export class CreateRoomRequestDto {
   @ApiProperty({ description: 'Book ID (UUID string)' })
@@ -19,4 +21,15 @@ export class CreateRoomRequestDto {
   @Max(50)
   @IsOptional()
   maxMembers?: number;
+
+  toCommand(actor: Actor, idempotencyKey: string): CreateRoomCommand {
+    return new CreateRoomCommand(
+      actor,
+      this.bookId,
+      this.chapterId,
+      this.mode,
+      idempotencyKey,
+      this.maxMembers,
+    );
+  }
 }

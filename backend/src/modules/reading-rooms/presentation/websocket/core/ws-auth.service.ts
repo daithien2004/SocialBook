@@ -113,9 +113,6 @@ export class WsAuthService {
   }
 
   /**
-   * Đăng ký socket vào Redis sorted set của user và giới hạn số kết nối đồng thời.
-   * Trước khi đếm, xóa các slot đã quá hạn; nếu vượt giới hạn, thử gỡ slot mới
-   * rồi từ chối kết nối. Lỗi Redis được ghi log và xử lý theo hướng fail-open.
    */
   private async reserveConnectionSlot(
     userId: string,
@@ -151,7 +148,7 @@ export class WsAuthService {
     try {
       await this.redis
         .multi()
-        .zadd(key, 'XX', Date.now(), socketId) // chỉ cập nhật member đã tồn tại
+        .zadd(key, 'XX', Date.now(), socketId)
         .pexpire(key, CONN_STALE_MS)
         .exec();
     } catch (error) {
