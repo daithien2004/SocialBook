@@ -10,9 +10,9 @@ import { CREATE_SINGLE_CHAPTER_QUEUE } from '../single-chapter/single-chapter.pr
 import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 
 /**
- * Retry policy cho job táº¡o chÆ°Æ¡ng con (A1). khai bÃ¡o á»Ÿ cáº¥p queue Ä‘á»ƒ má»i job
- * enqueue tá»« `ChaptersImportProcessor` Ä‘á»u Ä‘Æ°á»£c retry + backoff mÃ  khÃ´ng pháº£i
- * láº·p láº¡i á»Ÿ tá»«ng chá»— `add(...)`.
+ * Retry policy cho job tạo chương con (A1). khai báo ở cấp queue để mọi job
+ * enqueue từ `ChaptersImportProcessor` đều được retry + backoff mÃ  không phải
+ * lặp lại ở từng chỗ `add(...)`.
  */
 export const CREATE_SINGLE_CHAPTER_JOB_OPTIONS = {
   attempts: 3,

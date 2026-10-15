@@ -162,7 +162,7 @@ export class RecommendationDataRepository implements IRecommendationDataReposito
 
 function toPopulatedBook(book: CatalogBook): PopulatedBook {
   return {
-    _id: book.id,
+    id: book.id,
     title: book.title,
     slug: book.slug,
     description: book.description,
@@ -172,12 +172,12 @@ function toPopulatedBook(book: CatalogBook): PopulatedBook {
     status: book.status,
     isDeleted: book.isDeleted,
     genres: book.genres.map(({ genre }) => ({
-      _id: genre.id,
+      id: genre.id,
       name: genre.name,
       slug: genre.slug,
     })),
     authorId: {
-      _id: book.author.id,
+      id: book.author.id,
       name: book.author.name,
       avatar: book.author.photoUrl,
     },

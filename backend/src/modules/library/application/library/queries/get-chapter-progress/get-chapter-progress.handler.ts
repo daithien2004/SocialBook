@@ -5,6 +5,7 @@ import { ChapterId } from '@/modules/library/domain/library/value-objects/chapte
 import { GetChapterProgressQuery } from './get-chapter-progress.query';
 import { ReadingProgressResult } from '../../dto/library.dto';
 import { LibraryApplicationMapper } from '../../mappers/library.mapper';
+import { assertLibraryAccess } from '@/modules/library/application/policies/library-access.policy';
 
 @QueryHandler(GetChapterProgressQuery)
 export class GetChapterProgressHandler implements IQueryHandler<
@@ -18,6 +19,7 @@ export class GetChapterProgressHandler implements IQueryHandler<
   async execute(
     query: GetChapterProgressQuery,
   ): Promise<ReadingProgressResult | null> {
+    assertLibraryAccess(query.actor, 'read', query.userId);
     if (!query.bookId || !query.chapterId) {
       return null;
     }

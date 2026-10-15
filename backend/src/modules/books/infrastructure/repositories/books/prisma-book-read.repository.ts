@@ -1,11 +1,15 @@
 import { randomUUID } from 'node:crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { Prisma } from '@/core/database/generated/prisma/client';
-import { PrismaService } from '@/core/database/postgres/prisma.service';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
 import { BookDetailReadModel } from '@/modules/books/application/read-models/book-detail.read-model';
 import { BookListReadModel } from '@/modules/books/application/read-models/book-list.read-model';
 import { BookFiltersReadModel } from '@/modules/books/application/read-models/book-filters.read-model';
 import { BookReadRepository } from '@/modules/books/application/ports/book-read.repository';
+import { BookIndexReadRepository } from '@/modules/books/application/ports/book-index-read.repository';
+import { BookSearchReadRepository } from '@/modules/books/application/ports/book-search-read.repository';
+import type { BookSearchReadModel } from '@/modules/books/application/read-models/book-search.read-model';
 import { accessibleBy } from '@/shared/casl/accessible-by';
 import type { AppAbility } from '@/shared/casl/app-ability';
 import { BookFilter } from '@/modules/books/domain/books/repositories/book.repository.interface';
@@ -23,11 +27,16 @@ import { buildBookFilter, buildBookSort } from './book.repository';
 const MAX_PAGE_SIZE = 100;
 
 @Injectable()
-export class PrismaBookReadRepository implements BookReadRepository {
+export class PrismaBookReadRepository
+  implements
+    BookReadRepository,
+    BookSearchReadRepository,
+    BookIndexReadRepository
+{
   private readonly logger = new Logger(PrismaBookReadRepository.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
     private readonly vectorRepository: IVectorRepository,
   ) {}
 
@@ -73,21 +82,21 @@ export class PrismaBookReadRepository implements BookReadRepository {
     };
     const [rows, total] = orderedIds
       ? await Promise.all([
-          this.prisma.book.findMany({
+          this.transactionHost.tx.book.findMany({
             where,
             include: BOOK_WITH_RELATIONS,
           }),
-          this.prisma.book.count({ where }),
+          this.transactionHost.tx.book.count({ where }),
         ])
       : await Promise.all([
-          this.prisma.book.findMany({
+          this.transactionHost.tx.book.findMany({
             where,
             include: BOOK_WITH_RELATIONS,
             orderBy: buildBookSort(sort),
             skip: (page - 1) * limit,
             take: limit,
           }),
-          this.prisma.book.count({ where }),
+          this.transactionHost.tx.book.count({ where }),
         ]);
     if (orderedIds) {
       const rank = new Map(orderedIds.map((id, index) => [id, index]));
@@ -110,7 +119,7 @@ export class PrismaBookReadRepository implements BookReadRepository {
     ability: AppAbility,
     id: string,
   ): Promise<BookListReadModel | null> {
-    const row = await this.prisma.book.findFirst({
+    const row = await this.transactionHost.tx.book.findFirst({
       where: {
         AND: [{ id, isDeleted: false }, accessibleBy(ability).ofType('Book')],
       },
@@ -123,7 +132,7 @@ export class PrismaBookReadRepository implements BookReadRepository {
     ability: AppAbility,
     slug: string,
   ): Promise<BookDetailReadModel | null> {
-    const row = await this.prisma.book.findFirst({
+    const row = await this.transactionHost.tx.book.findFirst({
       where: {
         AND: [{ slug, isDeleted: false }, accessibleBy(ability).ofType('Book')],
       },
@@ -149,7 +158,7 @@ export class PrismaBookReadRepository implements BookReadRepository {
 
   async getFilters(ability: AppAbility): Promise<BookFiltersReadModel> {
     const [genreGroups, tags] = await Promise.all([
-      this.prisma.bookGenre.groupBy({
+      this.transactionHost.tx.bookGenre.groupBy({
         by: ['genreId'],
         where: {
           book: {
@@ -163,7 +172,7 @@ export class PrismaBookReadRepository implements BookReadRepository {
         orderBy: { _count: { genreId: 'desc' } },
         take: 20,
       }),
-      this.prisma.$queryRaw<Array<{ name: string; count: number }>>(
+      this.transactionHost.tx.$queryRaw<Array<{ name: string; count: number }>>(
         Prisma.sql`SELECT tag AS name, COUNT(*)::int AS count
           FROM "books" CROSS JOIN LATERAL unnest("tags") AS tag
           WHERE "isDeleted" = false AND "status" = 'published'
@@ -172,7 +181,7 @@ export class PrismaBookReadRepository implements BookReadRepository {
     ]);
 
     // This is a read-only lookup of the names/slugs for IDs counted from the Books relation.
-    const genreRows = await this.prisma.genre.findMany({
+    const genreRows = await this.transactionHost.tx.genre.findMany({
       where: { id: { in: genreGroups.map((group) => group.genreId) } },
       select: { id: true, name: true, slug: true },
     });
@@ -188,5 +197,103 @@ export class PrismaBookReadRepository implements BookReadRepository {
       }),
       tags,
     };
+  }
+
+  findByTitle(title: string): Promise<BookSearchReadModel | null> {
+    return this.transactionHost.tx.book
+      .findFirst({
+        where: { title, isDeleted: false },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          status: true,
+          author: { select: { name: true } },
+        },
+      })
+      .then((row) =>
+        row
+          ? {
+              id: row.id,
+              title: row.title,
+              description: row.description,
+              status: row.status,
+              authorName: row.author.name,
+            }
+          : null,
+      );
+  }
+
+  findIdsByFilter(filter: BookFilter): Promise<string[]> {
+    return this.transactionHost.tx.book
+      .findMany({
+        where: buildBookFilter(filter),
+        select: { id: true },
+      })
+      .then((rows) => rows.map((row) => row.id));
+  }
+
+  findSearchCandidates(
+    filter: BookFilter,
+    limit: number,
+  ): Promise<BookSearchReadModel[]> {
+    return this.transactionHost.tx.book
+      .findMany({
+        where: buildBookFilter(filter),
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: Math.min(Math.max(limit, 1), MAX_PAGE_SIZE),
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          status: true,
+          author: { select: { name: true } },
+        },
+      })
+      .then((rows) =>
+        rows.map((row) => ({
+          id: row.id,
+          title: row.title,
+          description: row.description,
+          status: row.status,
+          authorName: row.author.name,
+        })),
+      );
+  }
+
+  findByIds(ids: string[]): Promise<BookListReadModel[]> {
+    if (ids.length === 0) return Promise.resolve([]);
+
+    return this.transactionHost.tx.book
+      .findMany({
+        where: { id: { in: ids }, isDeleted: false },
+        include: BOOK_WITH_RELATIONS,
+      })
+      .then((rows) => rows.map((row) => PrismaBookMapper.toListReadModel(row)));
+  }
+
+  findIndexPage(
+    pagination: PaginationOptions,
+  ): Promise<PaginatedResult<BookListReadModel>> {
+    const page = Math.max(1, Math.trunc(pagination.page || 1));
+    const limit = Math.min(
+      Math.max(1, Math.trunc(pagination.limit || 10)),
+      MAX_PAGE_SIZE,
+    );
+    const where: Prisma.BookWhereInput = { isDeleted: false };
+
+    return Promise.all([
+      this.transactionHost.tx.book.findMany({
+        where,
+        include: BOOK_WITH_RELATIONS,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.transactionHost.tx.book.count({ where }),
+    ]).then(([rows, total]) => ({
+      data: rows.map((row) => PrismaBookMapper.toListReadModel(row)),
+      meta: buildPaginationMeta(page, limit, total),
+    }));
   }
 }

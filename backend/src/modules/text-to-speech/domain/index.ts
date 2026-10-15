@@ -1,3 +1,3 @@
-export { ITextToSpeechPort } from './interfaces/text-to-speech.port';
-export { ITextToSpeechRepository } from './repositories/text-to-speech.repository.interface';
+export { TextToSpeechProvider } from './ports/text-to-speech.provider';
+export { TextToSpeechRepository } from './repositories/text-to-speech.repository';
 export { TextToSpeech, TTSStatus } from './entities/text-to-speech.entity';

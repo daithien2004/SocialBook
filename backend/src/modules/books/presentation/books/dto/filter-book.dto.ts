@@ -8,7 +8,7 @@ export class FilterBookDto extends PaginationQueryDto {
   title?: string;
 
   @IsOptional()
-  @IsString({ message: 'Author ID khÃ´ng há»£p lá»‡' })
+  @IsString({ message: 'Author ID không hợp lệ' })
   authorId?: string;
 
   @Transform(({ value }: { value: unknown }) => {
@@ -26,7 +26,7 @@ export class FilterBookDto extends PaginationQueryDto {
   @IsArray()
   @IsString({
     each: true,
-    message: 'Má»—i genre pháº£i lÃ  má»™t chuá»—i (ID hoáº·c slug)',
+    message: 'Mỗi genre phải là một chuỗi (ID hoặc slug)',
   })
   genres?: string[];
 
@@ -48,7 +48,7 @@ export class FilterBookDto extends PaginationQueryDto {
 
   @IsOptional()
   @IsEnum(['draft', 'published', 'completed'], {
-    message: 'Status pháº£i lÃ  draft, published hoáº·c completed',
+    message: 'Status phải là draft, published hoặc completed',
   })
   status?: 'draft' | 'published' | 'completed';
 
@@ -68,7 +68,7 @@ export class FilterBookDto extends PaginationQueryDto {
   @IsEnum(
     ['createdAt', 'updatedAt', 'title', 'views', 'likes', 'publishedYear'],
     {
-      message: 'TrÆ°á»ng sáº¯p xáº¿p khÃ´ng há»£p lá»‡',
+      message: 'Trường sắp xếp không hợp lệ',
     },
   )
   override sortBy?:
@@ -77,7 +77,7 @@ export class FilterBookDto extends PaginationQueryDto {
 
   @IsOptional()
   @IsEnum(['asc', 'desc'], {
-    message: 'Thá»© tá»± sáº¯p xáº¿p pháº£i lÃ  asc hoáº·c desc',
+    message: 'Thứ tự sắp xếp phải là asc hoặc desc',
   })
   override order: 'asc' | 'desc' = 'desc';
 }

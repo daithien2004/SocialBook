@@ -28,6 +28,7 @@ export interface FollowWithUserInfo {
   userId: string;
   targetId: string;
   status: boolean;
+  isActive: boolean;
   username?: string;
   image?: string;
   postCount?: number;

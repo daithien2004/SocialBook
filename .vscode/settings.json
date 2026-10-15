@@ -1,6 +1,8 @@
 {
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
+  "jest.jestCommandLine": "npm test --workspace=backend --",
+  "jest.rootPath": "backend",
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.removeUnusedImports": "explicit",

@@ -4,6 +4,7 @@ import { IFollowRepository } from '@/modules/follows/domain/repositories/follow.
 import { UserId } from '@/modules/follows/domain/value-objects/user-id.vo';
 import { TargetId } from '@/modules/follows/domain/value-objects/target-id.vo';
 import { GetFollowStatusQuery } from './get-follow-status.query';
+import { ForbiddenDomainException } from '@/shared/domain/common-exceptions';
 
 @QueryHandler(GetFollowStatusQuery)
 export class GetFollowStatusHandler implements IQueryHandler<GetFollowStatusQuery> {
@@ -13,7 +14,10 @@ export class GetFollowStatusHandler implements IQueryHandler<GetFollowStatusQuer
 
   async execute(query: GetFollowStatusQuery) {
     try {
-      const userId = UserId.create(query.userId);
+      if (!query.actor.ability.can('read', 'Follow')) {
+        throw new ForbiddenDomainException('FOLLOW_READ_FORBIDDEN');
+      }
+      const userId = UserId.create(query.actor.userId);
       const targetId = TargetId.create(query.targetId);
 
       const isOwner = userId.getValue() === targetId.getValue();
@@ -24,7 +28,7 @@ export class GetFollowStatusHandler implements IQueryHandler<GetFollowStatusQuer
       );
 
       return {
-        userId: query.userId,
+        userId: query.actor.userId,
         targetId: query.targetId,
         isFollowing: followStatus.isFollowing,
         isOwner,
@@ -32,7 +36,7 @@ export class GetFollowStatusHandler implements IQueryHandler<GetFollowStatusQuer
       };
     } catch (error) {
       this.logger.error(
-        `Failed to get follow status: ${query.userId} -> ${query.targetId}`,
+        `Failed to get follow status: ${query.actor.userId} -> ${query.targetId}`,
         error,
       );
       throw error;

@@ -17,20 +17,14 @@ import { ValidateUserHandler } from './commands/validate-user/validate-user.hand
 import { GenerateWsTicketHandler } from './commands/generate-ws-ticket/generate-ws-ticket.handler';
 
 import { TokenService } from './services/token.service';
-import { OAuthStateService } from './services/oauth-state.service';
 import { AuthCookieService } from './services/auth-cookie.service';
 
 import { UsersApplicationModule } from '@/modules/users/application/public-api';
-import {
-  RolesApplicationModule,
-  RolesInfrastructureModule,
-} from '@/modules/roles';
+import { RolesInfrastructureModule } from '@/modules/roles';
 import { OtpApplicationModule } from '@/modules/auth/application/otp/otp-application.module';
 import { UsersRepositoryModule } from '@/modules/users/infrastructure/public-api';
 import { OtpRepositoryModule } from '@/modules/auth/infrastructure/repositories/otp/otp-repository.module';
 import { PasswordHasherModule } from '@/core/security/password-hasher.module';
-import { OAuthStateStorePort } from '@/modules/auth/application/auth/oauth-state-store.port';
-import { RedisOAuthStateAdapter } from '@/modules/auth/infrastructure/auth/adapters/redis-oauth-state.adapter';
 import { TokenRotationModule } from '@/modules/auth/infrastructure/cache/token-rotation.module';
 
 @Module({
@@ -48,7 +42,6 @@ import { TokenRotationModule } from '@/modules/auth/infrastructure/cache/token-r
       }),
     }),
     UsersApplicationModule,
-    RolesApplicationModule,
     OtpApplicationModule,
     UsersRepositoryModule,
     RolesInfrastructureModule,
@@ -68,32 +61,10 @@ import { TokenRotationModule } from '@/modules/auth/infrastructure/cache/token-r
     VerifyOtpHandler,
     ResendOtpHandler,
     ValidateUserHandler,
-    RedisOAuthStateAdapter,
-    {
-      provide: OAuthStateStorePort,
-      useExisting: RedisOAuthStateAdapter,
-    },
-    OAuthStateService,
     AuthCookieService,
     GenerateWsTicketHandler,
   ],
 
-  exports: [
-    LoginHandler,
-    RegisterHandler,
-    OAuthAuthHandler,
-    RefreshTokenHandler,
-    LogoutHandler,
-    ForgotPasswordHandler,
-    ResetPasswordHandler,
-    VerifyOtpHandler,
-    ResendOtpHandler,
-    ValidateUserHandler,
-    GenerateWsTicketHandler,
-    TokenService,
-    OAuthStateStorePort,
-    OAuthStateService,
-    AuthCookieService,
-  ],
+  exports: [TokenService, AuthCookieService],
 })
 export class AuthApplicationModule {}

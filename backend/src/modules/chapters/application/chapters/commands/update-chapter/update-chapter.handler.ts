@@ -10,35 +10,38 @@ import { ChapterTitle } from '@/modules/chapters/domain/chapters/value-objects/c
 import { BookId } from '@/modules/chapters/domain/chapters/value-objects/book-id.vo';
 import { UpdateChapterCommand } from './update-chapter.command';
 import { ChapterErrorMessages } from '@/modules/chapters/application/error-messages';
-import { ChapterResult } from '../../queries/get-chapters/get-chapters.result';
+import { ChapterReadModel } from '@/modules/chapters/application/read-models/chapter.read-model';
 import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
 import { ReadingRoomReferencePort } from '@/modules/reading-rooms';
-import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
+import { ForbiddenError, subject } from '@casl/ability';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(UpdateChapterCommand)
 export class UpdateChapterHandler implements ICommandHandler<
   UpdateChapterCommand,
-  ChapterResult
+  ChapterReadModel
 > {
   constructor(
     private readonly chapterRepository: IChapterRepository,
     private readonly readingRoomReferences: ReadingRoomReferencePort,
-    private readonly unitOfWork: UnitOfWorkPort,
   ) {}
 
-  async execute(command: UpdateChapterCommand): Promise<ChapterResult> {
-    return this.unitOfWork.execute(() => this.updateChapter(command));
-  }
-
-  private async updateChapter(
-    command: UpdateChapterCommand,
-  ): Promise<ChapterResult> {
+  @Transactional()
+  async execute(command: UpdateChapterCommand): Promise<ChapterReadModel> {
     const chapterId = ChapterId.create(command.id);
 
     const chapter = await this.chapterRepository.findById(chapterId);
     if (!chapter) {
       throw new NotFoundDomainException(ChapterErrorMessages.CHAPTER_NOT_FOUND);
     }
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'update',
+      subject('Chapter', {
+        id: chapter.id.toString(),
+        bookId: chapter.bookId.toString(),
+        isDeleted: false,
+      }),
+    );
 
     // Check if title is being updated and if it conflicts with existing chapter
     if (command.title && command.title.trim() !== chapter.title.toString()) {
@@ -117,6 +120,6 @@ export class UpdateChapterHandler implements ICommandHandler<
 
     await this.chapterRepository.save(chapter);
 
-    return ChapterApplicationMapper.toResult(chapter);
+    return ChapterApplicationMapper.toReadModel(chapter);
   }
 }

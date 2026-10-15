@@ -1,13 +1,10 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ICollectionRepository } from '@/modules/library/domain/library/repositories/collection.repository.interface';
-import {
-  ForbiddenDomainException,
-  NotFoundDomainException,
-} from '@/shared/domain/common-exceptions';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { UpdateCollectionCommand } from './update-collection.command';
 import { Collection } from '@/modules/library/domain/library/entities/collection.entity';
-import { Action, Subject } from '@socialbook/shared';
-import { subject } from '@casl/ability';
+import { ForbiddenError, subject } from '@casl/ability';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(UpdateCollectionCommand)
 export class UpdateCollectionHandler implements ICommandHandler<
@@ -16,6 +13,7 @@ export class UpdateCollectionHandler implements ICommandHandler<
 > {
   constructor(private readonly collectionRepository: ICollectionRepository) {}
 
+  @Transactional()
   async execute(command: UpdateCollectionCommand): Promise<Collection> {
     const collection = await this.collectionRepository.findById(command.id);
 
@@ -23,16 +21,14 @@ export class UpdateCollectionHandler implements ICommandHandler<
       throw new NotFoundDomainException('Collection not found');
     }
 
-    if (
-      !command.ability.can(
-        Action.Update,
-        subject(Subject.Collection, { userId: collection.userId.getValue() }),
-      )
-    ) {
-      throw new ForbiddenDomainException(
-        'You do not have permission to update this collection',
-      );
-    }
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'update',
+      subject('LibraryCollection', {
+        id: collection.id,
+        userId: collection.userId.toString(),
+        isPublic: collection.isPublic,
+      }),
+    );
 
     collection.updateInfo({
       name: command.name,

@@ -6,15 +6,20 @@ import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { IFollowRepository } from '@/modules/follows/domain/repositories/follow.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Follow } from '@/modules/follows/domain/entities/follow.entity';
+import { FollowResultMapper } from '../../follow.result';
+import type { FollowResult } from '../../follow.result';
 import { FollowId } from '@/modules/follows/domain/value-objects/follow-id.vo';
 import { UserId } from '@/modules/follows/domain/value-objects/user-id.vo';
 import { TargetId } from '@/modules/follows/domain/value-objects/target-id.vo';
+import { subject } from '@casl/ability';
+import { ForbiddenDomainException } from '@/shared/domain/common-exceptions';
 import { CreateFollowCommand } from './create-follow.command';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(CreateFollowCommand)
 export class CreateFollowHandler implements ICommandHandler<
   CreateFollowCommand,
-  Follow
+  FollowResult
 > {
   private readonly logger = new Logger(CreateFollowHandler.name);
 
@@ -25,55 +30,78 @@ export class CreateFollowHandler implements ICommandHandler<
     private readonly notificationQueue: INotificationQueuePort,
   ) {}
 
-  async execute(command: CreateFollowCommand): Promise<Follow> {
+  async execute(command: CreateFollowCommand): Promise<FollowResult> {
     try {
-      const userId = UserId.create(command.userId);
-      const targetId = TargetId.create(command.targetId);
-
-      if (userId.getValue() === targetId.getValue()) {
-        throw new BadRequestDomainException('User cannot follow themselves');
-      }
-
-      const existingFollow = await this.followRepository.exists(
-        userId,
-        targetId,
-      );
-
-      if (existingFollow) {
-        existingFollow.toggleStatus();
-        await this.followRepository.save(existingFollow);
-
-        this.logger.log(
-          `Follow status toggled to ${existingFollow.isActive()} successfully: ${existingFollow.id.toString()} (User: ${command.userId} -> Target: ${command.targetId})`,
-        );
-
-        return existingFollow;
-      } else {
-        const newFollow = Follow.create({
-          id: FollowId.create(this.idGenerator.generate()),
-          userId: command.userId,
-          targetId: command.targetId,
-          status: true,
-        });
-
-        await this.followRepository.save(newFollow);
-
-        this.logger.log(
-          `Follow created successfully: ${newFollow.id.toString()} (User: ${command.userId} -> Target: ${command.targetId})`,
-        );
-
+      const { follow, shouldNotify } = await this.persistFollow(command);
+      if (shouldNotify) {
         await this.notificationQueue.queueUserFollowed(
-          new UserFollowedJobPayload(command.userId, command.targetId),
+          new UserFollowedJobPayload(command.actor.userId, command.targetId),
         );
-
-        return newFollow;
       }
+      return FollowResultMapper.fromDomain(follow);
     } catch (error) {
       this.logger.error(
-        `Failed to create follow: ${command.userId} -> ${command.targetId}`,
+        `Failed to create follow: ${command.actor.userId} -> ${command.targetId}`,
         error,
       );
       throw error;
     }
+  }
+
+  @Transactional()
+  private async persistFollow(
+    command: CreateFollowCommand,
+  ): Promise<{ follow: Follow; shouldNotify: boolean }> {
+    const userId = UserId.create(command.actor.userId);
+    const targetId = TargetId.create(command.targetId);
+    if (userId.getValue() === targetId.getValue()) {
+      throw new BadRequestDomainException('User cannot follow themselves');
+    }
+
+    const existingFollow = await this.followRepository.exists(userId, targetId);
+    if (existingFollow) {
+      if (
+        !command.actor.ability.can(
+          'update',
+          subject('Follow', {
+            id: existingFollow.id.toString(),
+            userId: existingFollow.userId.toString(),
+            targetId: existingFollow.targetId.toString(),
+          }),
+        )
+      ) {
+        throw new ForbiddenDomainException('FOLLOW_UPDATE_FORBIDDEN');
+      }
+      existingFollow.toggleStatus();
+      await this.followRepository.save(existingFollow);
+      this.logger.log(
+        `Follow status toggled to ${existingFollow.isActive()} successfully: ${existingFollow.id.toString()} (User: ${command.actor.userId} -> Target: ${command.targetId})`,
+      );
+      return { follow: existingFollow, shouldNotify: false };
+    }
+
+    if (
+      !command.actor.ability.can(
+        'create',
+        subject('Follow', {
+          id: '',
+          userId: command.actor.userId,
+          targetId: command.targetId,
+        }),
+      )
+    ) {
+      throw new ForbiddenDomainException('FOLLOW_CREATE_FORBIDDEN');
+    }
+    const newFollow = Follow.create({
+      id: FollowId.create(this.idGenerator.generate()),
+      userId: command.actor.userId,
+      targetId: command.targetId,
+      status: true,
+    });
+    await this.followRepository.save(newFollow);
+    this.logger.log(
+      `Follow created successfully: ${newFollow.id.toString()} (User: ${command.actor.userId} -> Target: ${command.targetId})`,
+    );
+    return { follow: newFollow, shouldNotify: true };
   }
 }

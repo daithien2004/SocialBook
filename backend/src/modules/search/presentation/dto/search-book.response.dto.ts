@@ -3,7 +3,7 @@ import type { SearchBookResult } from '@/modules/search/application/dto/search-b
 
 class SearchAuthorResponseDto {
   @ApiProperty()
-  _id!: string;
+  id!: string;
 
   @ApiProperty()
   name!: string;
@@ -14,7 +14,7 @@ class SearchAuthorResponseDto {
 
 class SearchGenreResponseDto {
   @ApiProperty()
-  _id!: string;
+  id!: string;
 
   @ApiProperty()
   name!: string;
@@ -43,9 +43,6 @@ class SearchBookStatsResponseDto {
 export class SearchBookResponseDto {
   @ApiProperty()
   id!: string;
-
-  @ApiProperty()
-  _id!: string;
 
   @ApiProperty()
   title!: string;
@@ -95,7 +92,6 @@ export class SearchBookResponseDto {
   static fromReadModel(result: SearchBookResult): SearchBookResponseDto {
     const response = new SearchBookResponseDto();
     response.id = result.id;
-    response._id = result._id;
     response.title = result.title;
     response.slug = result.slug;
     response.description = result.description;
@@ -107,12 +103,12 @@ export class SearchBookResponseDto {
     response.createdAt = result.createdAt;
     response.updatedAt = result.updatedAt;
     response.authorId = {
-      _id: result.authorId._id,
+      id: result.authorId.id,
       name: result.authorId.name,
       avatar: result.authorId.avatar,
     };
     response.genres = result.genres.map((genre) => ({
-      _id: genre._id,
+      id: genre.id,
       name: genre.name,
       slug: genre.slug,
     }));

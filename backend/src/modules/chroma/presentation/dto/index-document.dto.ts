@@ -6,6 +6,8 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import type { Actor } from '@/shared/casl/actor';
+import { IndexDocumentCommand } from '@/modules/chroma/application/commands/index-document/index-document.command';
 
 export class IndexDocumentDto {
   @IsString()
@@ -25,4 +27,15 @@ export class IndexDocumentDto {
   @IsArray()
   @IsNumber({}, { each: true })
   embedding!: number[];
+
+  toCommand(actor: Actor): IndexDocumentCommand {
+    return new IndexDocumentCommand(
+      actor,
+      this.contentId,
+      this.contentType,
+      this.content,
+      this.metadata,
+      this.embedding,
+    );
+  }
 }

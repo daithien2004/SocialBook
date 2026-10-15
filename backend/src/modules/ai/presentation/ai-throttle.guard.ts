@@ -13,7 +13,6 @@ import { Request, Response } from 'express';
 interface AIRequest extends Request {
   user?: {
     id?: string;
-    _id?: string;
   };
 }
 
@@ -30,7 +29,7 @@ export class AIThrottleGuard implements CanActivate {
 
     const config = await this.configService.get();
 
-    const userId = req.user?.id ?? req.user?._id;
+    const userId = req.user?.id;
     const authenticatedUserId =
       typeof userId === 'string' && userId.length > 0 ? userId : undefined;
     const isAuthenticated = authenticatedUserId !== undefined;

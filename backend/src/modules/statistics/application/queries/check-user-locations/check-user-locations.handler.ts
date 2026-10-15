@@ -1,12 +1,12 @@
-import { Logger } from '@nestjs/common';
-import { QueryHandler } from '@nestjs/cqrs';
+﻿import { Logger } from '@nestjs/common';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { StatisticsReadRepository } from '@/modules/statistics/application/ports/statistics-read.repository';
 import type { UserLocationSummaryReadModel } from '@/modules/statistics/application/read-models/statistics.read-model';
-import { assertStatisticsReadAllowed } from '@/modules/statistics/application/assert-statistics-read-policy';
+import { assertCanReadStatistics } from '../../policies/statistics-access.policy';
 import { CheckUserLocationsQuery } from './check-user-locations.query';
 
 @QueryHandler(CheckUserLocationsQuery)
-export class CheckUserLocationsHandler {
+export class CheckUserLocationsHandler implements IQueryHandler<CheckUserLocationsQuery> {
   private readonly logger = new Logger(CheckUserLocationsHandler.name);
 
   constructor(
@@ -16,7 +16,7 @@ export class CheckUserLocationsHandler {
   async execute(
     query: CheckUserLocationsQuery,
   ): Promise<UserLocationSummaryReadModel> {
-    assertStatisticsReadAllowed(query.actor);
+    assertCanReadStatistics(query.actor);
     this.logger.log('Checking user locations');
 
     return this.statisticsReadRepository.checkUserLocations();

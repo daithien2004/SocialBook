@@ -2,6 +2,7 @@ import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { RecordReadingTimeCommand } from '@/modules/library/application/library/commands/record-reading-time/record-reading-time.command';
 import { ProcessReadingSessionCommand } from './process-reading-session.command';
+import { assertLibraryAccess } from '@/modules/library/application/policies/library-access.policy';
 
 export interface ProcessReadingSessionResult {
   timeSpentMinutes: number;
@@ -19,9 +20,11 @@ export class ProcessReadingSessionHandler implements ICommandHandler<
   async execute(
     command: ProcessReadingSessionCommand,
   ): Promise<ProcessReadingSessionResult> {
+    assertLibraryAccess(command.actor, 'manage', command.userId);
     try {
       const result = await this.commandBus.execute(
         new RecordReadingTimeCommand(
+          command.actor,
           command.userId,
           command.bookId,
           command.chapterId,

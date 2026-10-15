@@ -87,8 +87,6 @@ export const chapterKeys = {
     [...chapterKeys.all, 'by-id', bookSlug, chapterId] as const,
   importStatus: (bookSlug: string, jobId: string, timestamp?: number) =>
     [...chapterKeys.all, 'import-status', bookSlug, jobId, timestamp] as const,
-  knowledge: (bookSlug: string, chapterId: string, force?: boolean) =>
-    [...chapterKeys.all, 'knowledge', bookSlug, chapterId, force] as const,
 };
 
 export const commentKeys = {
@@ -130,6 +128,8 @@ export const libraryKeys = {
   all: ['library'] as const,
   books: (status?: LibraryStatus | string, limit?: number) =>
     [...libraryKeys.all, 'books', status, limit] as const,
+  bookPages: (status?: LibraryStatus | string, limit?: number) =>
+    [...libraryKeys.all, 'book-pages', status, limit] as const,
   chapterProgress: (bookId: string, chapterId: string) =>
     [...libraryKeys.all, 'chapter-progress', bookId, chapterId] as const,
   bookInfo: (bookId: string) =>

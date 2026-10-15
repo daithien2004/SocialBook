@@ -5,6 +5,6 @@ import { AIThrottleGuard } from './ai-throttle.guard';
 @Module({
   imports: [RateLimitConfigModule],
   providers: [AIThrottleGuard],
-  exports: [AIThrottleGuard],
+  exports: [AIThrottleGuard, RateLimitConfigModule],
 })
 export class AIThrottleModule {}

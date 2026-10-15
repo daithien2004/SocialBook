@@ -66,7 +66,7 @@ export const NESTJS_CHAPTERS_ENDPOINTS = {
     importPreview: (bookSlug: string) => `/books/${bookSlug}/chapters/import/preview`,
     importStart: (bookSlug: string) => `/books/${bookSlug}/chapters/import/start`,
     importStatus: (bookSlug: string, jobId: string) => `/books/${bookSlug}/chapters/import/status/${jobId}`,
-    getChapterKnowledge: (bookSlug: string, chapterId: string) => `/books/${bookSlug}/chapters/${chapterId}/knowledge`,
+    generateChapterKnowledge: (bookSlug: string, chapterId: string) => `/books/${bookSlug}/chapters/${chapterId}/knowledge`,
 };
 
 

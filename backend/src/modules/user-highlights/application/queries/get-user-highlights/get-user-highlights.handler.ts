@@ -1,22 +1,23 @@
 import { GetUserHighlightsQuery } from './get-user-highlights.query';
-import { QueryHandler } from '@nestjs/cqrs';
-import { IUserHighlightRepository } from '@/modules/user-highlights/domain/repositories/user-highlight.repository.interface';
-import { UserHighlight } from '@/modules/user-highlights/domain/entities/user-highlight.entity';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
+import { UserHighlightReadRepository } from '../../ports/user-highlight-read.repository';
 
 @QueryHandler(GetUserHighlightsQuery)
-export class GetUserHighlightsHandler {
-  constructor(private readonly highlightRepository: IUserHighlightRepository) {}
+export class GetUserHighlightsHandler implements IQueryHandler<GetUserHighlightsQuery> {
+  constructor(
+    private readonly highlightReadRepository: UserHighlightReadRepository,
+  ) {}
 
-  async execute(query: GetUserHighlightsQuery): Promise<UserHighlight[]> {
-    if (query.chapterId) {
-      return this.highlightRepository.findByChapterId(
-        query.userId,
-        query.chapterId,
-      );
-    }
-    if (query.bookId) {
-      return this.highlightRepository.findByBookId(query.userId, query.bookId);
-    }
-    return [];
+  execute(query: GetUserHighlightsQuery) {
+    return this.highlightReadRepository.findPageForUser(
+      query.actor.ability,
+      query.actor.userId,
+      {
+        ...(query.bookId ? { bookId: query.bookId } : {}),
+        ...(query.chapterId ? { chapterId: query.chapterId } : {}),
+      },
+      query.limit,
+      (query.page - 1) * query.limit,
+    );
   }
 }

@@ -7,17 +7,16 @@ import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.
 import { IMediaPort } from '@/modules/media/domain/public-api';
 import { PostModerationService } from '../../services/post-moderation.service';
 import { IBookRepository } from '@/modules/books/domain/public-api';
-import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
 import { PostErrorMessages } from '@/modules/posts/application/error-messages';
 import { UpdatePostCommand } from './update-post.command';
-
-import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
+import type { Post as PostEntity } from '@/modules/posts/domain/posts/entities/post.entity';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(UpdatePostCommand)
 export class UpdatePostHandler implements ICommandHandler<
   UpdatePostCommand,
-  { post: Post; moderationMessage?: string }
+  string
 > {
   constructor(
     private readonly postRepository: IPostRepository,
@@ -26,23 +25,22 @@ export class UpdatePostHandler implements ICommandHandler<
     private readonly postModerationService: PostModerationService,
   ) {}
 
-  async execute(
-    command: UpdatePostCommand,
-  ): Promise<{ post: Post; moderationMessage?: string }> {
+  async execute(command: UpdatePostCommand): Promise<string> {
     const post = await this.postRepository.findById(command.postId);
     if (!post)
       throw new NotFoundDomainException(PostErrorMessages.POST_NOT_FOUND);
 
-    if (!command.ability.can(Action.Update, subject(Subject.Post, post))) {
+    if (
+      !command.actor.ability.can('update', subject('Post', postSubject(post)))
+    ) {
       throw new ForbiddenDomainException(
         PostErrorMessages.POST_UPDATE_FORBIDDEN,
       );
     }
 
-    let moderationMessage: string | undefined;
-
     if (command.content) {
-      moderationMessage = await this.postModerationService.moderate(
+      await this.postModerationService.moderate(
+        command.actor,
         post,
         command.content,
       );
@@ -60,11 +58,6 @@ export class UpdatePostHandler implements ICommandHandler<
       let urls: string[] = [];
       if (Array.isArray(command.imageUrls)) {
         urls = command.imageUrls.filter((url) => url && url.trim() !== '');
-      } else if (typeof command.imageUrls === 'string') {
-        const strVal = (command.imageUrls as string).trim();
-        if (strVal && strVal !== '""' && strVal !== "''") {
-          urls = [strVal];
-        }
       }
       post.updateImages(urls);
     }
@@ -76,10 +69,21 @@ export class UpdatePostHandler implements ICommandHandler<
       post.updateImages([...post.imageUrls, ...newImageUrls]);
     }
 
-    const updatedPost = await this.postRepository.update(post);
-    return {
-      post: updatedPost,
-      moderationMessage,
-    };
+    return this.persistPost(post);
   }
+
+  @Transactional()
+  private async persistPost(post: PostEntity): Promise<string> {
+    const updatedPost = await this.postRepository.update(post);
+    return updatedPost.id;
+  }
+}
+
+function postSubject(post: PostEntity) {
+  return {
+    id: post.id,
+    userId: post.userId,
+    isDeleted: post.isDeleted,
+    isFlagged: post.isFlagged,
+  };
 }

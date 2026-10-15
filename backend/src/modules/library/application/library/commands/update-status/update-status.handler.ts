@@ -1,6 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ReadingList } from '@/modules/library/domain/library/entities/reading-list.entity';
-import { LibraryItemReadModel } from '@/modules/library/domain/library/read-models/library-item.read-model';
+import type { LibraryItemReadModel } from '@/modules/library/application/read-models/library-item.read-model';
+import { LibraryReadRepository } from '@/modules/library/application/ports/library-read.repository';
 import { IReadingListRepository } from '@/modules/library/domain/library/repositories/reading-list.repository.interface';
 import { BookId } from '@/modules/library/domain/library/value-objects/book-id.vo';
 import { UserId } from '@/modules/library/domain/library/value-objects/user-id.vo';
@@ -8,6 +9,8 @@ import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { InternalServerDomainException } from '@/shared/domain/common-exceptions';
 import { UpdateStatusCommand } from './update-status.command';
 import { IRecommendationCachePort } from '@/modules/recommendations/domain/public-api';
+import { assertLibraryAccess } from '@/modules/library/application/policies/library-access.policy';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(UpdateStatusCommand)
 export class UpdateStatusHandler implements ICommandHandler<
@@ -16,11 +19,22 @@ export class UpdateStatusHandler implements ICommandHandler<
 > {
   constructor(
     private readonly readingListRepository: IReadingListRepository,
+    private readonly libraryReadRepository: LibraryReadRepository,
     private readonly idGenerator: IIdGenerator,
     private readonly recommendationCache: IRecommendationCachePort,
   ) {}
 
   async execute(command: UpdateStatusCommand): Promise<LibraryItemReadModel> {
+    assertLibraryAccess(command.actor, 'manage', command.userId);
+    const result = await this.updateStatusInTransaction(command);
+    void this.recommendationCache.clear(command.userId);
+    return result;
+  }
+
+  @Transactional()
+  private async updateStatusInTransaction(
+    command: UpdateStatusCommand,
+  ): Promise<LibraryItemReadModel> {
     const userId = UserId.create(command.userId);
     const bookId = BookId.create(command.bookId);
 
@@ -42,11 +56,9 @@ export class UpdateStatusHandler implements ICommandHandler<
 
     await this.readingListRepository.save(readingList);
 
-    void this.recommendationCache.clear(command.userId);
-
-    const result = await this.readingListRepository.findDetailByUserIdAndBookId(
-      userId,
-      bookId,
+    const result = await this.libraryReadRepository.findDetailByUserIdAndBookId(
+      userId.toString(),
+      bookId.toString(),
     );
     if (!result) {
       throw new InternalServerDomainException(

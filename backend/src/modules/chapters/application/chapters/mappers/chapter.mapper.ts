@@ -1,8 +1,10 @@
 import { Chapter } from '@/modules/chapters/domain/chapters/entities/chapter.entity';
-import { ChapterResult } from '../queries/get-chapters/get-chapters.result';
+import { ChapterKnowledge } from '@/modules/chapters/domain/chapters/entities/chapter-knowledge.entity';
+import { ChapterReadModel } from '@/modules/chapters/application/read-models/chapter.read-model';
+import type { ChapterKnowledgeResult } from '../commands/generate-chapter-knowledge/generate-chapter-knowledge.result';
 
 export class ChapterApplicationMapper {
-  static toResult(chapter: Chapter): ChapterResult {
+  static toReadModel(chapter: Chapter): ChapterReadModel {
     return {
       id: chapter.id.toString(),
       title: chapter.title.toString(),
@@ -18,6 +20,20 @@ export class ChapterApplicationMapper {
       contentPreview: chapter.getContentPreview(),
       createdAt: chapter.createdAt,
       updatedAt: chapter.updatedAt,
+    };
+  }
+
+  static toKnowledgeResult(
+    knowledge: ChapterKnowledge,
+  ): ChapterKnowledgeResult {
+    return {
+      id: knowledge.id,
+      chapterId: knowledge.chapterId,
+      entities: knowledge.entities,
+      relationships: knowledge.relationships,
+      summary: knowledge.summary,
+      createdAt: knowledge.createdAt,
+      updatedAt: knowledge.updatedAt,
     };
   }
 }

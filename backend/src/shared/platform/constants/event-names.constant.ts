@@ -6,7 +6,6 @@ export const EventNames = {
   BOOK_VIEWED: 'book.viewed',
 
   // Audio events
-  AUDIO_PLAYED: 'audio.played',
 
   // Reading room events
   READING_ROOM_HIGHLIGHT_INSIGHT_UPDATED:
@@ -20,6 +19,7 @@ export const EventNames = {
   POST_CREATED: 'post.created',
   COMMENT_CREATED: 'comment.created',
   LIKE_TOGGLED: 'like.toggled',
+  NOTIFICATION_CREATED: 'notification.created',
 
   // Moderation events
   TOXIC_WORDS_UPDATED: 'toxic-words.updated',

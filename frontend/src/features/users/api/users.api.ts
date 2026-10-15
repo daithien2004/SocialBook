@@ -22,7 +22,6 @@ interface SearchUsersRawPage {
   data: {
     id: string;
     username: string;
-    email: string;
     image?: string | null;
     bio?: string | null;
     createdAt: string;

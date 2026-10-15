@@ -33,6 +33,7 @@ import {
 } from '@/shared/platform/decorators/api-response.decorators';
 import {
   paginate,
+  type PageResult,
   type PaginatedResult,
 } from '@/shared/domain/pagination.types';
 import type { GenreReadModel } from '../application/read-models/genre.read-model';
@@ -78,10 +79,9 @@ export class GenresController {
     @CurrentActor() actor: Actor,
     @Query() request: FilterGenreDto,
   ): Promise<PaginatedResult<GenreResponseDto>> {
-    const page = await this.queryBus.execute<{
-      items: GenreReadModel[];
-      total: number;
-    }>(request.toQuery(actor));
+    const page = await this.queryBus.execute<PageResult<GenreReadModel>>(
+      request.toQuery(actor),
+    );
     return paginate(page.items, page.total, request, (items) =>
       GenreResponseDto.fromArray(items),
     );
@@ -97,10 +97,9 @@ export class GenresController {
     @CurrentActor() actor: Actor,
     @Query() request: FilterGenreDto,
   ): Promise<PaginatedResult<GenreResponseDto>> {
-    const page = await this.queryBus.execute<{
-      items: GenreReadModel[];
-      total: number;
-    }>(request.toQuery(actor));
+    const page = await this.queryBus.execute<PageResult<GenreReadModel>>(
+      request.toQuery(actor),
+    );
     return paginate(page.items, page.total, request, (items) =>
       GenreResponseDto.fromArray(items),
     );

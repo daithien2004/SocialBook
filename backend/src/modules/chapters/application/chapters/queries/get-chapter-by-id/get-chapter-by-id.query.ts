@@ -1,9 +1,13 @@
 import { Query } from '@nestjs/cqrs';
 
-import { ChapterResult } from '@/modules/chapters/application/chapters/queries/get-chapters/get-chapters.result';
+import { ChapterReadModel } from '@/modules/chapters/application/read-models/chapter.read-model';
+import type { Actor } from '@/shared/casl/actor';
 
-export class GetChapterByIdQuery extends Query<ChapterResult> {
-  constructor(public readonly id: string) {
+export class GetChapterByIdQuery extends Query<ChapterReadModel> {
+  constructor(
+    public readonly actor: Actor,
+    public readonly id: string,
+  ) {
     super();
   }
 }

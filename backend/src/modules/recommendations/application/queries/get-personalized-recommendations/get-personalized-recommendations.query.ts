@@ -1,9 +1,10 @@
 import { Query } from '@nestjs/cqrs';
-import type { PaginatedRecommendationResult } from '@/modules/recommendations/domain/interfaces/recommendation-result';
+import type { Actor } from '@/shared/casl/actor';
+import type { RecommendationsReadModel } from '../../read-models/recommendations.read-model';
 
-export class GetPersonalizedRecommendationsQuery extends Query<PaginatedRecommendationResult> {
+export class GetPersonalizedRecommendationsQuery extends Query<RecommendationsReadModel> {
   constructor(
-    public readonly userId: string,
+    public readonly actor: Actor,
     public readonly page: number,
     public readonly limit: number,
   ) {

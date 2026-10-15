@@ -14,11 +14,13 @@ import { CreatePostCommand } from './create-post.command';
 import { containsVietnameseToxicWords } from '@/modules/content-moderation';
 import { IPostModerationPort } from '@/modules/posts/domain/posts/interfaces/post-moderation.port';
 import { EventNames } from '@/shared/platform/constants/event-names.constant';
+import { ForbiddenDomainException } from '@/shared/domain/common-exceptions';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(CreatePostCommand)
 export class CreatePostHandler implements ICommandHandler<
   CreatePostCommand,
-  { post: Post; moderationMessage?: string }
+  string
 > {
   constructor(
     private readonly postRepository: IPostRepository,
@@ -29,19 +31,22 @@ export class CreatePostHandler implements ICommandHandler<
     private readonly postModerationQueue: IPostModerationPort,
   ) {}
 
-  async execute(
-    command: CreatePostCommand,
-  ): Promise<{ post: Post; moderationMessage?: string }> {
+  async execute(command: CreatePostCommand): Promise<string> {
+    if (!command.actor.ability.can('create', 'Post')) {
+      throw new ForbiddenDomainException(
+        PostErrorMessages.POST_CREATE_FORBIDDEN,
+      );
+    }
     // Validate Book
     const bookExists = await this.bookRepository.existsById(command.bookId);
     if (!bookExists)
       throw new NotFoundDomainException(PostErrorMessages.BOOK_NOT_FOUND);
 
-    // Layer 1: Quick regex check (obvious profanity) â€” SYNCHRONOUS, immediate
+    // Layer 1: Quick regex check (obvious profanity) — SYNCHRONOUS, immediate
     const quickCheck = containsVietnameseToxicWords(command.content);
     if (quickCheck) {
       throw new BadRequestDomainException(
-        `Ná»™i dung chá»©a tá»« ngá»¯ thÃ´ tá»¥c khÃ´ng phÃ¹ há»£p: "${quickCheck.matchedWord}" (nhÃ³m: ${quickCheck.group}).`,
+        `Nội dung chứa từ ngữ thô tục không phù hợp: "${quickCheck.matchedWord}" (nhóm: ${quickCheck.group}).`,
       );
     }
 
@@ -51,29 +56,35 @@ export class CreatePostHandler implements ICommandHandler<
       imageUrls = await this.mediaService.uploadMultipleImages(command.files);
     }
 
-    // Create and save the post immediately (PENDING status â€” visible to user)
+    // Create and save the post immediately (PENDING status — visible to user)
     const post = Post.create({
       id: this.idGenerator.generate(),
-      userId: command.userId,
+      userId: command.actor.userId,
       bookId: command.bookId,
       content: command.content,
       imageUrls,
     });
 
-    const createdPost = await this.postRepository.create(post);
+    const createdPostId = await this.persistPost(post);
 
     this.eventEmitter.emit(EventNames.POST_CREATED, {
-      postId: createdPost.id,
-      userId: command.userId,
+      postId: createdPostId,
+      userId: command.actor.userId,
       bookId: command.bookId,
     });
 
     // Layer 2: Push Job to Queue for background AI moderation (ASYNCHRONOUS)
     await this.postModerationQueue.enqueue({
-      postId: createdPost.id,
+      postId: createdPostId,
       content: command.content,
     });
 
-    return { post: createdPost };
+    return createdPostId;
+  }
+
+  @Transactional()
+  private async persistPost(post: Post): Promise<string> {
+    const createdPost = await this.postRepository.create(post);
+    return createdPost.id;
   }
 }

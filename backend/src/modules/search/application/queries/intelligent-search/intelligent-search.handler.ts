@@ -1,4 +1,4 @@
-import { QueryHandler } from '@nestjs/cqrs';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { calculateFuzzyScore } from './fuzzy-search.util';
 import { Logger } from '@nestjs/common';
@@ -7,23 +7,25 @@ import {
   PaginatedSearchBookResult,
   SearchBookResult,
 } from '../../dto/search-book-result.dto';
-import { IBookRepository } from '@/modules/books/domain/public-api';
-import { IChapterRepository } from '@/modules/chapters/domain/public-api';
+import {
+  BookSearchReadRepository,
+  type BookSearchReadModel,
+} from '@/modules/books';
+import type { BookListReadModel } from '@/modules/books';
+import { IChapterReadRepository } from '@/modules/chapters';
 import { IReviewRepository } from '@/modules/reviews/domain/public-api';
 import { GenreReadRepository } from '@/modules/genres';
 import {
   AuthorReadRepository,
   type AuthorSearchReadModel,
 } from '@/modules/authors';
-import { Book } from '@/modules/books/domain/public-api';
-import { BookId } from '@/modules/books/domain/public-api';
-import { BookTitle } from '@/modules/books/domain/public-api';
 import {
   SearchQueryExpansionService,
   QueryAnalysis,
 } from '../../services/search-query-expansion.service';
 import { SearchRankingService } from '../../services/search-ranking.service';
 import { ICachePort } from '@/shared/domain/cache.port';
+import { ForbiddenError } from '@casl/ability';
 
 interface HybridScore {
   finalScore: number;
@@ -31,7 +33,7 @@ interface HybridScore {
 }
 
 @QueryHandler(IntelligentSearchQuery)
-export class IntelligentSearchHandler {
+export class IntelligentSearchHandler implements IQueryHandler<IntelligentSearchQuery> {
   private readonly logger = new Logger(IntelligentSearchHandler.name);
 
   private static readonly SEMANTIC_WEIGHT = 1.0;
@@ -40,8 +42,8 @@ export class IntelligentSearchHandler {
   private static readonly MIN_FINAL_SCORE = 35;
 
   constructor(
-    private readonly bookRepository: IBookRepository,
-    private readonly chapterRepository: IChapterRepository,
+    private readonly bookSearchRepository: BookSearchReadRepository,
+    private readonly chapterRepository: IChapterReadRepository,
     private readonly reviewRepository: IReviewRepository,
     private readonly genreRepository: GenreReadRepository,
     private readonly authorRepository: AuthorReadRepository,
@@ -53,13 +55,17 @@ export class IntelligentSearchHandler {
   async execute(
     queryDto: IntelligentSearchQuery,
   ): Promise<PaginatedSearchBookResult> {
+    ForbiddenError.from(queryDto.actor.ability).throwUnlessCan(
+      'read',
+      'Search',
+    );
     const start = performance.now();
     const { query, page = 1, limit = 10, genres, order = 'desc' } = queryDto;
 
     const normalizedQuery = query.toLowerCase().trim();
     const mode = queryDto.mode ?? 'hybrid';
 
-    // 1. Kiá»ƒm tra cache trong Redis
+    // 1. Kiểm tra cache trong Redis
     const cacheKey = `search:${mode}:${encodeURIComponent(normalizedQuery)}:page:${page}:limit:${limit}:genres:${genres?.join(',') || 'all'}:order:${order}`;
 
     try {
@@ -77,17 +83,17 @@ export class IntelligentSearchHandler {
     }
 
     try {
-      // 1. KIá»‚M TRA TÃC GIáº¢ & TÃŠN SÃCH (Local DB)
+      // 1. KIỂM TRA TÁC GIẢ & TÊN SÁCH (Local DB)
       const [authors, exactBook] = await Promise.all([
         this.authorRepository.searchByName(query, 1),
-        this.bookRepository.findByTitle(BookTitle.create(query)),
+        this.bookSearchRepository.findByTitle(query),
       ]);
 
       const exactAuthor = authors.find(
         (author) => author.name.toLowerCase() === normalizedQuery,
       );
 
-      // 2. Cháº¡y tÃ¬m kiáº¿m tuá»³ theo mode
+      // 2. Chạy tìm kiếm tuỳ theo mode
       let keywordPromise: Promise<Map<string, number>> = Promise.resolve(
         new Map<string, number>(),
       );
@@ -133,8 +139,8 @@ export class IntelligentSearchHandler {
         resolvedGenreIds = await this.resolveGenreIds(genres, analysis);
       }
 
-      // 4. MÃ€N Lá»ŒC QUYáº¾T Äá»ŠNH (LuÃ´n cháº¡y Ä‘á»ƒ Ä‘áº£m báº£o total khá»›p vá»›i thá»±c táº¿ DB)
-      candidateIds = await this.bookRepository.findIdsByFilter({
+      // 4. MÀN LỌC QUYẾT ĐỊNH (Luôn chạy để đảm bảo total khớp với thực tế DB)
+      candidateIds = await this.bookSearchRepository.findIdsByFilter({
         ids: candidateIds,
         genres: resolvedGenreIds,
         status: 'published',
@@ -146,9 +152,7 @@ export class IntelligentSearchHandler {
 
       if (pagedIds.length === 0) return this.emptyResult(page, limit, total);
 
-      const books = await this.bookRepository.findByIds(
-        pagedIds.map((id) => BookId.create(id)),
-      );
+      const books = await this.bookSearchRepository.findByIds(pagedIds);
       const searchResults = await this.enrichAndMap(books, hybridMap);
 
       const finalResult = searchResults.sort(
@@ -170,7 +174,7 @@ export class IntelligentSearchHandler {
         },
       };
 
-      // 4. LÆ°u cache vÃ o Redis (TTL 24 giá»)
+      // 4. Lưu cache vÃ o Redis (TTL 24 giờ)
       this.cacheService.set(cacheKey, resultToReturn, 86400).catch((err) => {
         this.logger.warn(
           `Failed to set search cache to Redis for key: ${cacheKey}`,
@@ -188,11 +192,11 @@ export class IntelligentSearchHandler {
   private async getKeywordCandidates(
     query: string,
     exactAuthor?: AuthorSearchReadModel,
-    exactBook?: Book,
+    exactBook?: BookSearchReadModel,
   ): Promise<Map<string, number>> {
     const results = new Map<string, number>();
 
-    // 1. TÃ¬m tÃ¡c giáº£ theo tÃªn
+    // 1. Tìm tác giả theo tên
     const authors = await this.authorRepository.searchByName(query, 5);
     const authorIds = authors.map((author) => author.id);
 
@@ -207,14 +211,14 @@ export class IntelligentSearchHandler {
       description?: string;
     }> = [];
 
-    // TÃ¬m kiáº¿m song song
+    // Tìm kiếm song song
     const [booksByTitle, booksByAuthor] = await Promise.all([
-      this.bookRepository.findSearchCandidates(
+      this.bookSearchRepository.findSearchCandidates(
         { search: query, status: 'published' },
         50,
       ),
       authorIds.length > 0
-        ? this.bookRepository.findSearchCandidates(
+        ? this.bookSearchRepository.findSearchCandidates(
             { authorIds: authorIds, status: 'published' },
             50,
           )
@@ -223,11 +227,11 @@ export class IntelligentSearchHandler {
 
     allBooks = [...booksByTitle, ...booksByAuthor];
 
-    if (exactBook && exactBook.status.toString() === 'published') {
+    if (exactBook && exactBook.status === 'published') {
       allBooks.push({
-        id: exactBook.id.toString(),
-        title: exactBook.title.toString(),
-        authorName: exactBook.authorName || exactBook.author?.name,
+        id: exactBook.id,
+        title: exactBook.title,
+        authorName: exactBook.authorName,
         description: exactBook.description,
       });
     }
@@ -244,11 +248,11 @@ export class IntelligentSearchHandler {
         calculateFuzzyScore(query, author),
       );
 
-      // Náº¿u search trÃºng Ä‘Ã­ch danh tÃ¡c giáº£ hoáº·c Ä‘Ã­ch danh sÃ¡ch, cá»™ng ká»‹ch tráº§n
+      // Nếu search trúng đích danh tác giả hoặc đích danh sách, cộng kịch trần
       if (exactAuthor && calculateFuzzyScore(exactAuthor.name, author) >= 90) {
         score = Math.max(score, 100);
       }
-      if (exactBook && bid === exactBook.id.toString()) {
+      if (exactBook && bid === exactBook.id) {
         score = 100;
       }
 
@@ -295,7 +299,7 @@ export class IntelligentSearchHandler {
       }
     }
 
-    // Bá»™ lá»c sÃ n: Láº­p tá»©c loáº¡i bá» nhá»¯ng sÃ¡ch cÃ³ tá»•ng Ä‘iá»ƒm dÆ°á»›i 25 (Ä‘iá»ƒm liá»‡t)
+    // Bộ lọc sÃ n: Lập tức loại bỏ những sách có tổng điểm dưới 25 (điểm liệt)
     for (const [id, score] of hybridMap.entries()) {
       if (score.finalScore < IntelligentSearchHandler.MIN_FINAL_SCORE) {
         hybridMap.delete(id);
@@ -333,48 +337,46 @@ export class IntelligentSearchHandler {
   }
 
   private async enrichAndMap(
-    books: Book[],
+    books: BookListReadModel[],
     scoreMap: Map<string, HybridScore>,
   ): Promise<SearchBookResult[]> {
-    const foundIds = books.map((b) => b.id.toString());
+    const foundIds = books.map((book) => book.id);
     const [chapterCounts, reviewStats] = await Promise.all([
       this.chapterRepository.countChaptersForBooks(foundIds),
       this.reviewRepository.getStatsForBooks(foundIds),
     ]);
 
     return books.map((book) => {
-      const bid = book.id.toString();
+      const bid = book.id;
       const scoreData = scoreMap.get(bid);
       const rStats = reviewStats.get(bid) || { rating: 0, count: 0 };
 
       return {
         id: bid,
-        _id: bid,
-        title: book.title.toString(),
+        title: book.title,
         slug: book.slug,
         description: book.description,
         coverUrl: book.coverUrl,
-        status: book.status.toString(),
+        status: book.status,
         tags: book.tags,
-        views: book.views,
-        likes: book.likes,
+        views: book.stats.views,
+        likes: book.stats.likes,
         createdAt: book.createdAt,
         updatedAt: book.updatedAt,
         authorId: {
-          _id: book.authorId.toString(),
-          name: book.author?.name || book.authorName || 'Unknown',
+          id: book.authorId,
+          name: book.authorName || 'Unknown',
           avatar: undefined,
         },
-        genres:
-          book.genreObjects?.map((g) => ({
-            _id: g.id,
-            name: g.name,
-            slug: g.slug,
-          })) || [],
+        genres: book.genres.map((genre) => ({
+          id: genre.id,
+          name: genre.name,
+          slug: genre.slug,
+        })),
         stats: {
           chapters: chapterCounts.get(bid) || 0,
-          views: book.views,
-          likes: book.likes,
+          views: book.stats.views,
+          likes: book.stats.likes,
           rating: rStats.rating,
           reviews: rStats.count,
         },

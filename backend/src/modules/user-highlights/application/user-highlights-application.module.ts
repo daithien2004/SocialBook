@@ -6,6 +6,7 @@ import { DeleteUserHighlightHandler } from './commands/delete-user-highlight/del
 import { GetUserHighlightsHandler } from './queries/get-user-highlights/get-user-highlights.handler';
 import { UserHighlightsInfrastructureModule } from '../infrastructure/user-highlights-infrastructure.module';
 import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
+import { GetUserHighlightHandler } from './queries/get-user-highlight/get-user-highlight.handler';
 
 @Module({
   imports: [CqrsModule, UserHighlightsInfrastructureModule, IdGeneratorModule],
@@ -14,12 +15,7 @@ import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.mod
     UpdateUserHighlightHandler,
     DeleteUserHighlightHandler,
     GetUserHighlightsHandler,
-  ],
-  exports: [
-    CreateUserHighlightHandler,
-    UpdateUserHighlightHandler,
-    DeleteUserHighlightHandler,
-    GetUserHighlightsHandler,
+    GetUserHighlightHandler,
   ],
 })
 export class UserHighlightsApplicationModule {}

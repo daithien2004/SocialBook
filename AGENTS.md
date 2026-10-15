@@ -2,14 +2,15 @@
 
 ## Quick Reference
 
-- Trước khi làm việc, đọc `.claude/rules/AGENT_TYPE_RULES.md` (luật type safety bắt buộc)
-- Đọc `.claude/rules/craftsman.md` và áp dụng cho toàn bộ quy hoạch/hiện thực/kiểm thử
+- Type safety rules được ghi trực tiếp trong file này.
+- Với thay đổi NestJS, đọc `.claude/skills/nestjs-clean-module/SKILL.md` và phần reference liên quan.
+- Với controller, DTO hoặc OpenAPI, đọc `.claude/skills/nestjs-swagger-contract/SKILL.md`.
 - Chạy `npm run check --workspace=backend` trước khi báo "xong"
 - Prefer repo-specific instructions over generic habits; keep changes scoped
 
 ## Type safety (bắt buộc)
 
-Nguồn chuẩn: `.claude/rules/AGENT_TYPE_RULES.md` (khối dưới đây phải khớp với file đó).
+Các quy tắc dưới đây là nguồn chuẩn về type safety cho repository.
 
 Dự án này cấm "ép kiểu cho qua". Compiler và lint là nguồn sự thật; không hạ chuẩn chúng.
 
@@ -59,8 +60,8 @@ Dừng lại và hỏi, kèm: lỗi gốc, 2 đến 3 phương án, đánh đổ
 SocialBook is a full-stack social network for book lovers.
 
 - **Frontend**: Next.js App Router, React 19, TypeScript, Tailwind CSS 4, Radix UI, Framer Motion
-- **Backend**: NestJS 11, TypeScript, MongoDB/Mongoose, Redis, Socket.IO
-- **Infra**: Docker Compose for Redis and ChromaDB
+- **Backend**: NestJS 11, TypeScript, Prisma 7, PostgreSQL, Redis, Socket.IO
+- **Infra**: Docker Compose for PostgreSQL, Redis, and ChromaDB
 
 ## Repository Layout
 
@@ -208,11 +209,11 @@ export const getErrorMessage = (error: any): string => {
 
 **Frontend ESLint**: follows `next/core-web-vitals`, `next/typescript`
 
-## MongoDB Guidelines
+## PostgreSQL / Prisma Guidelines
 
-- Use indexes intentionally
-- Favor `$match` early in aggregation pipelines
-- Avoid unnecessary full-document fetches when projection is enough
+- Use PostgreSQL UUID `id` fields; do not introduce MongoDB `_id` or `ObjectId` conventions.
+- Keep Prisma access in infrastructure and use explicit `select` projections for read repositories.
+- Add indexes for real filter/sort patterns and review migrations before applying them.
 
 ## Required Workflow
 
@@ -224,12 +225,13 @@ export const getErrorMessage = (error: any): string => {
 ## Local Skills
 
 - `.claude/skills/vercel-react-best-practices/SKILL.md`: Next.js, React, rendering, data flow (index + rules)
-- `.claude/skills/mongodb-query-optimizer/SKILL.md`: MongoDB queries, aggregation, index strategy
+- `.claude/skills/nestjs-clean-module/SKILL.md`: module architecture, CQRS, Prisma, CASL, transactions
+- `.claude/skills/nestjs-swagger-contract/SKILL.md`: Swagger/OpenAPI endpoint contracts
 - `.claude/skills/shadcnui/SKILL.md`: shadcn/ui components and theming
 
 ## Environment Notes
 
-**Backend `.env`**: `PORT`, `MONGO_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `FRONTEND_URL`
+**Backend `.env`**: `PORT`, `DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `FRONTEND_URL`
 **Frontend `.env.local`**: `NEXT_PUBLIC_NEST_API_URL`, `NEXT_PUBLIC_SOCKET_URL`
 
 Never commit secrets or replace real environment values with placeholders.

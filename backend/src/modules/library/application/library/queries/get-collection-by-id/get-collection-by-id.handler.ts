@@ -1,10 +1,10 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Collection } from '@/modules/library/domain/library/entities/collection.entity';
-import { LibraryItemReadModel } from '@/modules/library/domain/library/read-models/library-item.read-model';
+import type { LibraryItemReadModel } from '@/modules/library/application/read-models/library-item.read-model';
 import { ICollectionRepository } from '@/modules/library/domain/library/repositories/collection.repository.interface';
-import { IReadingListRepository } from '@/modules/library/domain/library/repositories/reading-list.repository.interface';
-import { ForbiddenDomainException } from '@/shared/domain/common-exceptions';
+import { LibraryReadRepository } from '@/modules/library/application/ports/library-read.repository';
 import { GetCollectionByIdQuery } from './get-collection-by-id.query';
+import { subject } from '@casl/ability';
 
 export interface GetCollectionByIdResult {
   collection: Collection;
@@ -18,7 +18,7 @@ export class GetCollectionByIdHandler implements IQueryHandler<
 > {
   constructor(
     private readonly collectionRepository: ICollectionRepository,
-    private readonly readingListRepository: IReadingListRepository,
+    private readonly libraryReadRepository: LibraryReadRepository,
   ) {}
 
   async execute(
@@ -32,13 +32,20 @@ export class GetCollectionByIdHandler implements IQueryHandler<
       return null;
     }
 
-    if (!collection.isPublic && collection.userId.toString() !== query.userId) {
-      throw new ForbiddenDomainException(
-        'You do not have permission to view this collection',
-      );
+    if (
+      !query.actor.ability.can(
+        'read',
+        subject('LibraryCollection', {
+          id: collection.id,
+          userId: collection.userId.toString(),
+          isPublic: collection.isPublic,
+        }),
+      )
+    ) {
+      return null;
     }
 
-    const books = await this.readingListRepository.findByCollectionId(
+    const books = await this.libraryReadRepository.findByCollectionId(
       collection.id,
     );
 

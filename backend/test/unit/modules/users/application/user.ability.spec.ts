@@ -13,6 +13,7 @@ describe('user abilities', () => {
 
     expect(ability.can('read', subject('User', { id: 'user-1' }))).toBe(true);
     expect(ability.can('read', subject('User', { id: 'user-2' }))).toBe(false);
+    expect(ability.can('read', 'PublicUser')).toBe(true);
   });
 
   it('allows administrators to read users', () => {

@@ -1,11 +1,10 @@
 import { Command } from '@nestjs/cqrs';
-import { AppAbility } from '@socialbook/shared';
+import type { Actor } from '@/shared/casl/actor';
 
 export class DeleteCollectionCommand extends Command<void> {
   constructor(
+    public readonly actor: Actor,
     public readonly id: string,
-    public readonly userId: string,
-    public readonly ability: AppAbility,
   ) {
     super();
   }

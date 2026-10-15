@@ -1,11 +1,12 @@
 import { Command } from '@nestjs/cqrs';
 
-import { GenerateTextResult } from '@/modules/ai/application/commands/generate-text/generate-text.handler';
+import type { Actor } from '@/shared/casl/actor';
+import type { GenerateTextResult } from '@/modules/ai/application/ai.result';
 
 export class GenerateTextCommand extends Command<GenerateTextResult> {
   constructor(
     public readonly prompt: string,
-    public readonly userId: string,
+    public readonly actor: Actor,
   ) {
     super();
   }

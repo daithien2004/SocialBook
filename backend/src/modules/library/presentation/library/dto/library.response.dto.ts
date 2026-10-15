@@ -4,7 +4,8 @@ import {
   ReadingListResult,
   ReadingProgressResult,
 } from '@/modules/library/application/library/dto/library.dto';
-import { LibraryItemReadModel } from '@/modules/library/domain/library/read-models/library-item.read-model';
+import type { LibraryItemReadModel } from '@/modules/library/application/read-models/library-item.read-model';
+import type { CollectionReadModel } from '@/modules/library/application/read-models/collection.read-model';
 
 /** Accepts either domain Collection entity (userId: UserId) or CollectionResult (userId: string) */
 type CollectionInput = {
@@ -154,6 +155,10 @@ export class CollectionResponseDto {
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     });
+  }
+
+  static fromReadModel(model: CollectionReadModel): CollectionResponseDto {
+    return new CollectionResponseDto(model);
   }
 }
 

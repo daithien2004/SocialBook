@@ -1,44 +1,49 @@
-import { ApiTags } from '@nestjs/swagger';
-import { buildPaginationMeta } from '@/shared/domain/pagination.types';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
-  HttpCode,
   Body,
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
-  ParseUUIDPipe,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
-
-import { CreateReviewDto } from '@/modules/reviews/presentation/dto/create-review.dto';
-import { UpdateReviewDto } from '@/modules/reviews/presentation/dto/update-review.dto';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
+import type { Actor } from '@/shared/casl/actor';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
+import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
 import { Public } from '@/shared/platform/decorators/custom.decorator';
-import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
-import { CurrentAbility } from '@/shared/platform/decorators/current-ability.decorator';
-import type { AppAbility } from '@socialbook/shared';
-import { Review } from '@/modules/reviews/domain/entities/review.entity';
-import { ReviewResponseDto } from '@/modules/reviews/presentation/dto/review.response.dto';
-import { CreateReviewCommand } from '@/modules/reviews/application/commands/create-review/create-review.command';
-import { GetBookReviewsQuery } from '@/modules/reviews/application/queries/get-book-reviews/get-book-reviews.query';
-import { UpdateReviewCommand } from '@/modules/reviews/application/commands/update-review/update-review.command';
-import { DeleteReviewCommand } from '@/modules/reviews/application/commands/delete-review/delete-review.command';
-import { ToggleReviewLikeCommand } from '@/modules/reviews/application/commands/toggle-review-like/toggle-review-like.command';
 import {
   ApiPaginatedResponse,
   ApiProblemResponses,
 } from '@/shared/platform/decorators/api-response.decorators';
 import {
-  ApiCreatedResponse,
-  ApiNoContentResponse,
-  ApiOkResponse,
-  ApiOperation,
-} from '@nestjs/swagger';
+  paginate,
+  type PaginatedResult,
+} from '@/shared/domain/pagination.types';
+import { CreateReviewDto } from './dto/create-review.dto';
+import { GetBookReviewsDto } from './dto/get-book-reviews.dto';
+import type { ReviewReadModel } from '../application/read-models/review.read-model';
+import { ReviewLikeResponseDto } from './dto/review-like.response.dto';
+import { ReviewResponseDto } from './dto/review.response.dto';
+import { UpdateReviewDto } from './dto/update-review.dto';
+import { ToggleReviewLikeCommand } from '../application/commands/toggle-review-like/toggle-review-like.command';
+import { DeleteReviewCommand } from '../application/commands/delete-review/delete-review.command';
 
-@ApiProblemResponses()
 @ApiTags('Reviews')
+@UseGuards(PoliciesGuard)
 @Controller('reviews')
 export class ReviewsController {
   constructor(
@@ -46,102 +51,83 @@ export class ReviewsController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  @ApiOperation({ summary: 'Find All By Book' })
   @Public()
+  @CheckPolicy('read', 'Review')
   @Get('book/:bookId')
+  @ApiOperation({ summary: 'List reviews for a book' })
+  @ApiProblemResponses([400])
   @ApiPaginatedResponse(ReviewResponseDto, 'offset')
   async findAllByBook(
-    @CurrentUser('id') userId: string | undefined,
+    @CurrentActor() actor: Actor,
     @Param('bookId', new ParseUUIDPipe({ version: '4' })) bookId: string,
-  ) {
-    const reviews = await this.queryBus.execute(
-      new GetBookReviewsQuery(bookId),
+    @Query() pagination: GetBookReviewsDto,
+  ): Promise<PaginatedResult<ReviewResponseDto>> {
+    const page = await this.queryBus.execute(pagination.toQuery(actor, bookId));
+    return paginate(page.items, page.total, pagination, (items) =>
+      ReviewResponseDto.fromReadModels(items),
     );
-
-    const responseDtos = reviews.map((review: Review) => {
-      const responseDto = new ReviewResponseDto(review);
-      return {
-        ...responseDto,
-        isLiked: userId ? review.likedBy.includes(userId) : false,
-      };
-    });
-
-    return {
-      data: responseDtos,
-      meta: buildPaginationMeta(
-        1,
-        Math.max(responseDtos.length, 1),
-        responseDtos.length,
-      ),
-    };
   }
 
-  @ApiOperation({ summary: 'Create' })
+  @CheckPolicy('create', 'Review')
+  @ApiBearerAuth()
   @Post()
+  @ApiOperation({ summary: 'Create a review' })
+  @ApiProblemResponses([400, 401, 403, 409])
   @ApiCreatedResponse({ type: ReviewResponseDto })
   async create(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Body() dto: CreateReviewDto,
-  ) {
-    const review = await this.commandBus.execute(
-      new CreateReviewCommand(userId, dto),
+  ): Promise<ReviewResponseDto> {
+    const result = await this.commandBus.execute<ReviewReadModel>(
+      dto.toCommand(actor),
     );
-    return this.toResponse(review);
+    return ReviewResponseDto.fromReadModel(result);
   }
 
-  @ApiOperation({ summary: 'Update' })
+  @CheckPolicy('update', 'Review')
+  @ApiBearerAuth()
   @Patch(':id')
+  @ApiOperation({ summary: 'Update a review' })
+  @ApiProblemResponses([400, 401, 403, 404])
   @ApiOkResponse({ type: ReviewResponseDto })
   async update(
+    @CurrentActor() actor: Actor,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @CurrentAbility() ability: AppAbility,
     @Body() dto: UpdateReviewDto,
-  ) {
-    const review = await this.commandBus.execute(
-      new UpdateReviewCommand(id, dto, ability),
+  ): Promise<ReviewResponseDto> {
+    const result = await this.commandBus.execute<ReviewReadModel>(
+      dto.toCommand(actor, id),
     );
-    return this.toResponse(review);
+    return ReviewResponseDto.fromReadModel(result);
   }
 
-  @ApiOperation({ summary: 'Toggle like' })
+  @CheckPolicy('like', 'Review')
+  @ApiBearerAuth()
   @Patch(':id/like')
-  @ApiOkResponse({
-    schema: {
-      type: 'object',
-      required: ['likesCount', 'isLiked'],
-      properties: {
-        likesCount: { type: 'integer' },
-        isLiked: { type: 'boolean' },
-      },
-    },
-  })
+  @ApiOperation({ summary: 'Toggle a review like' })
+  @ApiProblemResponses([401, 403, 404])
+  @ApiOkResponse({ type: ReviewLikeResponseDto })
   async toggleLike(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-  ) {
-    const review = await this.commandBus.execute(
-      new ToggleReviewLikeCommand(id, userId),
+  ): Promise<ReviewLikeResponseDto> {
+    const result = await this.commandBus.execute<ReviewReadModel>(
+      new ToggleReviewLikeCommand(actor, id),
     );
-    const isLiked = review.likedBy.includes(userId);
-    return {
-      likesCount: review.likesCount,
-      isLiked: isLiked,
-    };
+    return ReviewLikeResponseDto.fromResult(result);
   }
 
-  @ApiOperation({ summary: 'Delete' })
+  @CheckPolicy('delete', 'Review')
+  @ApiBearerAuth()
   @HttpCode(204)
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete a review' })
+  @ApiProblemResponses([401, 403, 404])
   @ApiNoContentResponse()
   async remove(
+    @CurrentActor() actor: Actor,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @CurrentAbility() ability: AppAbility,
-  ) {
-    await this.commandBus.execute(new DeleteReviewCommand(id, ability));
-    return undefined;
-  }
-
-  private toResponse(review: Review): ReviewResponseDto {
-    return new ReviewResponseDto(review);
+  ): Promise<void> {
+    await this.commandBus.execute(new DeleteReviewCommand(actor, id));
   }
 }

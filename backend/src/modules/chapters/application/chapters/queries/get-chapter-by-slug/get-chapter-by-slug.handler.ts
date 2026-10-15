@@ -14,6 +14,7 @@ export class GetChapterBySlugHandler implements IQueryHandler<
 
   async execute(query: GetChapterBySlugQuery): Promise<ChapterDetailReadModel> {
     const result = await this.chapterReadRepository.findDetailBySlug(
+      query.actor.ability,
       query.chapterSlug,
       query.bookSlug,
     );

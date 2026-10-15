@@ -11,27 +11,33 @@ import {
   Post,
   Query,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 
 import { Public } from '@/shared/platform/decorators/custom.decorator';
-import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
+import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
+import type { Actor } from '@/shared/casl/actor';
+import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
+import type { PaginatedResult } from '@/shared/domain/pagination.types';
+import { paginate } from '@/shared/domain/pagination.types';
 
 import {
   CreateFollowDto,
   FilterFollowDto,
 } from '@/modules/follows/presentation/dto/create-follow.dto';
 import {
+  FollowStatusQueryDto,
+  FollowersQueryDto,
+  FollowingQueryDto,
+} from '@/modules/follows/presentation/dto/follow-query.dto';
+import {
   FollowResponseDto,
   FollowStatsResponseDto,
   FollowStatusResponseDto,
 } from '@/modules/follows/presentation/dto/follow.response.dto';
 
-import { CreateFollowCommand } from '@/modules/follows/application/commands/create-follow/create-follow.command';
 import { DeleteFollowCommand } from '@/modules/follows/application/commands/delete-follow/delete-follow.command';
-import { GetFollowStatusQuery } from '@/modules/follows/application/queries/get-follow-status/get-follow-status.query';
-import { GetFollowsQuery } from '@/modules/follows/application/queries/get-follows/get-follows.query';
-import { GetFollowingQuery } from '@/modules/follows/application/queries/get-following-with-user-info/get-following.query';
-import { GetFollowersQuery } from '@/modules/follows/application/queries/get-followers-with-user-info/get-followers.query';
 import {
   ApiPaginatedResponse,
   ApiProblemResponses,
@@ -45,6 +51,7 @@ import {
 
 @ApiProblemResponses()
 @ApiTags('Follows')
+@UseGuards(PoliciesGuard)
 @Controller('follows')
 export class FollowsController {
   constructor(
@@ -53,41 +60,43 @@ export class FollowsController {
   ) {}
 
   @ApiOperation({ summary: 'Get Following List' })
+  @CheckPolicy('read', 'Follow')
   @Public()
   @Get('following')
   @ApiPaginatedResponse(FollowResponseDto, 'offset')
-  async getFollowingList(@Query('userId') userId: string) {
-    const query = new GetFollowingQuery(userId);
-    const result = await this.queryBus.execute(query);
-
-    return {
-      data: result.data.map((item) => new FollowResponseDto(item)),
-      meta: result.meta,
-    };
+  async getFollowingList(
+    @CurrentActor() actor: Actor,
+    @Query() filter: FollowingQueryDto,
+  ): Promise<PaginatedResult<FollowResponseDto>> {
+    const result = await this.queryBus.execute(filter.toQuery(actor));
+    return paginate(result.items, result.total, filter, (items) =>
+      items.map((item) => new FollowResponseDto(item)),
+    );
   }
 
   @ApiOperation({ summary: 'Get Followers List' })
+  @CheckPolicy('read', 'Follow')
   @Get('followers')
   @ApiPaginatedResponse(FollowResponseDto, 'offset')
-  async getFollowersList(@Query('targetUserId') targetUserId: string) {
-    const query = new GetFollowersQuery(targetUserId);
-    const result = await this.queryBus.execute(query);
-
-    return {
-      data: result.data.map((item) => new FollowResponseDto(item)),
-      meta: result.meta,
-    };
+  async getFollowersList(
+    @CurrentActor() actor: Actor,
+    @Query() filter: FollowersQueryDto,
+  ): Promise<PaginatedResult<FollowResponseDto>> {
+    const result = await this.queryBus.execute(filter.toQuery(actor));
+    return paginate(result.items, result.total, filter, (items) =>
+      items.map((item) => new FollowResponseDto(item)),
+    );
   }
 
   @ApiOperation({ summary: 'Get Status' })
+  @CheckPolicy('read', 'Follow')
   @Get('status')
   @ApiOkResponse({ type: FollowStatusResponseDto })
   async getStatus(
-    @CurrentUser('id') userId: string,
-    @Query('targetId') targetId: string,
-  ) {
-    const query = new GetFollowStatusQuery(userId, targetId);
-    const result = await this.queryBus.execute(query);
+    @CurrentActor() actor: Actor,
+    @Query() filter: FollowStatusQueryDto,
+  ): Promise<FollowStatusResponseDto> {
+    const result = await this.queryBus.execute(filter.toQuery(actor));
 
     return new FollowStatusResponseDto(
       result.userId,
@@ -99,33 +108,35 @@ export class FollowsController {
   }
 
   @ApiOperation({ summary: 'Create' })
+  @CheckPolicy('create', 'Follow')
   @Post()
   @ApiCreatedResponse({ type: FollowResponseDto })
   async create(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Body() dto: CreateFollowDto,
-  ) {
-    const command = new CreateFollowCommand(userId, dto.targetId, dto.status);
-    const follow = await this.commandBus.execute(command);
+  ): Promise<FollowResponseDto> {
+    const follow = await this.commandBus.execute(dto.toCommand(actor));
 
     return new FollowResponseDto(follow);
   }
 
   @ApiOperation({ summary: 'Unfollow' })
+  @CheckPolicy('update', 'Follow')
   @HttpCode(204)
   @Delete(':targetId')
   @ApiNoContentResponse()
   async unfollow(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Param('targetId', new ParseUUIDPipe({ version: '4' })) targetId: string,
   ) {
-    const command = new DeleteFollowCommand(userId, targetId);
+    const command = new DeleteFollowCommand(actor, targetId);
     await this.commandBus.execute(command);
 
     return undefined;
   }
 
   @ApiOperation({ summary: 'Get Stats' })
+  @CheckPolicy('read', 'Follow')
   @Get('stats')
   @Public()
   @ApiOkResponse({ type: FollowStatsResponseDto })
@@ -134,21 +145,17 @@ export class FollowsController {
   }
 
   @ApiOperation({ summary: 'Get All' })
+  @CheckPolicy('read', 'Follow')
   @Get('all')
   @Public()
   @ApiPaginatedResponse(FollowResponseDto, 'offset')
-  async getAll(@Query() filter: FilterFollowDto) {
-    const query = new GetFollowsQuery(
-      filter.userId,
-      filter.targetId,
-      filter.actualPage,
-      filter.actualLimit,
+  async getAll(
+    @CurrentActor() actor: Actor,
+    @Query() filter: FilterFollowDto,
+  ): Promise<PaginatedResult<FollowResponseDto>> {
+    const result = await this.queryBus.execute(filter.toQuery(actor));
+    return paginate(result.items, result.total, filter, (items) =>
+      items.map((follow) => new FollowResponseDto(follow)),
     );
-    const result = await this.queryBus.execute(query);
-
-    return {
-      data: result.data.map((follow) => new FollowResponseDto(follow)),
-      meta: result.meta,
-    };
   }
 }

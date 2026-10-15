@@ -36,7 +36,11 @@ import {
   ApiPaginatedResponse,
   ApiProblemResponses,
 } from '@/shared/platform/decorators/api-response.decorators';
-import { paginate } from '@/shared/domain/pagination.types';
+import {
+  paginate,
+  type PageResult,
+  type PaginatedResult,
+} from '@/shared/domain/pagination.types';
 import { GetAuthorQuery } from '../application/queries/get-author/get-author.query';
 import { ListAuthorsQuery } from '../application/queries/list-authors/list-authors.query';
 import type { AuthorReadModel } from '../application/read-models/author.read-model';
@@ -101,11 +105,10 @@ export class AuthorsController {
   async findAll(
     @CurrentActor() actor: Actor,
     @Query() request: FilterAuthorDto,
-  ) {
-    const page = await this.queryBus.execute<{
-      items: AuthorReadModel[];
-      total: number;
-    }>(request.toQuery(actor));
+  ): Promise<PaginatedResult<AuthorResponseDto>> {
+    const page = await this.queryBus.execute<PageResult<AuthorReadModel>>(
+      request.toQuery(actor),
+    );
     return paginate(page.items, page.total, request, (authors) =>
       AuthorResponseDto.fromArray(authors),
     );
@@ -181,12 +184,13 @@ export class AuthorsController {
   @ApiOperation({ summary: 'List authors for selection' })
   @ApiProblemResponses([400])
   @ApiPaginatedResponse(AuthorResponseDto, 'offset')
-  async getForSelect(@CurrentActor() actor: Actor) {
+  async getForSelect(
+    @CurrentActor() actor: Actor,
+  ): Promise<PaginatedResult<AuthorResponseDto>> {
     const pagination = { actualPage: 1, actualLimit: 100 };
-    const page = await this.queryBus.execute<{
-      items: AuthorReadModel[];
-      total: number;
-    }>(new ListAuthorsQuery(actor, {}, { offset: 0, limit: 100 }));
+    const page = await this.queryBus.execute<PageResult<AuthorReadModel>>(
+      new ListAuthorsQuery(actor, {}, { offset: 0, limit: 100 }),
+    );
     return paginate(page.items, page.total, pagination, (authors) =>
       AuthorResponseDto.fromArray(authors),
     );

@@ -3,8 +3,14 @@ import { GenerateWsTicketCommand } from '@/modules/auth/application/auth/command
 import { GenerateWsTicketHandler } from '@/modules/auth/application/auth/commands/generate-ws-ticket/generate-ws-ticket.handler';
 import { IUserRepository } from '@/modules/users/domain/public-api';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
+import { AbilityFactory } from '@/shared/casl/ability.factory';
 
 describe('GenerateWsTicketHandler', () => {
+  const actor = new AbilityFactory([]).createActor({
+    userId: 'test-user',
+    roles: [],
+  });
+
   it('returns a not-found domain error when the authenticated user no longer exists', async () => {
     const userRepository = {
       findById: jest.fn().mockResolvedValue(null),
@@ -19,7 +25,9 @@ describe('GenerateWsTicketHandler', () => {
     const handler = moduleRef.get(GenerateWsTicketHandler);
 
     await expect(
-      handler.execute(new GenerateWsTicketCommand('missing-user', 'user')),
+      handler.execute(
+        new GenerateWsTicketCommand(actor, 'missing-user', 'user'),
+      ),
     ).rejects.toBeInstanceOf(NotFoundDomainException);
 
     await moduleRef.close();

@@ -55,22 +55,5 @@ import { RecommendationsInfrastructureModule } from '@/modules/recommendations/i
     DeleteCollectionHandler,
     GetKnowledgeGraphHandler,
   ],
-  exports: [
-    CreateCollectionHandler,
-    GetAllCollectionsHandler,
-    GetBookLibraryInfoHandler,
-    GetChapterProgressHandler,
-    GetCollectionByIdHandler,
-    GetLibraryHandler,
-    RecordReadingTimeHandler,
-    RemoveFromLibraryHandler,
-    UpdateCollectionsHandler,
-    UpdateProgressHandler,
-    UpdateStatusHandler,
-    ProcessReadingSessionHandler,
-    UpdateCollectionHandler,
-    DeleteCollectionHandler,
-    GetKnowledgeGraphHandler,
-  ],
 })
 export class LibraryApplicationModule {}

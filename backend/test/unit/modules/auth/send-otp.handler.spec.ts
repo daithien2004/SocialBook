@@ -6,6 +6,7 @@ import {
   SendMailOptions,
 } from '@/modules/auth/domain/auth/otp/interfaces/mailer.port';
 import { IOtpRepository } from '@/modules/auth/domain/auth/otp/repositories/otp.repository.interface';
+import { AbilityFactory } from '@/shared/casl/ability.factory';
 
 class CapturingOtpRepository extends IOtpRepository {
   savedOtp: Otp | undefined;
@@ -50,12 +51,17 @@ class CapturingMailer extends IMailerPort {
 }
 
 describe('SendOtpHandler', () => {
+  const actor = new AbilityFactory([]).createActor({
+    userId: 'test-user',
+    roles: [],
+  });
+
   it('stores and emails a six-digit OTP', async () => {
     const repository = new CapturingOtpRepository();
     const mailer = new CapturingMailer();
     const handler = new SendOtpHandler(repository, mailer);
 
-    await handler.execute(new SendOtpCommand('reader@example.com'));
+    await handler.execute(new SendOtpCommand(actor, 'reader@example.com'));
 
     expect(repository.savedOtp?.code).toMatch(/^\d{6}$/);
     expect(mailer.sentMail?.html).toContain(repository.savedOtp?.code);

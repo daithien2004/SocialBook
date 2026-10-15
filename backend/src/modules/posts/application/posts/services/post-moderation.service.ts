@@ -3,6 +3,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
 import { CheckContentCommand } from '@/modules/content-moderation/application/public-api';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+import type { Actor } from '@/shared/casl/actor';
 
 @Injectable()
 export class PostModerationService {
@@ -12,9 +13,13 @@ export class PostModerationService {
    * Moderate post content and update Post entity status.
    * Returns a warning message if applicable.
    */
-  async moderate(post: Post, content: string): Promise<string | undefined> {
+  async moderate(
+    actor: Actor,
+    post: Post,
+    content: string,
+  ): Promise<string | undefined> {
     const moderationResult = await this.commandBus.execute(
-      new CheckContentCommand(content),
+      new CheckContentCommand(actor, content),
     );
 
     if (moderationResult.action === 'BLOCK') {

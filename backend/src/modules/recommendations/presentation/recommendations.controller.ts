@@ -1,118 +1,37 @@
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { QueryBus } from '@nestjs/cqrs';
-
-import { Controller, Get, Query, Req } from '@nestjs/common';
-import type { Request } from 'express';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import type { Actor } from '@/shared/casl/actor';
+import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
+import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
 import { GetRecommendationsDto } from './dto/get-recommendations.dto';
-import { GetPersonalizedRecommendationsQuery } from '@/modules/recommendations/application/queries/get-personalized-recommendations/get-personalized-recommendations.query';
 import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
-import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { RecommendationsResponseDto } from './dto/recommendations.response.dto';
 
-@ApiProblemResponses()
 @ApiTags('Recommendations')
+@UseGuards(PoliciesGuard)
 @Controller('recommendations')
 export class RecommendationsController {
   constructor(private readonly queryBus: QueryBus) {}
 
   @ApiOperation({ summary: 'Get Personalized Recommendations' })
+  @CheckPolicy('read', 'Recommendation')
+  @ApiBearerAuth()
   @Get('personalized')
-  @ApiOkResponse({
-    schema: {
-      type: 'object',
-      required: ['data', 'meta', 'analysis'],
-      properties: {
-        data: {
-          type: 'array',
-          items: {
-            type: 'object',
-            required: [
-              'bookId',
-              'title',
-              'reason',
-              'matchScore',
-              'slug',
-              'book',
-            ],
-            properties: {
-              bookId: { type: 'string' },
-              title: { type: 'string' },
-              reason: { type: 'string' },
-              matchScore: { type: 'number' },
-              slug: { type: 'string' },
-              book: {
-                type: 'object',
-                required: [
-                  '_id',
-                  'title',
-                  'slug',
-                  'views',
-                  'likes',
-                  'status',
-                  'isDeleted',
-                ],
-                properties: {
-                  _id: { type: 'string' },
-                  title: { type: 'string' },
-                  slug: { type: 'string' },
-                  description: { type: 'string' },
-                  coverUrl: { type: 'string' },
-                  views: { type: 'integer' },
-                  likes: { type: 'integer' },
-                  status: { type: 'string' },
-                  isDeleted: { type: 'boolean' },
-                  genres: { type: 'array', items: { type: 'object' } },
-                  authorId: { type: 'object' },
-                },
-              },
-            },
-          },
-        },
-        meta: {
-          type: 'object',
-          required: ['page', 'pageSize', 'total', 'totalPages'],
-          properties: {
-            page: { type: 'integer' },
-            pageSize: { type: 'integer' },
-            total: { type: 'integer' },
-            totalPages: { type: 'integer' },
-          },
-        },
-        analysis: {
-          type: 'object',
-          required: [
-            'favoriteGenres',
-            'readingPace',
-            'preferredLength',
-            'themes',
-          ],
-          properties: {
-            favoriteGenres: { type: 'array', items: { type: 'string' } },
-            readingPace: { type: 'string', enum: ['fast', 'medium', 'slow'] },
-            preferredLength: {
-              type: 'string',
-              enum: ['short', 'medium', 'long'],
-            },
-            themes: { type: 'array', items: { type: 'string' } },
-          },
-        },
-      },
-    },
-  })
+  @ApiProblemResponses([400, 401, 403, 500])
+  @ApiOkResponse({ type: RecommendationsResponseDto })
   async getPersonalizedRecommendations(
-    @Req() req: Request,
+    @CurrentActor() actor: Actor,
     @Query() filter: GetRecommendationsDto,
-  ) {
-    const userId = (req as unknown as { user: { id: string } }).user.id;
-    const query = new GetPersonalizedRecommendationsQuery(
-      userId,
-      filter.actualPage,
-      filter.actualLimit,
-    );
+  ): Promise<RecommendationsResponseDto> {
+    const query = filter.toQuery(actor);
     const result = await this.queryBus.execute(query);
-
-    return {
-      ...{ data: result.recommendations, meta: result.meta },
-      analysis: result.analysis,
-    };
+    return RecommendationsResponseDto.fromReadModel(result);
   }
 }

@@ -1,64 +1,71 @@
 import { GenerateTextCommand } from './generate-text.command';
-import { CommandHandler } from '@nestjs/cqrs';
-import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import {
+  BadRequestDomainException,
+  ForbiddenDomainException,
+} from '@/shared/domain/common-exceptions';
 import { IAIPort } from '@/modules/ai/domain/interfaces/ai.port';
 import { IAIRequestRepository } from '@/modules/ai/domain/repositories/ai-request.repository.interface';
 import {
   AIRequest,
   AIRequestType,
 } from '@/modules/ai/domain/entities/ai-request.entity';
-import { UserId } from '@/modules/ai/domain/value-objects/user-id.vo';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
-
-export interface GenerateTextRequest {
-  prompt: string;
-  userId: string;
-}
-
-export interface GenerateTextResult {
-  response: string;
-  requestId: string;
-  responseLength: number;
-}
+import type { GenerateTextResult } from '@/modules/ai/application/ai.result';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(GenerateTextCommand)
-export class GenerateTextHandler {
+export class GenerateTextHandler implements ICommandHandler<GenerateTextCommand> {
   constructor(
     private readonly aiService: IAIPort,
     private readonly aiRequestRepository: IAIRequestRepository,
     private readonly idGenerator: IIdGenerator,
   ) {}
 
-  async execute(request: GenerateTextRequest): Promise<GenerateTextResult> {
-    UserId.create(request.userId);
+  async execute(command: GenerateTextCommand): Promise<GenerateTextResult> {
+    if (!command.actor.ability.can('create', 'AIRequest')) {
+      throw new ForbiddenDomainException('AI_REQUEST_CREATE_FORBIDDEN');
+    }
 
-    const aiRequest = AIRequest.create({
-      id: this.idGenerator.generate(),
-      prompt: request.prompt,
-      type: AIRequestType.TEXT_GENERATION,
-      userId: request.userId,
-    });
-
-    if (!aiRequest.hasValidPrompt()) {
+    const prompt = command.prompt.trim();
+    if (prompt.length < 1 || prompt.length > 10000) {
       throw new BadRequestDomainException(
         'Prompt must be between 1 and 10000 characters',
       );
     }
 
-    try {
-      const response = await this.aiService.generateText(request.prompt);
+    const requestId = this.idGenerator.generate();
+    const aiRequest =
+      command.actor.userId === 'anonymous'
+        ? null
+        : AIRequest.create({
+            id: requestId,
+            prompt,
+            type: AIRequestType.TEXT_GENERATION,
+            userId: command.actor.userId,
+          });
 
-      aiRequest.setResponse(response);
-      await this.aiRequestRepository.save(aiRequest);
+    try {
+      const response = await this.aiService.generateText(prompt);
+
+      if (aiRequest) {
+        aiRequest.setResponse(response);
+        await this.saveRequest(aiRequest);
+      }
 
       return {
         response,
-        requestId: aiRequest.id.toString(),
-        responseLength: aiRequest.getResponseLength(),
+        requestId,
+        responseLength: response.length,
       };
     } catch (error) {
-      await this.aiRequestRepository.save(aiRequest);
+      if (aiRequest) await this.saveRequest(aiRequest);
       throw error;
     }
+  }
+
+  @Transactional()
+  private async saveRequest(request: AIRequest): Promise<void> {
+    await this.aiRequestRepository.save(request);
   }
 }

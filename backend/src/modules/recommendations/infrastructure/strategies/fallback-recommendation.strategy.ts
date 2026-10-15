@@ -28,7 +28,7 @@ export class FallbackRecommendationStrategy implements IRecommendationStrategy {
           favoriteGenres.has(genre.name),
         );
         return {
-          bookId: book._id,
+          bookId: book.id,
           title: book.title,
           reason: matchingGenre
             ? `Phù hợp với sở thích: ${matchingGenre.name}`
@@ -43,12 +43,12 @@ export class FallbackRecommendationStrategy implements IRecommendationStrategy {
     if (recommendations.length < limit) {
       const selectedIds = new Set(recommendations.map(({ bookId }) => bookId));
       const remainingBooks = availableBooks
-        .filter((book) => !selectedIds.has(book._id))
+        .filter((book) => !selectedIds.has(book.id))
         .sort(comparePopularity)
         .slice(0, limit - recommendations.length);
       recommendations.push(
         ...remainingBooks.map((book) => ({
-          bookId: book._id,
+          bookId: book.id,
           title: book.title,
           reason: 'Sách được nhiều người quan tâm',
           matchScore: 50,
@@ -73,5 +73,5 @@ export class FallbackRecommendationStrategy implements IRecommendationStrategy {
 function comparePopularity(left: PopulatedBook, right: PopulatedBook): number {
   const leftScore = left.views + left.likes * 2;
   const rightScore = right.views + right.likes * 2;
-  return rightScore - leftScore || left._id.localeCompare(right._id);
+  return rightScore - leftScore || left.id.localeCompare(right.id);
 }

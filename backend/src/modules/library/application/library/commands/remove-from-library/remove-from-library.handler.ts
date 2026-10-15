@@ -5,6 +5,8 @@ import { UserId } from '@/modules/library/domain/library/value-objects/user-id.v
 import { BookId } from '@/modules/library/domain/library/value-objects/book-id.vo';
 import { ChapterId } from '@/modules/library/domain/library/value-objects/chapter-id.vo';
 import { RemoveFromLibraryCommand } from './remove-from-library.command';
+import { assertLibraryAccess } from '@/modules/library/application/policies/library-access.policy';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(RemoveFromLibraryCommand)
 export class RemoveFromLibraryHandler implements ICommandHandler<
@@ -16,7 +18,9 @@ export class RemoveFromLibraryHandler implements ICommandHandler<
     private readonly readingProgressRepository: IReadingProgressRepository,
   ) {}
 
+  @Transactional()
   async execute(command: RemoveFromLibraryCommand): Promise<void> {
+    assertLibraryAccess(command.actor, 'manage', command.userId);
     const userId = UserId.create(command.userId);
     const bookId = BookId.create(command.bookId);
 

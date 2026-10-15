@@ -1,10 +1,10 @@
-import { ForbiddenError } from '@casl/ability';
-import { CommandHandler } from '@nestjs/cqrs';
+﻿import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { AIRateLimitConfigPort } from '../../ports/ai-rate-limit-config.port';
 import { UpdateRateLimitConfigCommand } from './update-rate-limit-config.command';
+import { ForbiddenError } from '@casl/ability';
 
 @CommandHandler(UpdateRateLimitConfigCommand)
-export class UpdateRateLimitConfigHandler {
+export class UpdateRateLimitConfigHandler implements ICommandHandler<UpdateRateLimitConfigCommand> {
   constructor(private readonly config: AIRateLimitConfigPort) {}
 
   async execute(command: UpdateRateLimitConfigCommand): Promise<void> {

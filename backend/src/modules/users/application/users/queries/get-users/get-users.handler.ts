@@ -1,15 +1,18 @@
 import { GetUsersQuery } from './get-users.query';
-import { QueryHandler } from '@nestjs/cqrs';
-import { IUserRepository } from '@/modules/users/domain/users/repositories/user.repository.interface';
-import { User } from '@/modules/users/domain/users/entities/user.entity';
-import { PageResult } from '@/shared/domain/pagination.types';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
+import { ForbiddenError } from '@casl/ability';
+import { UsersReadRepository } from '@/modules/users/application/ports/users-read.repository';
+import type { AdminUserReadModel } from '@/modules/users/application/read-models/admin-user.read-model';
+import type { PageResult } from '@/shared/domain/pagination.types';
 
 @QueryHandler(GetUsersQuery)
-export class GetUsersHandler {
-  constructor(private readonly userRepository: IUserRepository) {}
+export class GetUsersHandler implements IQueryHandler<GetUsersQuery> {
+  constructor(private readonly usersReadRepository: UsersReadRepository) {}
 
-  async execute(query: GetUsersQuery): Promise<PageResult<User>> {
-    return this.userRepository.findAll(
+  async execute(query: GetUsersQuery): Promise<PageResult<AdminUserReadModel>> {
+    ForbiddenError.from(query.actor.ability).throwUnlessCan('manage', 'User');
+    return this.usersReadRepository.findAdminUsers(
+      query.actor.ability,
       {
         username: query.username,
         email: query.email,

@@ -1,4 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { ForbiddenError, subject } from '@casl/ability';
 import { Logger } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { IChapterRepository } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
@@ -7,9 +8,13 @@ import { IAIPort } from '@/modules/ai';
 import { getChapterContext } from '@/modules/chapters/application/public-api';
 import { ChapterId } from '@/modules/chapters/domain/chapters/value-objects/chapter-id.vo';
 import { AskChapterAICommand } from './ask-chapter-ai.command';
+import type { AskChapterAiResult } from './ask-chapter-ai.result';
 
 @CommandHandler(AskChapterAICommand)
-export class AskChapterAIHandler implements ICommandHandler<AskChapterAICommand> {
+export class AskChapterAIHandler implements ICommandHandler<
+  AskChapterAICommand,
+  AskChapterAiResult
+> {
   private readonly logger = new Logger(AskChapterAIHandler.name);
 
   constructor(
@@ -18,18 +23,34 @@ export class AskChapterAIHandler implements ICommandHandler<AskChapterAICommand>
     private readonly aiService: IAIPort,
   ) {}
 
-  async execute(command: AskChapterAICommand) {
+  async execute(command: AskChapterAICommand): Promise<AskChapterAiResult> {
     const chapter = await this.chapterRepository.findById(
       ChapterId.create(command.chapterId),
     );
     if (!chapter) {
       throw new NotFoundDomainException('Chapter not found');
     }
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'read',
+      subject('Chapter', {
+        id: chapter.id.toString(),
+        bookId: chapter.bookId.toString(),
+        isDeleted: false,
+      }),
+    );
 
     const book = await this.bookRepository.findBySlug(command.bookSlug);
     if (!book) {
       throw new NotFoundDomainException('Book not found');
     }
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'read',
+      subject('Book', {
+        id: book.id.toString(),
+        status: book.status.toString(),
+        isDeleted: false,
+      }),
+    );
 
     const selectedContent = getChapterContext(
       chapter.paragraphs,

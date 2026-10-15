@@ -4,7 +4,7 @@ import { GetCollectionStatsHandler } from './queries/get-collection-stats/get-co
 import { ClearCollectionHandler } from './commands/clear-collection/clear-collection.handler';
 import { BatchIndexHandler } from './commands/batch-index/batch-index.handler';
 import { IndexDocumentHandler } from './commands/index-document/index-document.handler';
-import { SearchHandler } from './commands/search/search.handler';
+import { SearchHandler } from './queries/search/search.handler';
 import { ReindexAllHandler } from './commands/reindex-all/reindex-all.handler';
 import { AskChatbotHandler } from './commands/ask-chatbot/ask-chatbot.handler';
 import { ChromaInfrastructureModule } from '../infrastructure/chroma-infrastructure.module';
@@ -25,15 +25,6 @@ import { AIInfrastructureModule } from '@/modules/ai/infrastructure/public-api';
     AIInfrastructureModule,
   ],
   providers: [
-    GetCollectionStatsHandler,
-    ClearCollectionHandler,
-    BatchIndexHandler,
-    IndexDocumentHandler,
-    SearchHandler,
-    ReindexAllHandler,
-    AskChatbotHandler,
-  ],
-  exports: [
     GetCollectionStatsHandler,
     ClearCollectionHandler,
     BatchIndexHandler,

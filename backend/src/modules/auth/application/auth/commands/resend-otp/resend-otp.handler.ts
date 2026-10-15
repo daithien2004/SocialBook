@@ -1,11 +1,11 @@
 import { ResendOtpCommand } from './resend-otp.command';
-import { CommandBus, CommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { SendOtpCommand } from '@/modules/auth/application/otp/commands/send-otp/send-otp.command';
 import { IOtpRepository } from '@/modules/auth/domain/auth/otp/repositories/otp.repository.interface';
 
 @CommandHandler(ResendOtpCommand)
-export class ResendOtpHandler {
+export class ResendOtpHandler implements ICommandHandler<ResendOtpCommand> {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly otpRepository: IOtpRepository,
@@ -19,7 +19,7 @@ export class ResendOtpHandler {
 
     if (ttl === -2) {
       // Not found, generate new
-      const sendOtpCommand = new SendOtpCommand(email);
+      const sendOtpCommand = new SendOtpCommand(command.actor, email);
       await this.commandBus.execute(sendOtpCommand);
       return { resendCooldown: 60 };
     }
@@ -32,7 +32,7 @@ export class ResendOtpHandler {
       );
     }
 
-    const sendOtpCommand = new SendOtpCommand(email);
+    const sendOtpCommand = new SendOtpCommand(command.actor, email);
     await this.commandBus.execute(sendOtpCommand);
 
     return {

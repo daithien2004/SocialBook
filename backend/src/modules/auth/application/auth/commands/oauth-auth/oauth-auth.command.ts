@@ -1,5 +1,6 @@
 import { Command } from '@nestjs/cqrs';
 import { OAuthProfile } from '@/modules/auth/application/auth/services/oauth-provider.strategy';
+import type { Actor } from '@/shared/casl/actor';
 
 export class OAuthAuthCommand extends Command<{
   accessToken: string;
@@ -12,7 +13,10 @@ export class OAuthAuthCommand extends Command<{
     role: string;
   };
 }> {
-  constructor(public readonly profile: OAuthProfile) {
+  constructor(
+    public readonly actor: Actor,
+    public readonly profile: OAuthProfile,
+  ) {
     super();
   }
 }

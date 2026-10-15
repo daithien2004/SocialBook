@@ -11,6 +11,11 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { GoogleOAuthStrategy } from './services/google-oauth.strategy';
 import { GitHubOAuthStrategy } from './services/github-oauth.strategy';
 import { TokenRotationModule } from '../cache/token-rotation.module';
+import { OAuthStateStorePort } from '@/modules/auth/application/auth/oauth-state-store.port';
+import { OAuthStateService } from '@/modules/auth/application/auth/services/oauth-state.service';
+import { RedisOAuthStateAdapter } from './adapters/redis-oauth-state.adapter';
+import { AbilityFactory } from '@/shared/casl/ability.factory';
+import { defineUserAbilities } from '@/modules/users/application/public-api';
 
 @Module({
   imports: [
@@ -27,6 +32,16 @@ import { TokenRotationModule } from '../cache/token-rotation.module';
     LocalStrategy,
     GoogleOAuthStrategy,
     GitHubOAuthStrategy,
+    RedisOAuthStateAdapter,
+    {
+      provide: OAuthStateStorePort,
+      useExisting: RedisOAuthStateAdapter,
+    },
+    OAuthStateService,
+    {
+      provide: AbilityFactory,
+      useFactory: () => new AbilityFactory([defineUserAbilities]),
+    },
     {
       provide: OAuthProviderStrategy,
       useFactory: (
@@ -43,6 +58,7 @@ import { TokenRotationModule } from '../cache/token-rotation.module';
     GoogleOAuthStrategy,
     GitHubOAuthStrategy,
     OAuthProviderStrategy,
+    OAuthStateService,
     TokenRotationModule,
   ],
 })

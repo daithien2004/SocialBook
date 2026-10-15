@@ -1,5 +1,5 @@
 import { RegisterCommand } from './register.command';
-import { CommandBus, CommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import {
   ConflictDomainException,
@@ -9,12 +9,11 @@ import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { IUserRepository } from '@/modules/users/domain/public-api';
 import { IRoleRepository } from '@/modules/roles/domain/public-api';
 import { UserCreationPort } from '@/modules/users/application/public-api';
-import { CreateUserCommand } from '@/modules/users/application/public-api';
 import { UserEmail } from '@/modules/users/domain/public-api';
 import { SendOtpCommand } from '@/modules/auth/application/otp/commands/send-otp/send-otp.command';
 
 @CommandHandler(RegisterCommand)
-export class RegisterHandler {
+export class RegisterHandler implements ICommandHandler<RegisterCommand> {
   private readonly logger = new Logger(RegisterHandler.name);
 
   constructor(
@@ -38,7 +37,7 @@ export class RegisterHandler {
         }
         await this.userRepository.save(user);
 
-        return await this.sendOtp(command.email);
+        return await this.sendOtp(command.email, command.actor);
       }
       throw new ConflictDomainException('Email này đã được sử dụng');
     }
@@ -53,21 +52,22 @@ export class RegisterHandler {
       );
     }
 
-    const createUserCommand = new CreateUserCommand(
-      command.username,
-      command.email,
-      command.password,
-      userRole.id,
-      undefined,
-      'local',
-    );
-    await this.createUserService.create(createUserCommand);
+    await this.createUserService.create({
+      username: command.username,
+      email: command.email,
+      password: command.password,
+      roleId: userRole.id,
+      provider: 'local',
+    });
 
-    return await this.sendOtp(command.email);
+    return await this.sendOtp(command.email, command.actor);
   }
 
-  private async sendOtp(email: string): Promise<string> {
-    const sendOtpCommand = new SendOtpCommand(email);
+  private async sendOtp(
+    email: string,
+    actor: RegisterCommand['actor'],
+  ): Promise<string> {
+    const sendOtpCommand = new SendOtpCommand(actor, email);
     await this.commandBus.execute(sendOtpCommand);
     return 'Mã OTP đã được gửi đến email của bạn';
   }

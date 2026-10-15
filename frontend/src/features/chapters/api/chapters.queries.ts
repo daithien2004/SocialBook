@@ -5,18 +5,15 @@ import {
   getAdminChapters,
   getChapter,
   getChapterById,
-  getChapterKnowledge,
   getChapters,
   getChaptersImportStatus,
 } from './chapters.api';
 import type {
   Chapter,
   ChapterDetailData,
-  ChapterKnowledge,
   ChaptersImportStatus,
   ChaptersListData,
   GetChapterByIdParams,
-  GetChapterKnowledgeParams,
   GetChapterParams,
   GetChaptersImportStatusParams,
   GetChaptersParams,
@@ -56,13 +53,5 @@ export const chaptersQueries = {
     queryFn: (): Promise<ChaptersImportStatus> =>
       getChaptersImportStatus(params),
     gcTime: 0,
-  }),
-  knowledge: (params: GetChapterKnowledgeParams) => ({
-    queryKey: chapterKeys.knowledge(
-      params.bookSlug,
-      params.chapterId,
-      params.force,
-    ),
-    queryFn: (): Promise<ChapterKnowledge> => getChapterKnowledge(params),
   }),
 };

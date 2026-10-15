@@ -1,21 +1,26 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { CursorPaginatedResult } from '@/shared/domain/pagination.types';
-import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
 import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
 import { GetPostsQuery } from './get-posts.query';
+import { PostResultMapper } from '@/modules/posts/application/posts/post.result';
+import type { PostResult } from '@/modules/posts/application/posts/post.result';
 
 @QueryHandler(GetPostsQuery)
 export class GetPostsHandler implements IQueryHandler<
   GetPostsQuery,
-  CursorPaginatedResult<Post>
+  CursorPaginatedResult<PostResult>
 > {
   constructor(private readonly postRepository: IPostRepository) {}
 
-  async execute(query: GetPostsQuery): Promise<CursorPaginatedResult<Post>> {
-    return this.postRepository.findAll({
+  async execute(
+    query: GetPostsQuery,
+  ): Promise<CursorPaginatedResult<PostResult>> {
+    const page = await this.postRepository.findAll({
       limit: query.limit,
       cursor: query.cursor,
-      viewerUserId: query.viewerUserId,
+      viewerUserId:
+        query.actor.userId === 'anonymous' ? undefined : query.actor.userId,
     });
+    return { ...page, data: PostResultMapper.fromDomainArray(page.data) };
   }
 }

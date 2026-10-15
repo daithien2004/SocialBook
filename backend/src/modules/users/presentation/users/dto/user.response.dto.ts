@@ -1,4 +1,5 @@
 import { User } from '@/modules/users/domain/users/entities/user.entity';
+import type { AdminUserReadModel } from '@/modules/users/application/read-models/admin-user.read-model';
 
 export class UserResponseDto {
   id: string;
@@ -15,10 +16,27 @@ export class UserResponseDto {
   createdAt: Date;
   updatedAt: Date;
 
-  constructor(user: User) {
-    this.id = user.id.toString();
+  constructor(user: User | AdminUserReadModel) {
+    if (user instanceof User) {
+      this.id = user.id.toString();
+      this.username = user.username;
+      this.email = user.email.toString();
+      this.roleId = user.roleId;
+      this.isVerified = user.isVerified;
+      this.isBanned = user.isBanned;
+      this.provider = user.provider;
+      this.image = user.image;
+      this.bio = user.bio;
+      this.location = user.location;
+      this.website = user.website;
+      this.createdAt = user.createdAt;
+      this.updatedAt = user.updatedAt;
+      return;
+    }
+
+    this.id = user.id;
     this.username = user.username;
-    this.email = user.email.toString();
+    this.email = user.email;
     this.roleId = user.roleId;
     this.isVerified = user.isVerified;
     this.isBanned = user.isBanned;
@@ -37,5 +55,9 @@ export class UserResponseDto {
 
   static fromArray(users: User[]): UserResponseDto[] {
     return users.map((user) => new UserResponseDto(user));
+  }
+
+  static fromAdminReadModel(user: AdminUserReadModel): UserResponseDto {
+    return new UserResponseDto(user);
   }
 }

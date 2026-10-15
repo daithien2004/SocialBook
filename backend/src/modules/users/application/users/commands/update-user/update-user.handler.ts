@@ -1,5 +1,6 @@
 import { UpdateUserCommand } from './update-user.command';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { ForbiddenError, subject } from '@casl/ability';
 import {
   NotFoundDomainException,
   ConflictDomainException,
@@ -7,11 +8,13 @@ import {
 import { IUserRepository } from '@/modules/users/domain/users/repositories/user.repository.interface';
 import { User } from '@/modules/users/domain/users/entities/user.entity';
 import { UserId } from '@/modules/users/domain/users/value-objects/user-id.vo';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(UpdateUserCommand)
-export class UpdateUserHandler {
+export class UpdateUserHandler implements ICommandHandler<UpdateUserCommand> {
   constructor(private readonly userRepository: IUserRepository) {}
 
+  @Transactional()
   async execute(command: UpdateUserCommand): Promise<User> {
     const userId = UserId.create(command.id);
     const user = await this.userRepository.findById(userId);
@@ -19,6 +22,11 @@ export class UpdateUserHandler {
     if (!user) {
       throw new NotFoundDomainException('User not found');
     }
+
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'update',
+      subject('User', { id: user.id.toString() }),
+    );
 
     if (command.username && command.username !== user.username) {
       const exists = await this.userRepository.existsByUsername(

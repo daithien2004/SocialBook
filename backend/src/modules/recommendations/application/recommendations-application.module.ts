@@ -6,6 +6,5 @@ import { RecommendationsInfrastructureModule } from '@/modules/recommendations/i
 @Module({
   imports: [CqrsModule, RecommendationsInfrastructureModule],
   providers: [GetPersonalizedRecommendationsHandler],
-  exports: [GetPersonalizedRecommendationsHandler],
 })
 export class RecommendationsApplicationModule {}

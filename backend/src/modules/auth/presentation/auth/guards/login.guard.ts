@@ -6,6 +6,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
+import { firstValueFrom, isObservable } from 'rxjs';
 
 import { LoginDto } from '../dto/auth.dto';
 
@@ -29,6 +30,9 @@ export class LoginGuard extends AuthGuard('local') {
       );
     }
 
-    return super.canActivate(context) as Promise<boolean>;
+    const result = super.canActivate(context);
+    if (typeof result === 'boolean') return result;
+    if (isObservable(result)) return firstValueFrom(result);
+    return result;
   }
 }

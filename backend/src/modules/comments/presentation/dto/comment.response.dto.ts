@@ -1,5 +1,96 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Comment } from '@/modules/comments/domain/entities/comment.entity';
+import type { CommentReadModel } from '@/modules/comments/application/read-models/comment.read-model';
+
+export class CommentCountResponseDto {
+  @ApiProperty({ type: Number })
+  count: number;
+
+  constructor(count: number) {
+    this.count = count;
+  }
+}
+
+export class CommentAuthorResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  username: string;
+
+  @ApiProperty({ nullable: true })
+  image: string | null;
+
+  constructor(author: CommentReadModel['user']) {
+    this.id = author.id;
+    this.username = author.username;
+    this.image = author.image;
+  }
+}
+
+/** Public list view for comments; unlike the command response, this includes author and like state. */
+export class CommentListItemResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  content: string;
+
+  @ApiProperty()
+  targetId: string;
+
+  @ApiProperty()
+  targetType: string;
+
+  @ApiProperty({ nullable: true })
+  parentId: string | null;
+
+  @ApiProperty()
+  likesCount: number;
+
+  @ApiProperty()
+  repliesCount: number;
+
+  @ApiProperty()
+  isLiked: boolean;
+
+  @ApiProperty()
+  isFlagged: boolean;
+
+  @ApiProperty()
+  moderationStatus: string;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  createdAt: Date;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  updatedAt: Date;
+
+  @ApiProperty({ type: CommentAuthorResponseDto })
+  user: CommentAuthorResponseDto;
+
+  constructor(model: CommentReadModel) {
+    this.id = model.id;
+    this.content = model.content;
+    this.targetId = model.targetId;
+    this.targetType = model.targetType;
+    this.parentId = model.parentId;
+    this.likesCount = model.likesCount;
+    this.repliesCount = model.repliesCount;
+    this.isLiked = model.isLiked;
+    this.isFlagged = model.isFlagged;
+    this.moderationStatus = model.moderationStatus;
+    this.createdAt = model.createdAt;
+    this.updatedAt = model.updatedAt;
+    this.user = new CommentAuthorResponseDto(model.user);
+  }
+
+  static fromReadModels(
+    models: CommentReadModel[],
+  ): CommentListItemResponseDto[] {
+    return models.map((model) => new CommentListItemResponseDto(model));
+  }
+}
 
 export class CommentResponseDto {
   @ApiProperty()
@@ -72,53 +163,5 @@ export class CommentResponseDto {
 
   static fromArray(comments: Comment[]): CommentResponseDto[] {
     return comments.map((comment) => new CommentResponseDto(comment));
-  }
-}
-
-export class CommentWithRepliesDto {
-  constructor(comment: Comment, replies: Comment[] = []) {
-    this.comment = new CommentResponseDto(comment);
-    this.replies = replies.map((reply) => new CommentResponseDto(reply));
-    this.totalReplies = replies.length;
-  }
-
-  comment: CommentResponseDto;
-  replies: CommentResponseDto[];
-  totalReplies: number;
-}
-
-export class CommentStatsDto {
-  @ApiProperty()
-  totalComments: number;
-
-  @ApiProperty()
-  pendingModeration: number;
-
-  @ApiProperty()
-  approvedComments: number;
-
-  @ApiProperty()
-  rejectedComments: number;
-
-  @ApiProperty()
-  flaggedComments: number;
-
-  @ApiProperty({ type: 'object', additionalProperties: { type: 'integer' } })
-  commentsByType: Record<string, number>;
-
-  constructor(
-    totalComments: number,
-    pendingModeration: number,
-    approvedComments: number,
-    rejectedComments: number,
-    flaggedComments: number,
-    commentsByType: Record<string, number>,
-  ) {
-    this.totalComments = totalComments;
-    this.pendingModeration = pendingModeration;
-    this.approvedComments = approvedComments;
-    this.rejectedComments = rejectedComments;
-    this.flaggedComments = flaggedComments;
-    this.commentsByType = commentsByType;
   }
 }

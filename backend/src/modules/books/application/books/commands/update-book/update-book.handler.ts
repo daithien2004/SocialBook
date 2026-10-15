@@ -30,6 +30,8 @@ export class UpdateBookHandler implements ICommandHandler<
   ) {}
 
   async execute(command: UpdateBookCommand): Promise<string> {
+    // Check access before uploading a file so a rejected update cannot create an orphaned media asset.
+    await this.assertCanUpdate(command);
     const coverUrl = command.coverFile
       ? await this.media.uploadImage(command.coverFile)
       : command.coverUrl;
@@ -37,6 +39,21 @@ export class UpdateBookHandler implements ICommandHandler<
     await this.bookCache.setDetail(book);
     await this.bookCache.invalidateDetail(book.id.toString(), book.slug);
     return book.id.toString();
+  }
+
+  private async assertCanUpdate(command: UpdateBookCommand): Promise<void> {
+    const book = await this.bookRepository.findById(BookId.create(command.id));
+    if (!book) {
+      throw new NotFoundDomainException(BookErrorMessages.BOOK_NOT_FOUND);
+    }
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'update',
+      subject('Book', {
+        id: book.id.toString(),
+        status: book.status.toString(),
+        isDeleted: false,
+      }),
+    );
   }
 
   @Transactional()

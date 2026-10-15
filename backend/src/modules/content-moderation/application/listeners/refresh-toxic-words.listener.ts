@@ -47,9 +47,9 @@ export class RefreshToxicWordsListener
 
   @OnEvent(EventNames.TOXIC_WORDS_UPDATED)
   async handleToxicWordsUpdatedEvent() {
-    // Gá»i tá»± lÃ m má»›i local trÆ°á»›c
+    // Gọi tự làm mới local trước
     await this.refreshCache();
-    // PhÃ¡t tÃ­n hiá»‡u cho cÃ¡c process khÃ¡c (worker, backend2, ...) lÃ m má»›i
+    // Phát tín hiệu cho các process khác (worker, backend2, ...) làm mới
     this.redis
       .publish('cache-invalidate:toxic-words', 'refresh')
       .catch((err) => {

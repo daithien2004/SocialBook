@@ -7,7 +7,7 @@ export abstract class IRecommendationDataRepository {
 }
 
 export interface PopulatedBook {
-  _id: string;
+  id: string;
   title: string;
   slug: string;
   description?: string;
@@ -16,6 +16,6 @@ export interface PopulatedBook {
   likes: number;
   status: string;
   isDeleted: boolean;
-  genres?: Array<{ _id: string; name: string; slug: string }>;
-  authorId?: { _id: string; name: string; avatar?: string };
+  genres?: Array<{ id: string; name: string; slug: string }>;
+  authorId?: { id: string; name: string; avatar?: string };
 }

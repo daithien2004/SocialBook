@@ -12,7 +12,6 @@ import {
 } from '@nestjs/websockets';
 import { DefaultEventsMap, Server, Socket } from 'socket.io';
 import { NotificationsService } from './notifications.service';
-import { CreateNotificationDto } from './create-notification.dto';
 import { JwtService } from '@nestjs/jwt';
 import { OnEvent } from '@nestjs/event-emitter';
 import { EventNames } from '@/shared/platform/constants/event-names.constant';
@@ -123,10 +122,10 @@ export class NotificationsGateway
   }
 
   handleDisconnect() {
-    // cleanup náº¿u cáº§n
+    // cleanup nếu cần
   }
 
-  // Cho phÃ©p client chá»§ Ä‘á»™ng yÃªu cáº§u data
+  // Cho phép client chủ động yêu cầu data
   @SubscribeMessage('notification:list')
   async list(@ConnectedSocket() socket: NotificationsSocket) {
     const userId = socket.data.userId;
@@ -146,14 +145,5 @@ export class NotificationsGateway
   async markAllRead(@ConnectedSocket() socket: NotificationsSocket) {
     const userId = socket.data.userId;
     return this.notificationsService.markAllRead(userId);
-  }
-
-  // (tuá»³ chá»n) cho phÃ©p backend khÃ¡c emit qua gateway â€” hoáº·c gá»i tháº³ng service.create()
-  @SubscribeMessage('createNotification')
-  async createFromClient(
-    @ConnectedSocket() socket: NotificationsSocket,
-    @MessageBody() data: CreateNotificationDto,
-  ) {
-    return this.notificationsService.create(data);
   }
 }

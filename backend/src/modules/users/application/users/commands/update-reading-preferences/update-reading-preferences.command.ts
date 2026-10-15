@@ -1,8 +1,10 @@
 import { Command } from '@nestjs/cqrs';
-import { User } from '@/modules/users/domain/users/entities/user.entity';
+import type { ReadingPreferencesResult } from '@/modules/users/application/reading-preferences.result';
+import type { Actor } from '@/shared/casl/actor';
 
-export class UpdateReadingPreferencesCommand extends Command<User> {
+export class UpdateReadingPreferencesCommand extends Command<ReadingPreferencesResult> {
   constructor(
+    public readonly actor: Actor,
     public readonly userId: string,
     public readonly theme?: string,
     public readonly fontSize?: number,

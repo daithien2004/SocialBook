@@ -1,7 +1,13 @@
 export { ChaptersReadingRoomsIntegrationModule } from './application/public-api/chapters-reading-rooms-integration.module';
 export type { ChapterDetailReadModel } from './application/read-models/chapter-detail.read-model';
+export { IChapterReadRepository } from './application/ports/chapter-read.repository';
 export type { ReadingRoomChapterContextReadModel } from './application/read-models/reading-room-chapter-context.read-model';
 export { TouchChapterForReadingRoomCommand } from './application/chapters/commands/touch-chapter-for-reading-room/touch-chapter-for-reading-room.command';
 export { GetReadingRoomChapterQuery } from './application/chapters/queries/get-reading-room-chapter/get-reading-room-chapter.query';
 export { GetReadingRoomChapterContextQuery } from './application/chapters/queries/get-reading-room-chapter-context/get-reading-room-chapter-context.query';
+export type { ChapterAudioSourceReadModel } from './application/read-models/chapter-audio-source.read-model';
+export { GetChapterAudioSourceQuery } from './application/chapters/queries/get-audio-source/get-chapter-audio-source.query';
+export { GetBookAudioSourcesQuery } from './application/chapters/queries/get-book-audio-sources/get-book-audio-sources.query';
+export { UpdateChapterAudioStatusCommand } from './application/chapters/commands/update-audio-status/update-chapter-audio-status.command';
 export { ChaptersModule } from './chapters.module';
+export { ChaptersTextToSpeechIntegrationModule } from './application/public-api/chapters-text-to-speech-integration.module';

@@ -1,5 +1,5 @@
 import { ApiTags } from '@nestjs/swagger';
-import { buildPaginationMeta } from '@/shared/domain/pagination.types';
+import { paginate } from '@/shared/domain/pagination.types';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { UpdateStatusCommand } from '@/modules/library/application/library/commands/update-status/update-status.command';
 import { ProcessReadingSessionCommand } from '@/modules/library/application/library/commands/process-reading-session/process-reading-session.command';
@@ -25,6 +25,7 @@ import {
   LibraryItemResponseDto,
   RecordReadingTimeResponseDto,
 } from '@/modules/library/presentation/library/dto/library.response.dto';
+import { KnowledgeGraphResponseDto } from '@/modules/library/presentation/library/dto/knowledge-graph.response.dto';
 import {
   HttpCode,
   Body,
@@ -36,8 +37,13 @@ import {
   Post,
   Query,
   ParseUUIDPipe,
+  UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
-import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
+import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
+import type { Actor } from '@/shared/casl/actor';
+import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
 import {
   ApiExtraModels,
   ApiOkResponse,
@@ -48,10 +54,31 @@ import {
   ApiPaginatedResponse,
   ApiProblemResponses,
 } from '@/shared/platform/decorators/api-response.decorators';
+import { PaginationQueryDto } from '@/shared/platform/dto/pagination-query.dto';
+
+const READING_STATUS_VALUES: readonly string[] = Object.values(ReadingStatus);
+
+function isReadingStatus(value: string): value is ReadingStatus {
+  return READING_STATUS_VALUES.includes(value);
+}
+
+function parseReadingStatuses(
+  value: string | undefined,
+): ReadingStatus | ReadingStatus[] {
+  if (!value) return ReadingStatus.READING;
+
+  const statuses = value.split(',').map((status) => status.trim());
+  if (!statuses.every(isReadingStatus)) {
+    throw new BadRequestException('Invalid reading status');
+  }
+
+  return statuses.length === 1 ? statuses[0] : statuses;
+}
 
 @ApiProblemResponses()
 @ApiTags('Library')
 @Controller('library')
+@UseGuards(PoliciesGuard)
 export class LibraryController {
   constructor(
     private readonly commandBus: CommandBus,
@@ -60,53 +87,50 @@ export class LibraryController {
 
   @ApiOperation({ summary: 'Get Library' })
   @Get()
+  @CheckPolicy('read', 'Library')
   @ApiPaginatedResponse(LibraryItemResponseDto, 'offset')
   async getLibrary(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
+    @Query() pagination: PaginationQueryDto,
     @Query('status') status?: string,
-    @Query('limit') limit?: string,
   ) {
-    let readingStatuses: ReadingStatus | ReadingStatus[];
-    if (status) {
-      readingStatuses = status.includes(',')
-        ? status.split(',').map((s) => s.trim() as ReadingStatus)
-        : (status as ReadingStatus);
-    } else {
-      readingStatuses = ReadingStatus.READING;
-    }
-
-    const limitNumber = limit ? parseInt(limit, 10) : undefined;
-    const query = new GetLibraryQuery(userId, readingStatuses, limitNumber);
-    const readingLists = await this.queryBus.execute(query);
-
-    const data = readingLists.map((rl) =>
-      LibraryItemResponseDto.fromReadModel(rl),
+    const readingStatuses = parseReadingStatuses(status);
+    const query = new GetLibraryQuery(actor, actor.userId, readingStatuses, {
+      offset: pagination.effectiveOffset,
+      limit: pagination.actualLimit,
+    });
+    const page = await this.queryBus.execute(query);
+    return paginate(page.items, page.total, pagination, (items) =>
+      items.map((item) => LibraryItemResponseDto.fromReadModel(item)),
     );
-    return {
-      data: data,
-      meta: buildPaginationMeta(1, Math.max(data.length, 1), data.length),
-    };
   }
 
   @ApiOperation({ summary: 'Get Knowledge Graph' })
   @Get('knowledge-graph')
-  @ApiOkResponse({ schema: { type: 'object', additionalProperties: true } })
-  async getKnowledgeGraph(@CurrentUser('id') userId: string) {
-    const query = new GetKnowledgeGraphQuery(userId);
+  @CheckPolicy('read', 'Library')
+  @ApiOkResponse({ type: KnowledgeGraphResponseDto })
+  async getKnowledgeGraph(@CurrentActor() actor: Actor) {
+    const query = new GetKnowledgeGraphQuery(actor, actor.userId);
     const result = await this.queryBus.execute(query);
 
-    return result;
+    return KnowledgeGraphResponseDto.fromResult(result);
   }
 
   @ApiOperation({ summary: 'Update Status' })
   @Post('status')
   @HttpCode(200)
+  @CheckPolicy('update', 'Library')
   @ApiOkResponse({ type: LibraryItemResponseDto })
   async updateStatus(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Body() dto: UpdateLibraryStatusDto,
   ) {
-    const command = new UpdateStatusCommand(userId, dto.bookId, dto.status);
+    const command = new UpdateStatusCommand(
+      actor,
+      actor.userId,
+      dto.bookId,
+      dto.status,
+    );
     const readingList = await this.commandBus.execute(command);
 
     return LibraryItemResponseDto.fromReadModel(readingList);
@@ -114,13 +138,19 @@ export class LibraryController {
 
   @ApiOperation({ summary: 'Get Chapter Progress' })
   @Get('progress')
+  @CheckPolicy('read', 'Library')
   @ApiOkResponse({ type: ChapterProgressResponseDto })
   async getChapterProgress(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Query('bookId') bookId: string,
     @Query('chapterId') chapterId: string,
   ) {
-    const query = new GetChapterProgressQuery(userId, bookId, chapterId);
+    const query = new GetChapterProgressQuery(
+      actor,
+      actor.userId,
+      bookId,
+      chapterId,
+    );
     const result = await this.queryBus.execute(query);
     return ChapterProgressResponseDto.fromResult(result);
   }
@@ -128,6 +158,7 @@ export class LibraryController {
   @ApiOperation({ summary: 'Update Progress' })
   @Post('progress')
   @HttpCode(200)
+  @CheckPolicy('update', 'Library')
   @ApiExtraModels(LibraryItemResponseDto, ChapterProgressResponseDto)
   @ApiOkResponse({
     schema: {
@@ -140,11 +171,12 @@ export class LibraryController {
     },
   })
   async updateProgress(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Body() updateProgressDto: UpdateProgressDto,
   ) {
     const command = new UpdateProgressCommand(
-      userId,
+      actor,
+      actor.userId,
       updateProgressDto.bookId,
       updateProgressDto.chapterId,
       updateProgressDto.progress || 0,
@@ -162,13 +194,15 @@ export class LibraryController {
   @ApiOperation({ summary: 'Record Reading Time' })
   @Post('reading-time')
   @HttpCode(200)
+  @CheckPolicy('update', 'Library')
   @ApiOkResponse({ type: RecordReadingTimeResponseDto })
   async recordReadingTime(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Body() dto: UpdateReadingTimeDto,
   ) {
     const command = new ProcessReadingSessionCommand(
-      userId,
+      actor,
+      actor.userId,
       dto.bookId,
       dto.chapterId,
       dto.durationInSeconds,
@@ -180,13 +214,15 @@ export class LibraryController {
 
   @ApiOperation({ summary: 'Update Collections' })
   @Patch('collections')
+  @CheckPolicy('update', 'Library')
   @ApiOkResponse({ type: LibraryItemResponseDto })
   async updateCollections(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Body() dto: AddToCollectionsDto,
   ) {
     const command = new UpdateCollectionsCommand(
-      userId,
+      actor,
+      actor.userId,
       dto.bookId,
       dto.collectionIds,
     );
@@ -198,11 +234,12 @@ export class LibraryController {
   @ApiOperation({ summary: 'Delete' })
   @HttpCode(204)
   @Delete(':bookId')
+  @CheckPolicy('delete', 'Library')
   async remove(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Param('bookId', new ParseUUIDPipe({ version: '4' })) bookId: string,
   ) {
-    const command = new RemoveFromLibraryCommand(userId, bookId);
+    const command = new RemoveFromLibraryCommand(actor, actor.userId, bookId);
     await this.commandBus.execute(command);
 
     return undefined;
@@ -210,12 +247,13 @@ export class LibraryController {
 
   @ApiOperation({ summary: 'Get Book Library Info' })
   @Get('book/:bookId')
+  @CheckPolicy('read', 'Library')
   @ApiOkResponse({ type: BookLibraryInfoResponseDto })
   async getBookLibraryInfo(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Param('bookId', new ParseUUIDPipe({ version: '4' })) bookId: string,
   ) {
-    const query = new GetBookLibraryInfoQuery(userId, bookId);
+    const query = new GetBookLibraryInfoQuery(actor, actor.userId, bookId);
     const result = await this.queryBus.execute(query);
 
     return BookLibraryInfoResponseDto.fromResult(result);

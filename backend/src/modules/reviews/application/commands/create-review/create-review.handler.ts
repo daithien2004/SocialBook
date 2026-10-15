@@ -1,35 +1,50 @@
-import { BookId as ChapterBookId } from '@/modules/chapters/domain/public-api';
+import { IChapterReadRepository } from '@/modules/chapters';
 import { CreateReviewCommand } from './create-review.command';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   BadRequestDomainException,
   ConflictDomainException,
 } from '@/shared/domain/common-exceptions';
 import { IReviewRepository } from '@/modules/reviews/domain/repositories/review.repository.interface';
-import { CreateReviewDto } from '@/modules/reviews/application/dto/create-review.dto';
 import { containsVietnameseToxicWords } from '@/modules/content-moderation';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { Review } from '@/modules/reviews/domain/entities/review.entity';
 import { ReviewErrorMessages } from '@/modules/reviews/application/error-messages';
 import { IReadingProgressRepository } from '@/modules/library/domain/public-api';
-import { IChapterRepository } from '@/modules/chapters/domain/public-api';
 import { UserId } from '@/modules/library/domain/public-api';
 import { BookId } from '@/modules/library/domain/public-api';
 import { ChapterStatus } from '@/modules/library/domain/public-api';
 import { IRecommendationCachePort } from '@/modules/recommendations/domain/public-api';
+import { ReviewResultMapper } from '../../mappers/review-result.mapper';
+import { Transactional } from '@nestjs-cls/transactional';
+import { ForbiddenError } from '@casl/ability';
+import type { ReviewReadModel } from '../../read-models/review.read-model';
 
 @CommandHandler(CreateReviewCommand)
-export class CreateReviewHandler {
+export class CreateReviewHandler implements ICommandHandler<CreateReviewCommand> {
   constructor(
     private readonly reviewRepository: IReviewRepository,
 
     private readonly idGenerator: IIdGenerator,
     private readonly readingProgressRepository: IReadingProgressRepository,
-    private readonly chapterRepository: IChapterRepository,
+    private readonly chapterRepository: IChapterReadRepository,
     private readonly recommendationCache: IRecommendationCachePort,
   ) {}
 
-  async execute(userId: string, dto: CreateReviewDto): Promise<Review> {
+  async execute(command: CreateReviewCommand): Promise<ReviewReadModel> {
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'create',
+      'Review',
+    );
+    const created = await this.createReview(command);
+    await this.recommendationCache.clear(command.actor.userId);
+    return ReviewResultMapper.fromDomain(created);
+  }
+
+  @Transactional()
+  private async createReview(command: CreateReviewCommand): Promise<Review> {
+    const { actor, dto } = command;
+    const userId = actor.userId;
     const userIdVo = UserId.create(userId);
     const bookIdVo = BookId.create(dto.bookId);
 
@@ -43,15 +58,13 @@ export class CreateReviewHandler {
       (p) => p.status === ChapterStatus.COMPLETED,
     ).length;
 
-    const totalChapters = await this.chapterRepository.countByBook(
-      ChapterBookId.create(dto.bookId),
-    );
+    const totalChapters = await this.chapterRepository.countByBook(dto.bookId);
 
     const requiredChapters = Math.min(10, totalChapters);
 
     if (completedChaptersCount < requiredChapters) {
       throw new BadRequestDomainException(
-        `Báº¡n cáº§n Ä‘á»c Ã­t nháº¥t ${requiredChapters} chÆ°Æ¡ng Ä‘á»ƒ cÃ³ thá»ƒ Ä‘Ã¡nh giÃ¡ cuá»‘n sÃ¡ch nÃ y (Hiá»‡n táº¡i: ${completedChaptersCount}/${requiredChapters}).`,
+        `Bạn cần đọc ít nhất ${requiredChapters} chương để có thể đánh giá cuốn sách này (Hiện tại: ${completedChaptersCount}/${requiredChapters}).`,
       );
     }
 
@@ -68,7 +81,7 @@ export class CreateReviewHandler {
     const quickCheck = containsVietnameseToxicWords(dto.content);
     if (quickCheck) {
       throw new BadRequestDomainException(
-        `Ná»™i dung chá»©a tá»« ngá»¯ thÃ´ tá»¥c khÃ´ng phÃ¹ há»£p: "${quickCheck.matchedWord}" (nhÃ³m: ${quickCheck.group}).`,
+        `Nội dung chứa từ ngữ thô tục không phù hợp: "${quickCheck.matchedWord}" (nhóm: ${quickCheck.group}).`,
       );
     }
 
@@ -83,8 +96,6 @@ export class CreateReviewHandler {
     });
 
     const created = await this.reviewRepository.create(review);
-
-    void this.recommendationCache.clear(userId);
 
     return created;
   }

@@ -40,7 +40,7 @@ backend/src/
         └── infrastructure/
 ```
 
-`core/queue` configures the BullMQ connection. A feature registers its own queues and workers. `shared/queue` contains only reusable payload schemas and job options. `CoreModule` composes the core modules; security providers and CQRS/event/scheduler setup are packaged in their own core modules. `src/migrations/` contains database migrations/maintenance scripts; `src/seeds/` contains seed entry points and may depend on feature APIs, while features must not depend on seeds.
+`core/queue` configures the BullMQ connection. A feature registers its own queues and workers. `shared/queue` contains only reusable payload schemas and job options. `CoreModule` composes the core modules; security providers and CQRS/event/scheduler setup are packaged in their own core modules. PostgreSQL migrations live in `backend/prisma/migrations/`; `backend/src/seeds/` contains seed entry points and may depend on feature APIs, while features must not depend on seeds.
 
 Feature code must use another feature's public API. The architecture checker enforces these boundaries, inward layer dependencies, and direct cycles between Nest modules. Domain code cannot import NestJS or persistence ORM clients. The checker runs in pull request and deployment workflows.
 
@@ -52,7 +52,7 @@ The API starts from `backend/src/main.ts`, loads `api-mode.ts` before `AppModule
 
 ### Prerequisites
 
-- Node.js 20.18.1 or later
+- Node.js 24 or later
 - npm
 - Docker Compose
 - Local environment files based on `backend/.env.example` and `frontend/.env.example`
@@ -106,7 +106,7 @@ npm run test:integration --workspace=backend
 npm run test:e2e --workspace=backend
 ```
 
-See [AGENTS.md](AGENTS.md) for repository-specific implementation and type-safety rules, [the backend architecture overview](docs/backend-architecture-overview.md) for the current module map, and [the ADR directory](docs/adr/) for recorded architecture decisions.
+See [AGENTS.md](AGENTS.md) for repository-specific implementation and type-safety rules, [the backend README](backend/README.md) for setup and checks, and [the backend architecture overview](docs/audit/backend-architecture-overview.md) for the current module map and conventions.
 
 ## Database seeding
 

@@ -3,7 +3,6 @@ import { Module } from '@nestjs/common';
 import { CreateReviewHandler } from './commands/create-review/create-review.handler';
 import { DeleteReviewHandler } from './commands/delete-review/delete-review.handler';
 import { GetBookReviewsHandler } from './queries/get-book-reviews/get-book-reviews.handler';
-import { GetReviewHandler } from './queries/get-review/get-review.handler';
 import { ToggleReviewLikeHandler } from './commands/toggle-review-like/toggle-review-like.handler';
 import { UpdateReviewHandler } from './commands/update-review/update-review.handler';
 import { LibraryRepositoryModule } from '@/modules/library/infrastructure/public-api';
@@ -27,15 +26,6 @@ import { RecommendationsInfrastructureModule } from '@/modules/recommendations/i
     CreateReviewHandler,
     DeleteReviewHandler,
     GetBookReviewsHandler,
-    GetReviewHandler,
-    ToggleReviewLikeHandler,
-    UpdateReviewHandler,
-  ],
-  exports: [
-    CreateReviewHandler,
-    DeleteReviewHandler,
-    GetBookReviewsHandler,
-    GetReviewHandler,
     ToggleReviewLikeHandler,
     UpdateReviewHandler,
   ],

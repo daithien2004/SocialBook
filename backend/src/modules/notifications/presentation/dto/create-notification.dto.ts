@@ -1,22 +1,24 @@
 // notifications/dto/create-notification.dto.ts
 import {
   IsString,
-  IsBoolean,
   IsOptional,
   IsUUID,
   IsObject,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import type { Actor } from '@/shared/casl/actor';
+import { CreateNotificationCommand } from '@/modules/notifications/application/commands/create-notification/create-notification.command';
+import type { NotificationMeta } from '@/modules/notifications/domain/entities/notification.entity';
 
 class NotificationMetaDto {
   @IsOptional()
   @IsUUID('4')
-  actorId!: string;
+  actorId?: string;
 
   @IsOptional()
   @IsString()
-  username!: string;
+  username?: string;
 
   @IsOptional()
   @IsString()
@@ -24,7 +26,7 @@ class NotificationMetaDto {
 
   @IsOptional()
   @IsUUID('4')
-  targetId!: string;
+  targetId?: string;
 }
 
 export class CreateNotificationDto {
@@ -41,10 +43,6 @@ export class CreateNotificationDto {
   type!: string;
 
   @IsOptional()
-  @IsBoolean()
-  isRead?: boolean;
-
-  @IsOptional()
   @IsString()
   actionUrl?: string;
 
@@ -52,5 +50,26 @@ export class CreateNotificationDto {
   @IsObject()
   @ValidateNested()
   @Type(() => NotificationMetaDto)
-  meta!: NotificationMetaDto;
+  meta?: NotificationMetaDto;
+
+  toCommand(actor: Actor): CreateNotificationCommand {
+    const meta: NotificationMeta | undefined = this.meta
+      ? {
+          actorId: this.meta.actorId,
+          username: this.meta.username,
+          image: this.meta.image,
+          targetId: this.meta.targetId,
+        }
+      : undefined;
+
+    return new CreateNotificationCommand(
+      actor,
+      this.userId,
+      this.title,
+      this.message,
+      this.type,
+      meta,
+      this.actionUrl,
+    );
+  }
 }

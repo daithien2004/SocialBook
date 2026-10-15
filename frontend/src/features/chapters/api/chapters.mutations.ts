@@ -4,6 +4,7 @@ import {
   askChapterAI,
   createChapter,
   deleteChapter,
+  generateChapterKnowledge,
   importChaptersPreview,
   recordChapterView,
   startChaptersImport,
@@ -12,8 +13,10 @@ import {
 import type {
   Chapter,
   ChapterPreview,
+  ChapterKnowledge,
   CreateChapterParams,
   DeleteChapterParams,
+  GenerateChapterKnowledgeParams,
   ImportChaptersParams,
   RecordChapterViewParams,
   StartChaptersImportParams,
@@ -81,5 +84,11 @@ export function useAskChapterAI() {
     { bookSlug: string; chapterId: string; question: string }
   >({
     mutationFn: askChapterAI,
+  });
+}
+
+export function useGenerateChapterKnowledge() {
+  return useMutation<ChapterKnowledge, Error, GenerateChapterKnowledgeParams>({
+    mutationFn: generateChapterKnowledge,
   });
 }

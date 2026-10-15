@@ -1,11 +1,10 @@
 import { Command } from '@nestjs/cqrs';
-import { AppAbility } from '@socialbook/shared';
+import type { Actor } from '@/shared/casl/actor';
 
-export class RemovePostImageCommand extends Command<{ imageUrls: string[] }> {
+export class RemovePostImageCommand extends Command<void> {
   constructor(
-    public readonly userId: string,
+    public readonly actor: Actor,
     public readonly postId: string,
-    public readonly ability: AppAbility,
     public readonly imageUrl: string,
   ) {
     super();

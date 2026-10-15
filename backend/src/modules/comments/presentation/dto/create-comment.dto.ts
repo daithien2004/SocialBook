@@ -56,9 +56,3 @@ export class ModerateCommentDto {
   @IsString()
   reason?: string;
 }
-
-export class FlagCommentDto {
-  @IsString()
-  @IsNotEmpty()
-  reason!: string;
-}

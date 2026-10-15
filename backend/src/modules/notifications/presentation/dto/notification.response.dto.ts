@@ -1,9 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Notification } from '@/modules/notifications/domain/entities/notification.entity';
+import type { NotificationResult } from '@/modules/notifications/application/notification.result';
 
 export class NotificationResponseDto {
   @ApiProperty()
   id: string;
+
+  @ApiProperty()
+  userId: string;
 
   @ApiProperty()
   title: string;
@@ -34,15 +37,16 @@ export class NotificationResponseDto {
   @ApiProperty()
   updatedAt: Date;
 
-  constructor(notification: Notification) {
-    this.id = notification.id.toString();
+  constructor(notification: NotificationResult) {
+    this.id = notification.id;
+    this.userId = notification.userId;
     this.title = notification.title;
     this.message = notification.message;
     this.type = notification.type;
-    this.isRead = notification.isRead || false;
-    this.actionUrl = notification.actionUrl || null;
-    this.createdAt = notification.createdAt || new Date();
-    this.updatedAt = notification.updatedAt || new Date();
+    this.isRead = notification.isRead;
+    this.actionUrl = notification.actionUrl;
+    this.createdAt = notification.createdAt;
+    this.updatedAt = notification.updatedAt;
 
     if (notification.meta) {
       this.meta = {
@@ -54,11 +58,13 @@ export class NotificationResponseDto {
     }
   }
 
-  static fromDomain(notification: Notification): NotificationResponseDto {
+  static fromResult(notification: NotificationResult): NotificationResponseDto {
     return new NotificationResponseDto(notification);
   }
 
-  static fromArray(notifications: Notification[]): NotificationResponseDto[] {
+  static fromArray(
+    notifications: NotificationResult[],
+  ): NotificationResponseDto[] {
     return notifications.map((n) => new NotificationResponseDto(n));
   }
 }

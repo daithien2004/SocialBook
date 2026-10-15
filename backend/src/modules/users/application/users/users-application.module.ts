@@ -6,11 +6,10 @@ import { CreateUserService } from './commands/create-user/create-user.service';
 import { UserCreationPort } from '../user-creation.port';
 import { DeleteUserHandler } from './commands/delete-user/delete-user.handler';
 import { GetReadingPreferencesHandler } from './queries/get-reading-preferences/get-reading-preferences.handler';
-import { GetUserByIdHandler } from './queries/get-user-by-id/get-user-by-id.handler';
 import { GetUserProfileHandler } from './queries/get-user-profile/get-user-profile.handler';
 import { GetCurrentUserHandler } from '../queries/get-current-user/get-current-user.handler';
 import { GetUsersHandler } from './queries/get-users/get-users.handler';
-import { SearchUsersHandler } from './commands/search-users/search-users.handler';
+import { SearchUsersHandler } from './queries/search-users/search-users.handler';
 import { ToggleBanHandler } from './commands/toggle-ban/toggle-ban.handler';
 import { UpdateReadingPreferencesHandler } from './commands/update-reading-preferences/update-reading-preferences.handler';
 import { UpdateUserHandler } from './commands/update-user/update-user.handler';
@@ -41,7 +40,6 @@ import { CaslCacheListener } from './listeners/casl-cache.listener';
     { provide: UserCreationPort, useClass: CreateUserService },
     DeleteUserHandler,
     GetReadingPreferencesHandler,
-    GetUserByIdHandler,
     GetUserProfileHandler,
     GetCurrentUserHandler,
     GetUsersHandler,
@@ -52,20 +50,6 @@ import { CaslCacheListener } from './listeners/casl-cache.listener';
     UpdateUserImageHandler,
     CaslCacheListener,
   ],
-  exports: [
-    CheckUserExistHandler,
-    CreateUserHandler,
-    UserCreationPort,
-    DeleteUserHandler,
-    GetReadingPreferencesHandler,
-    GetUserByIdHandler,
-    GetUserProfileHandler,
-    GetUsersHandler,
-    SearchUsersHandler,
-    ToggleBanHandler,
-    UpdateReadingPreferencesHandler,
-    UpdateUserHandler,
-    UpdateUserImageHandler,
-  ],
+  exports: [UserCreationPort],
 })
 export class UsersApplicationModule {}

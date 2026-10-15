@@ -1,13 +1,15 @@
 import { IndexDocumentCommand } from './index-document.command';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { Logger } from '@nestjs/common';
 import { IVectorRepository } from '@/modules/chroma/domain/repositories/vector.repository.interface';
 import { VectorDocument } from '@/modules/chroma/domain/entities/vector-document.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
+import { ForbiddenError } from '@casl/ability';
+import type { IndexDocumentResult } from '@/modules/chroma/application/chroma.result';
 
 @CommandHandler(IndexDocumentCommand)
-export class IndexDocumentHandler {
+export class IndexDocumentHandler implements ICommandHandler<IndexDocumentCommand> {
   private readonly logger = new Logger(IndexDocumentHandler.name);
 
   constructor(
@@ -15,9 +17,11 @@ export class IndexDocumentHandler {
     private readonly idGenerator: IIdGenerator,
   ) {}
 
-  async execute(
-    command: IndexDocumentCommand,
-  ): Promise<{ success: boolean; documentId?: string; error?: string }> {
+  async execute(command: IndexDocumentCommand): Promise<IndexDocumentResult> {
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'create',
+      'Search',
+    );
     try {
       // Check if document already exists
       const existingDocuments = await this.vectorRepository.findByContentId(
@@ -36,7 +40,7 @@ export class IndexDocumentHandler {
       const document = VectorDocument.create({
         id: this.idGenerator.generate(),
         contentId: command.contentId,
-        contentType: (command as any).contentType,
+        contentType: command.contentType,
         content: command.content,
         metadata: command.metadata,
         embedding: command.embedding || [],

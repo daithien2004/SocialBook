@@ -1,9 +1,9 @@
 import { Command } from '@nestjs/cqrs';
-import { UserHighlight } from '@/modules/user-highlights/domain/entities/user-highlight.entity';
+import type { Actor } from '@/shared/casl/actor';
 
-export class CreateUserHighlightCommand extends Command<UserHighlight> {
+export class CreateUserHighlightCommand extends Command<string> {
   constructor(
-    public readonly userId: string,
+    public readonly actor: Actor,
     public readonly bookId: string,
     public readonly chapterId: string,
     public readonly paragraphId: string,

@@ -1,15 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/core/database/postgres/prisma.service';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
 import { INotificationRepository } from '@/modules/notifications/domain/repositories/notification.repository.interface';
 import { Notification } from '@/modules/notifications/domain/entities/notification.entity';
 import { NotificationMapper } from './notification.mapper';
 
 @Injectable()
 export class NotificationRepository implements INotificationRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
+  ) {}
 
   async save(notification: Notification): Promise<Notification> {
-    const row = await this.prisma.notification.create({
+    const row = await this.transactionHost.tx.notification.create({
       data: NotificationMapper.toPersistence(notification),
     });
     return NotificationMapper.toDomain(row);
@@ -21,7 +24,7 @@ export class NotificationRepository implements INotificationRepository {
     offset = 0,
     isRead?: boolean,
   ): Promise<Notification[]> {
-    const rows = await this.prisma.notification.findMany({
+    const rows = await this.transactionHost.tx.notification.findMany({
       where: {
         userId,
         ...(isRead === undefined ? {} : { isRead }),
@@ -33,15 +36,24 @@ export class NotificationRepository implements INotificationRepository {
     return rows.map((row) => NotificationMapper.toDomain(row));
   }
 
+  countByUser(userId: string, isRead?: boolean): Promise<number> {
+    return this.transactionHost.tx.notification.count({
+      where: {
+        userId,
+        ...(isRead === undefined ? {} : { isRead }),
+      },
+    });
+  }
+
   async markAsRead(userId: string, notificationId: string): Promise<void> {
-    await this.prisma.notification.updateMany({
+    await this.transactionHost.tx.notification.updateMany({
       where: { id: notificationId, userId },
       data: { isRead: true },
     });
   }
 
   async markAllAsRead(userId: string): Promise<void> {
-    await this.prisma.notification.updateMany({
+    await this.transactionHost.tx.notification.updateMany({
       where: { userId, isRead: false },
       data: { isRead: true },
     });

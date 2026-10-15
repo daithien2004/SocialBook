@@ -1,13 +1,12 @@
 import { Command } from '@nestjs/cqrs';
-import { AppAbility } from '@socialbook/shared';
+import type { Actor } from '@/shared/casl/actor';
 
 import { Comment } from '@/modules/comments/domain/entities/comment.entity';
 
 export class UpdateCommentCommand extends Command<Comment> {
   constructor(
     public readonly id: string,
-    public readonly userId: string,
-    public readonly ability: AppAbility,
+    public readonly actor: Actor,
     public readonly content: string,
   ) {
     super();

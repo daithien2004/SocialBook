@@ -2,11 +2,13 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { ForbiddenError, subject } from '@casl/ability';
 import { IBookRepository } from '@/modules/books/domain/books/repositories/book.repository.interface';
+import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
 import { RecordBookViewCommand } from './record-book-view.command';
 import { IBookCachePort } from '@/modules/books/domain/books/interfaces/book-cache.port';
 import { IViewRankingCachePort } from '@/modules/books/domain/books/interfaces/view-ranking-cache.port';
 import { BookErrorMessages } from '@/modules/books/application/error-messages';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(RecordBookViewCommand)
 export class RecordBookViewHandler implements ICommandHandler<
@@ -36,7 +38,7 @@ export class RecordBookViewHandler implements ICommandHandler<
         }),
       );
 
-      await this.bookRepository.incrementViews(book.id);
+      await this.persistViewCount(book.id);
 
       // Record views in Redis
       await this.viewRankingCache.recordView(book.id.toString());
@@ -53,5 +55,10 @@ export class RecordBookViewHandler implements ICommandHandler<
       );
       throw error;
     }
+  }
+
+  @Transactional()
+  private async persistViewCount(bookId: BookId): Promise<void> {
+    await this.bookRepository.incrementViews(bookId);
   }
 }

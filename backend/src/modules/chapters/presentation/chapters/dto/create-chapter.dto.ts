@@ -10,6 +10,8 @@ import {
   IsUUID,
   IsNumber,
 } from 'class-validator';
+import type { Actor } from '@/shared/casl/actor';
+import { CreateChapterCommand } from '@/modules/chapters/application/chapters/commands/create-chapter/create-chapter.command';
 
 class ParagraphDto {
   @IsOptional()
@@ -44,4 +46,18 @@ export class CreateChapterDto {
   @IsOptional()
   @IsNumber()
   orderIndex?: number;
+
+  toCommand(actor: Actor): CreateChapterCommand {
+    return new CreateChapterCommand(
+      actor,
+      this.title,
+      this.bookId,
+      this.paragraphs.map((paragraph) => ({
+        id: paragraph.id,
+        content: paragraph.content,
+      })),
+      this.slug,
+      this.orderIndex,
+    );
+  }
 }

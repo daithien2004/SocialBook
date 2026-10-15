@@ -3,9 +3,15 @@ import { Logger } from '@nestjs/common';
 import { IFollowRepository } from '@/modules/follows/domain/repositories/follow.repository.interface';
 import { UserId } from '@/modules/follows/domain/value-objects/user-id.vo';
 import { TargetId } from '@/modules/follows/domain/value-objects/target-id.vo';
-import { Follow } from '@/modules/follows/domain/entities/follow.entity';
-import { PaginatedResult } from '@/shared/domain/pagination.types';
+import type {
+  PageResult,
+  PaginatedResult,
+} from '@/shared/domain/pagination.types';
 import { GetFollowsQuery } from './get-follows.query';
+import { ForbiddenDomainException } from '@/shared/domain/common-exceptions';
+import { FollowResultMapper } from '../../follow.result';
+import { Follow } from '@/modules/follows/domain/entities/follow.entity';
+import type { FollowResult } from '../../follow.result';
 
 @QueryHandler(GetFollowsQuery)
 export class GetFollowsHandler implements IQueryHandler<GetFollowsQuery> {
@@ -15,6 +21,9 @@ export class GetFollowsHandler implements IQueryHandler<GetFollowsQuery> {
 
   async execute(query: GetFollowsQuery) {
     try {
+      if (!query.actor.ability.can('read', 'Follow')) {
+        throw new ForbiddenDomainException('FOLLOW_READ_FORBIDDEN');
+      }
       const pagination = {
         page: query.page || 1,
         limit: query.limit || 10,
@@ -25,27 +34,31 @@ export class GetFollowsHandler implements IQueryHandler<GetFollowsQuery> {
         order: query.order || 'desc',
       };
 
-      let result: PaginatedResult<Follow>;
+      let domainPage: PaginatedResult<Follow>;
 
       if (query.userId) {
         const userId = UserId.create(query.userId);
-        result = await this.followRepository.findByUser(
+        domainPage = await this.followRepository.findByUser(
           userId,
           pagination,
           sort,
         );
       } else if (query.targetId) {
         const targetId = TargetId.create(query.targetId);
-        result = await this.followRepository.findByTarget(
+        domainPage = await this.followRepository.findByTarget(
           targetId,
           pagination,
           sort,
         );
       } else {
-        result = await this.followRepository.findAll({}, pagination, sort);
+        domainPage = await this.followRepository.findAll({}, pagination, sort);
       }
 
-      this.logger.log(`Retrieved ${result.data.length} follows`);
+      const result: PageResult<FollowResult> = {
+        items: FollowResultMapper.fromDomainArray(domainPage.data),
+        total: domainPage.meta.total,
+      };
+      this.logger.log(`Retrieved ${result.items.length} follows`);
 
       return result;
     } catch (error) {

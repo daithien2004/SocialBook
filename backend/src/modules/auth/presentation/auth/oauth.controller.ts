@@ -11,6 +11,7 @@ import {
   Res,
   VERSION_NEUTRAL,
   Version,
+  UseGuards,
 } from '@nestjs/common';
 
 import { ConfigService } from '@nestjs/config';
@@ -33,6 +34,9 @@ import {
 } from '@/modules/auth/domain/auth/exceptions/auth-exceptions';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { ApiResponse, ApiOperation } from '@nestjs/swagger';
+import type { Actor } from '@/shared/casl/actor';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
+import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
 
 export function toErrorCode(error: unknown): OAuthErrorCode {
   if (
@@ -65,7 +69,7 @@ export class OAuthController {
     const found = this.strategies.find((s) => s.provider === provider);
     if (!found)
       throw new NotFoundException(
-        `OAuth provider ${provider} chÆ°a Ä‘Æ°á»£c cáº¥u hÃ¬nh`,
+        `OAuth provider ${provider} chưa được cấu hình`,
       );
     return found;
   }
@@ -109,6 +113,7 @@ export class OAuthController {
 
   @ApiOperation({ summary: 'Start Google' })
   @Public()
+  @UseGuards(PoliciesGuard)
   @Version(VERSION_NEUTRAL)
   @Get('google')
   @ApiResponse({
@@ -125,6 +130,7 @@ export class OAuthController {
 
   @ApiOperation({ summary: 'Start Github' })
   @Public()
+  @UseGuards(PoliciesGuard)
   @Version(VERSION_NEUTRAL)
   @Get('github')
   @ApiResponse({
@@ -166,6 +172,7 @@ export class OAuthController {
 
   @ApiOperation({ summary: 'Callback Google' })
   @Public()
+  @UseGuards(PoliciesGuard)
   @Version(VERSION_NEUTRAL)
   @Get('google/callback')
   @ApiResponse({
@@ -174,16 +181,18 @@ export class OAuthController {
     headers: { Location: { schema: { type: 'string', format: 'uri' } } },
   })
   callbackGoogle(
+    @CurrentActor() actor: Actor,
     @Query('code') code: string | undefined,
     @Query('state') state: string | undefined,
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    return this.callback('google', code, state, req, res);
+    return this.callback(actor, 'google', code, state, req, res);
   }
 
   @ApiOperation({ summary: 'Callback Github' })
   @Public()
+  @UseGuards(PoliciesGuard)
   @Version(VERSION_NEUTRAL)
   @Get('github/callback')
   @ApiResponse({
@@ -192,23 +201,30 @@ export class OAuthController {
     headers: { Location: { schema: { type: 'string', format: 'uri' } } },
   })
   callbackGithub(
+    @CurrentActor() actor: Actor,
     @Query('code') code: string | undefined,
     @Query('state') state: string | undefined,
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    return this.callback('github', code, state, req, res);
+    return this.callback(actor, 'github', code, state, req, res);
   }
 
   private async callback(
+    actor: Actor,
     provider: 'google' | 'github',
     code: string | undefined,
     state: string | undefined,
     req: Request,
     res: Response,
   ) {
-    const cookieState = req.cookies?.sb_oauth_state as string | undefined;
-    if (!cookieState || cookieState !== state || !code) {
+    const cookieState: unknown = req.cookies?.sb_oauth_state;
+    if (
+      typeof cookieState !== 'string' ||
+      !state ||
+      cookieState !== state ||
+      !code
+    ) {
       this.clearOauthStateCookie(res);
       res.redirect(302, this.errorRedirect(OAuthErrorCode.OAuthFailed));
       return;
@@ -228,7 +244,7 @@ export class OAuthController {
         redirectUri,
       });
       const result = await this.commandBus.execute(
-        new OAuthAuthCommand(profile),
+        new OAuthAuthCommand(actor, profile),
       );
 
       this.applyCookie(

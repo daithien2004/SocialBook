@@ -9,13 +9,14 @@ import { PostgresDatabaseModule } from '@/core/database/postgres/postgres-databa
 @Module({
   imports: [PostgresDatabaseModule],
   providers: [
+    PrismaAuthorReadRepository,
     {
       provide: AuthorRepository,
       useClass: PrismaAuthorRepository,
     },
     {
       provide: AuthorReadRepository,
-      useClass: PrismaAuthorReadRepository,
+      useExisting: PrismaAuthorReadRepository,
     },
     {
       provide: AuthorIndexReadRepository,

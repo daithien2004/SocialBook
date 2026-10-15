@@ -4,6 +4,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { NotificationsApplicationModule } from '../../application/notifications-application.module';
 import { NotificationsGateway } from './notifications.gateway';
 import { NotificationsService } from './notifications.service';
+import { AbilityFactory } from '@/shared/casl/ability.factory';
+import { defineNotificationAbilities } from '../../application/policies/notification.ability';
 
 @Module({
   imports: [
@@ -15,7 +17,14 @@ import { NotificationsService } from './notifications.service';
       }),
     }),
   ],
-  providers: [NotificationsGateway, NotificationsService],
+  providers: [
+    NotificationsGateway,
+    NotificationsService,
+    {
+      provide: AbilityFactory,
+      useFactory: () => new AbilityFactory([defineNotificationAbilities]),
+    },
+  ],
   exports: [NotificationsService],
 })
 export class NotificationsRealtimeModule {}

@@ -30,7 +30,7 @@ export function useNotifications() {
         );
     }, []);
 
-    const { markAsRead, markAllAsRead, refetch, createNotification } = useNotificationSocket(
+    const { markAsRead, markAllAsRead, refetch } = useNotificationSocket(
         {
             onNotificationList: handleNotificationList,
             onNewNotification: handleNewNotification,
@@ -59,6 +59,5 @@ export function useNotifications() {
         markAsRead: markAsReadLocal,
         markAllAsRead: markAllAsReadLocal,
         refetch,
-        createNotification,
     };
 }

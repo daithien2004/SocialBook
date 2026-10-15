@@ -1,47 +1,4 @@
-import { PaginationQueryDto } from '@/shared/platform/dto/pagination-query.dto';
-import {
-  IsBoolean,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
-import { TargetTypeEnum } from './create-comment.dto';
-
-export class FilterCommentDto extends PaginationQueryDto {
-  @IsOptional()
-  userId?: string;
-
-  @IsOptional()
-  @IsEnum(TargetTypeEnum)
-  targetType?: TargetTypeEnum;
-
-  @IsOptional()
-  targetId?: string;
-
-  @IsOptional()
-  parentId?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  isFlagged?: boolean;
-
-  @IsOptional()
-  @IsEnum(['pending', 'approved', 'rejected'])
-  moderationStatus?: 'pending' | 'approved' | 'rejected';
-
-  @IsOptional()
-  @IsString()
-  search?: string;
-
-  @IsOptional()
-  @IsString()
-  dateFrom?: string;
-
-  @IsOptional()
-  @IsString()
-  dateTo?: string;
-}
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 import { Type } from 'class-transformer';
 
@@ -54,23 +11,22 @@ export class GetCommentsDto {
 
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
+  @Min(1)
   page?: number;
 
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
+  @Min(1)
+  @Max(100)
   limit?: number;
 
   @IsOptional()
-  @IsString()
-  cursor?: string;
+  @IsIn(['createdAt', 'updatedAt'])
+  sortBy?: 'createdAt' | 'updatedAt';
 
   @IsOptional()
-  @IsString()
-  sortBy?: string;
-
-  @IsOptional()
-  @IsString()
+  @IsIn(['asc', 'desc'])
   order?: 'asc' | 'desc';
 }

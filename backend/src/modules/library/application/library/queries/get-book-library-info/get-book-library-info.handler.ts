@@ -1,4 +1,4 @@
-import { BookId as ChapterBookId } from '@/modules/chapters/domain/public-api';
+import { IChapterReadRepository } from '@/modules/chapters';
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { ICollectionRepository } from '@/modules/library/domain/library/repositories/collection.repository.interface';
 import { IReadingListRepository } from '@/modules/library/domain/library/repositories/reading-list.repository.interface';
@@ -8,8 +8,8 @@ import { GetBookLibraryInfoQuery } from './get-book-library-info.query';
 import { ReadingListResult } from '../../dto/library.dto';
 import { LibraryApplicationMapper } from '../../mappers/library.mapper';
 import { IReadingProgressRepository } from '@/modules/library/domain/library/repositories/reading-progress.repository.interface';
-import { IChapterRepository } from '@/modules/chapters/domain/public-api';
 import { ChapterStatus } from '@/modules/library/domain/library/entities/reading-progress.entity';
+import { assertLibraryAccess } from '@/modules/library/application/policies/library-access.policy';
 
 export interface CollectionResult {
   id: string;
@@ -37,12 +37,13 @@ export class GetBookLibraryInfoHandler implements IQueryHandler<
     private readonly readingListRepository: IReadingListRepository,
     private readonly collectionRepository: ICollectionRepository,
     private readonly readingProgressRepository: IReadingProgressRepository,
-    private readonly chapterRepository: IChapterRepository,
+    private readonly chapterRepository: IChapterReadRepository,
   ) {}
 
   async execute(
     query: GetBookLibraryInfoQuery,
   ): Promise<GetBookLibraryInfoResult> {
+    assertLibraryAccess(query.actor, 'read', query.userId);
     const userId = UserId.create(query.userId);
     const bookId = BookId.create(query.bookId);
 
@@ -72,7 +73,7 @@ export class GetBookLibraryInfoHandler implements IQueryHandler<
     ).length;
 
     const totalChapters = await this.chapterRepository.countByBook(
-      ChapterBookId.create(query.bookId),
+      query.bookId,
     );
 
     return {

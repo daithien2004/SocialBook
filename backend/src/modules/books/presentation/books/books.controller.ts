@@ -85,7 +85,7 @@ export class BooksController {
     @CurrentActor() actor: Actor,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<BookResponseDto> {
-    // Xá»­ lÃ½ upload file trÆ°á»›c khi táº¡o command
+    // Xử lý upload file trước khi tạo command
     const bookId = await this.commandBus.execute(
       createBookDto.toCommand(actor, file),
     );
@@ -164,9 +164,10 @@ export class BooksController {
     @Query() filter: FilterBookDto,
     @CurrentActor() actor: Actor,
   ): Promise<PaginatedResult<BookResponseDto>> {
-    // Náº¿u cÃ³ tá»« khÃ³a tÃ¬m kiáº¿m, sá»­ dá»¥ng Intelligent Search
+    // Nếu có từ khóa tìm kiếm, sử dụng Intelligent Search
     if (filter.search) {
       const query = new IntelligentSearchQuery({
+        actor,
         query: filter.search,
         mode: filter.mode,
         ...filter,
@@ -180,7 +181,7 @@ export class BooksController {
       };
     }
 
-    // Náº¿u khÃ´ng search, dÃ¹ng logic GetBooks bÃ¬nh thÆ°á»ng (Danh sÃ¡ch trang chá»§)
+    // Nếu không search, dùng logic GetBooks bình thường (Danh sách trang chủ)
     const query = new GetBooksQuery({
       actor,
       ...filter,
@@ -285,7 +286,7 @@ export class BooksController {
     @CurrentActor() actor: Actor,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<BookResponseDto> {
-    // Xá»­ lÃ½ upload file náº¿u cÃ³
+    // Xử lý upload file nếu có
     const bookId = await this.commandBus.execute(
       updateBookDto.toCommand(actor, id, file),
     );

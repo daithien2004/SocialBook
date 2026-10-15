@@ -1,5 +1,5 @@
 import { ForbiddenError, subject } from '@casl/ability';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Transactional } from '@nestjs-cls/transactional';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { AuthorRepository } from '@/modules/authors/domain/repositories/author.repository';
@@ -8,7 +8,7 @@ import { AuthorErrorMessages } from '../../error-messages';
 import { DeleteAuthorCommand } from './delete-author.command';
 
 @CommandHandler(DeleteAuthorCommand)
-export class DeleteAuthorHandler {
+export class DeleteAuthorHandler implements ICommandHandler<DeleteAuthorCommand> {
   constructor(private readonly authorRepository: AuthorRepository) {}
 
   @Transactional()

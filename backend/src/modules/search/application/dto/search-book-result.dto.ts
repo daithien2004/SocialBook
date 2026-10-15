@@ -10,7 +10,6 @@ export interface BookStats {
 
 export interface SearchBookResult {
   id: string;
-  _id: string; // Keep for compatibility if needed, but prefer id
   title: string;
   slug: string;
   description?: string;
@@ -22,12 +21,12 @@ export interface SearchBookResult {
   createdAt: Date;
   updatedAt: Date;
   authorId: {
-    _id: string;
+    id: string;
     name: string;
     avatar?: string;
   };
   genres: Array<{
-    _id: string;
+    id: string;
     name: string;
     slug: string;
   }>;

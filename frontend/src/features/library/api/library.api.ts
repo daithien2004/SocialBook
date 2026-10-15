@@ -33,17 +33,36 @@ export interface UpdateReadingProgressResult {
   readingProgress: { progress: number };
 }
 
+export interface LibraryPage {
+  data: LibraryItem[];
+  meta: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export async function getLibraryBooksPage(params: {
+  status: LibraryStatus | string;
+  page: number;
+  limit: number;
+}): Promise<LibraryPage> {
+  return apiRequest<LibraryPage>({
+    url: NESTJS_LIBRARY_ENDPOINTS.getLibrary,
+    method: 'GET',
+    params,
+  });
+}
+
 export async function getLibraryBooks(params: {
   status: LibraryStatus | string;
   limit?: number;
 }): Promise<LibraryItem[]> {
-  const response = await apiRequest<{ data: LibraryItem[] }>({
-    url: NESTJS_LIBRARY_ENDPOINTS.getLibrary,
-    method: 'GET',
-    params: {
-      status: params.status,
-      ...(params.limit ? { limit: params.limit } : {}),
-    },
+  const response = await getLibraryBooksPage({
+    status: params.status,
+    page: 1,
+    limit: params.limit ?? 100,
   });
   return response.data;
 }
@@ -109,7 +128,7 @@ export async function getCollections(
   userId?: string | null,
 ): Promise<Collection[]> {
   const response = await apiRequest<{ data: Collection[] }>({
-    url: `${NESTJS_LIBRARY_ENDPOINTS.collections}?userId=${userId ?? ''}`,
+    url: `${NESTJS_LIBRARY_ENDPOINTS.collections}?userId=${userId ?? ''}&limit=100`,
     method: 'GET',
   });
   return response.data;

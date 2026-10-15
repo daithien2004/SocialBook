@@ -1,6 +1,7 @@
 import { Query } from '@nestjs/cqrs';
 
 import { PaginatedSearchBookResult } from '@/modules/search/application/dto/search-book-result.dto';
+import type { Actor } from '@/shared/casl/actor';
 
 type SearchSortField =
   | 'views'
@@ -41,6 +42,7 @@ export class IntelligentSearchQuery extends Query<PaginatedSearchBookResult> {
   public readonly order: 'asc' | 'desc';
 
   constructor(props: {
+    actor: Actor;
     query: string;
     page?: number;
     limit?: number;
@@ -50,6 +52,7 @@ export class IntelligentSearchQuery extends Query<PaginatedSearchBookResult> {
     order?: 'asc' | 'desc';
   }) {
     super();
+    this.actor = props.actor;
     this.query = props.query;
     this.page = props.page ?? 1;
     this.limit = props.limit ?? 10;
@@ -59,4 +62,6 @@ export class IntelligentSearchQuery extends Query<PaginatedSearchBookResult> {
 
     this.sortBy = parseSearchSortField(props.sortBy);
   }
+
+  public readonly actor: Actor;
 }

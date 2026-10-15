@@ -5,37 +5,18 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import type { Actor } from '@/shared/casl/actor';
+import { CreateFollowCommand } from '../../application/commands/create-follow/create-follow.command';
+import { GetFollowsQuery } from '../../application/queries/get-follows/get-follows.query';
 
 export class CreateFollowDto {
   @IsUUID('4')
   @IsNotEmpty()
   targetId!: string;
 
-  @IsOptional()
-  @IsBoolean()
-  status?: boolean;
-}
-
-export class UpdateFollowDto {
-  @IsBoolean()
-  @IsNotEmpty()
-  status!: boolean;
-}
-
-export class FollowStatusDto {
-  @IsUUID('4')
-  @IsNotEmpty()
-  userId!: string;
-
-  @IsUUID('4')
-  @IsNotEmpty()
-  targetId!: string;
-}
-
-export class FollowStatsDto {
-  @IsUUID('4')
-  @IsNotEmpty()
-  userId!: string;
+  toCommand(actor: Actor): CreateFollowCommand {
+    return new CreateFollowCommand(actor, this.targetId);
+  }
 }
 
 import { PaginationQueryDto } from '@/shared/platform/dto/pagination-query.dto';
@@ -60,4 +41,16 @@ export class FilterFollowDto extends PaginationQueryDto {
   @IsOptional()
   @IsString()
   dateTo?: string;
+
+  toQuery(actor: Actor) {
+    return new GetFollowsQuery(
+      actor,
+      this.userId,
+      this.targetId,
+      this.actualPage,
+      this.actualLimit,
+      'createdAt',
+      'desc',
+    );
+  }
 }

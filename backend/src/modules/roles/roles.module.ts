@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { RolesApplicationModule } from './application/roles-application.module';
+import { RolesInfrastructureModule } from './infrastructure/roles-infrastructure.module';
 
-@Module({ imports: [RolesApplicationModule] })
+@Module({ imports: [RolesInfrastructureModule] })
 export class RolesModule {}

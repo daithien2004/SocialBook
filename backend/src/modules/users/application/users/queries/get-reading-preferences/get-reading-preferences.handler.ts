@@ -1,24 +1,23 @@
 import { GetReadingPreferencesQuery } from './get-reading-preferences.query';
-import { QueryHandler } from '@nestjs/cqrs';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
-import { IUserRepository } from '@/modules/users/domain/users/repositories/user.repository.interface';
-import { UserId } from '@/modules/users/domain/users/value-objects/user-id.vo';
-import { ReadingPreferences } from '@/modules/users/domain/users/value-objects/reading-preferences.vo';
+import { UsersReadRepository } from '@/modules/users/application/ports/users-read.repository';
+import type { ReadingPreferencesReadModel } from '@/modules/users/application/read-models/reading-preferences.read-model';
 
 @QueryHandler(GetReadingPreferencesQuery)
-export class GetReadingPreferencesHandler {
-  constructor(private readonly userRepository: IUserRepository) {}
+export class GetReadingPreferencesHandler implements IQueryHandler<GetReadingPreferencesQuery> {
+  constructor(private readonly usersReadRepository: UsersReadRepository) {}
 
   async execute(
     query: GetReadingPreferencesQuery,
-  ): Promise<ReadingPreferences> {
-    const userId = UserId.create(query.userId);
-    const user = await this.userRepository.findById(userId);
-
-    if (!user) {
+  ): Promise<ReadingPreferencesReadModel> {
+    const preferences = await this.usersReadRepository.findReadingPreferences(
+      query.actor.ability,
+      query.userId,
+    );
+    if (!preferences) {
       throw new NotFoundDomainException('User not found');
     }
-
-    return user.readingPreferences || ReadingPreferences.createDefault();
+    return preferences;
   }
 }

@@ -25,6 +25,5 @@ import { ContentModerationService } from './services/content-moderation.service'
     RefreshToxicWordsListener,
     ContentModerationService,
   ],
-  exports: [AddToxicWordHandler, DeleteToxicWordHandler, GetToxicWordsHandler],
 })
 export class ContentModerationApplicationModule {}

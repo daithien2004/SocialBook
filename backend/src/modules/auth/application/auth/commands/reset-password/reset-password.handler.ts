@@ -1,5 +1,5 @@
 import { ResetPasswordCommand } from './reset-password.command';
-import { CommandBus, CommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
 import { IUserRepository, UserEmail } from '@/modules/users/domain/public-api';
 import { VerifyOtpCommand } from '@/modules/auth/application/otp/commands/verify-otp/verify-otp.command';
@@ -8,7 +8,7 @@ import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 const INVALID_RECOVERY_DETAILS = 'Email or OTP is invalid or expired';
 
 @CommandHandler(ResetPasswordCommand)
-export class ResetPasswordHandler {
+export class ResetPasswordHandler implements ICommandHandler<ResetPasswordCommand> {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly commandBus: CommandBus,
@@ -23,7 +23,11 @@ export class ResetPasswordHandler {
     }
 
     try {
-      const verifyCommand = new VerifyOtpCommand(command.email, command.otp);
+      const verifyCommand = new VerifyOtpCommand(
+        command.actor,
+        command.email,
+        command.otp,
+      );
       const isValid = await this.commandBus.execute(verifyCommand);
       if (!isValid) {
         throw new BadRequestDomainException(INVALID_RECOVERY_DETAILS);

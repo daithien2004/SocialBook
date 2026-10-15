@@ -1,5 +1,5 @@
 import { ForbiddenError, subject } from '@casl/ability';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Transactional } from '@nestjs-cls/transactional';
 import { IMediaPort } from '@/modules/media/domain/public-api';
 import {
@@ -13,7 +13,7 @@ import { AuthorErrorMessages } from '../../error-messages';
 import { UpdateAuthorCommand } from './update-author.command';
 
 @CommandHandler(UpdateAuthorCommand)
-export class UpdateAuthorHandler {
+export class UpdateAuthorHandler implements ICommandHandler<UpdateAuthorCommand> {
   constructor(
     private readonly authorRepository: AuthorRepository,
     private readonly media: IMediaPort,

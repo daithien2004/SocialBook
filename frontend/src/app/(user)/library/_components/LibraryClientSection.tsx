@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import {
   BookOpen,
@@ -37,8 +37,11 @@ export default function LibraryClientSection() {
     data: libraryData,
     isLoading: isLoadingLibrary,
     isFetching: isFetchingLibrary,
-  } = useQuery({
-    ...libraryQueries.books({ status: activeTab }),
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    ...libraryQueries.bookPages({ status: activeTab, limit: 20 }),
     enabled: isAuthenticated,
   });
 
@@ -50,7 +53,7 @@ export default function LibraryClientSection() {
       enabled: !!currentUserId,
     });
 
-  const books = libraryData || [];
+  const books = libraryData?.pages.flatMap((page) => page.data) ?? [];
 
   if (isLoading) {
     return <FullScreenSpinner />;
@@ -167,6 +170,18 @@ export default function LibraryClientSection() {
                     />
                   ))}
                 </div>
+                {hasNextPage && (
+                  <div className="mt-8 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => void fetchNextPage()}
+                      disabled={isFetchingNextPage}
+                      className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-wait disabled:opacity-60"
+                    >
+                      {isFetchingNextPage ? 'Đang tải...' : 'Tải thêm sách'}
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-20 text-center bg-card/50 rounded-2xl border border-dashed border-border">

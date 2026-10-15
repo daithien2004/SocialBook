@@ -1,11 +1,11 @@
-import { QueryHandler } from '@nestjs/cqrs';
+﻿import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { StatisticsReadRepository } from '@/modules/statistics/application/ports/statistics-read.repository';
 import type { GeographicReadModel } from '@/modules/statistics/application/read-models/statistics.read-model';
+import { assertCanReadStatistics } from '../../policies/statistics-access.policy';
 import { GetGeographicDistributionQuery } from './get-geographic-distribution.query';
-import { assertStatisticsReadAllowed } from '@/modules/statistics/application/assert-statistics-read-policy';
 
 @QueryHandler(GetGeographicDistributionQuery)
-export class GetGeographicDistributionHandler {
+export class GetGeographicDistributionHandler implements IQueryHandler<GetGeographicDistributionQuery> {
   constructor(
     private readonly statisticsReadRepository: StatisticsReadRepository,
   ) {}
@@ -13,7 +13,7 @@ export class GetGeographicDistributionHandler {
   execute(
     query: GetGeographicDistributionQuery,
   ): Promise<GeographicReadModel[]> {
-    assertStatisticsReadAllowed(query.actor);
+    assertCanReadStatistics(query.actor);
     return this.statisticsReadRepository.getGeographicDistribution();
   }
 }

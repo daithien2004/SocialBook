@@ -1,7 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { InjectRedis } from '@nestjs-modules/ioredis';
-import Redis from 'ioredis';
 import { IUserAnalyticsRepository } from '@/modules/analytics/domain/repositories/user-analytics.repository.interface';
 import { UserEvent } from '@/modules/analytics/domain/entities/user-event.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
@@ -10,14 +8,13 @@ import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 import { TrackEventPayloadSchema } from '@/shared/queue/job-payload.schemas';
 import { UserEventType } from '@/modules/analytics/domain/enums/user-event-type.enum';
 import { EventNames } from '@/shared/platform/constants/event-names.constant';
+import { AnalyticsEventBufferPort } from './ports/analytics-event-buffer.port';
 
 @Injectable()
 export class AnalyticsFlushCron {
   private readonly logger = new Logger(AnalyticsFlushCron.name);
-  private readonly BUFFER_KEY = 'analytics:events:buffer';
-
   constructor(
-    @InjectRedis() private readonly redis: Redis,
+    private readonly eventBuffer: AnalyticsEventBufferPort,
     private readonly analyticsRepository: IUserAnalyticsRepository,
     private readonly idGenerator: IIdGenerator,
     private readonly eventEmitter: EventEmitter2,
@@ -30,18 +27,8 @@ export class AnalyticsFlushCron {
     }
 
     try {
-      // DÃ¹ng transaction (multi/exec) Ä‘á»ƒ láº¥y toÃ n bá»™ List ra vÃ  xÃ³a List atomic
-      const [results] =
-        (await this.redis
-          .multi()
-          .lrange(this.BUFFER_KEY, 0, -1)
-          .del(this.BUFFER_KEY)
-          .exec()) || [];
-
-      const lrangeResult = results[1];
-      const rawEvents: string[] = Array.isArray(lrangeResult)
-        ? lrangeResult.map(String)
-        : [];
+      // Dùng transaction (multi/exec) để lấy toàn bộ List ra và xóa List atomic
+      const rawEvents = await this.eventBuffer.takeAll();
 
       if (rawEvents.length === 0) {
         return;
@@ -52,6 +39,7 @@ export class AnalyticsFlushCron {
       );
 
       const entitiesToInsert: UserEvent[] = [];
+      const eventsToPublish: Array<{ userId: string; event: UserEvent }> = [];
 
       for (const raw of rawEvents) {
         try {
@@ -91,8 +79,8 @@ export class AnalyticsFlushCron {
 
           entitiesToInsert.push(event);
 
-          // PhÃ¡t ra event ná»™i bá»™ cho cÃ¡c listener khÃ¡c (nhÆ° cáº­p nháº­t preference, stats)
-          this.eventEmitter.emit(EventNames.USER_EVENT_TRACKED, {
+          // Phát ra event nội bộ cho các listener khác (như cập nhật preference, stats)
+          eventsToPublish.push({
             userId: command.userId,
             event,
           });
@@ -103,6 +91,9 @@ export class AnalyticsFlushCron {
 
       if (entitiesToInsert.length > 0) {
         await this.analyticsRepository.insertManyEvents(entitiesToInsert);
+        for (const event of eventsToPublish) {
+          this.eventEmitter.emit(EventNames.USER_EVENT_TRACKED, event);
+        }
         this.logger.log(
           `Successfully flushed ${String(entitiesToInsert.length)} events.`,
         );

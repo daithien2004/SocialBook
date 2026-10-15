@@ -4,6 +4,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { CreateChapterCommand } from '@/modules/chapters/application/chapters/commands/create-chapter/create-chapter.command';
 import type { Job } from 'bullmq';
 import { z } from 'zod';
+import { AbilityFactory } from '@/shared/casl/ability.factory';
 
 export const CREATE_SINGLE_CHAPTER_QUEUE = 'create-single-chapter';
 export const CREATE_SINGLE_CHAPTER_JOB = 'create-single-chapter-job';
@@ -21,7 +22,10 @@ export interface CreateSingleChapterJobData {
   concurrency: 5,
 })
 export class SingleChapterProcessor extends WorkerHost {
-  constructor(private readonly commandBus: CommandBus) {
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly abilityFactory: AbilityFactory,
+  ) {
     super();
   }
 
@@ -45,6 +49,10 @@ export class SingleChapterProcessor extends WorkerHost {
     const { bookId, title, paragraphs, orderIndex } = parsed.data;
     await this.commandBus.execute(
       new CreateChapterCommand(
+        this.abilityFactory.createActor({
+          userId: 'system:chapters-import',
+          roles: ['admin'],
+        }),
         title,
         bookId,
         paragraphs,

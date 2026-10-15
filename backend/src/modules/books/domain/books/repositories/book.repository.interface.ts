@@ -23,23 +23,10 @@ export interface BookFilter {
   ids?: string[];
 }
 
-export interface BookSearchCandidate {
-  id: string;
-  title: string;
-  authorName?: string;
-  description?: string;
-}
-
 export abstract class IBookRepository {
   abstract findById(id: BookId): Promise<Book | null>;
   abstract findBySlug(slug: string): Promise<Book | null>;
-  abstract findByTitle(title: BookTitle): Promise<Book | null>;
   abstract findUnindexedBooks(limit: number): Promise<Book[]>;
-  abstract findAll(
-    filter: BookFilter,
-    pagination: PaginationOptions,
-    sort?: SortOptions,
-  ): Promise<PaginatedResult<Book>>;
   abstract findByGenre(
     genreId: GenreId,
     pagination: PaginationOptions,
@@ -68,9 +55,4 @@ export abstract class IBookRepository {
 
   abstract countTotal(): Promise<number>;
   abstract findByIds(ids: BookId[]): Promise<Book[]>;
-  abstract findIdsByFilter(filter: BookFilter): Promise<string[]>;
-  abstract findSearchCandidates(
-    filter: BookFilter,
-    limit: number,
-  ): Promise<BookSearchCandidate[]>;
 }

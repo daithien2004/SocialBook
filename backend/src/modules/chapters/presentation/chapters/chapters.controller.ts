@@ -1,14 +1,11 @@
 import { ApiTags } from '@nestjs/swagger';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Public } from '@/shared/platform/decorators/custom.decorator';
-import { Roles } from '@/shared/platform/decorators/roles.decorator';
-import { RolesGuard } from '@/shared/platform/guards/roles.guard';
 import {
   BadRequestException,
   Body,
   Controller,
   Delete,
-  Headers,
   FileTypeValidator,
   Get,
   HttpCode,
@@ -20,48 +17,63 @@ import {
   Post,
   Put,
   Query,
-  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
+import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
+import { IdempotencyKey } from '@/shared/platform/decorators/idempotency-key.decorator';
+import type { Actor } from '@/shared/casl/actor';
+import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-import { PaginationQueryDto } from '@/shared/platform/dto/pagination-query.dto';
 import { ChapterResponseDto } from '@/modules/chapters/presentation/chapters/dto/chapter.response.dto';
+import { ChapterDetailResponseDto } from '@/modules/chapters/presentation/chapters/dto/chapter-detail.response.dto';
+import { ChapterListResponseDto } from '@/modules/chapters/presentation/chapters/dto/chapter-list.response.dto';
+import {
+  AskChapterAiResponseDto,
+  ChaptersImportStatusResponseDto,
+  ImportEpubPreviewResponseDto,
+  StartChaptersImportResponseDto,
+} from '@/modules/chapters/presentation/chapters/dto/chapter-operation.response.dto';
+import type { ChapterListReadModel } from '@/modules/chapters/application/read-models/chapter-list.read-model';
+import type { ChapterReadModel } from '@/modules/chapters/application/read-models/chapter.read-model';
+import type { PaginatedResult } from '@/shared/domain/pagination.types';
 import { CreateChapterDto } from '@/modules/chapters/presentation/chapters/dto/create-chapter.dto';
 import { FilterChapterDto } from '@/modules/chapters/presentation/chapters/dto/filter-chapter.dto';
+import { GetBookChaptersQueryDto } from '@/modules/chapters/presentation/chapters/dto/get-book-chapters.query.dto';
 import { UpdateChapterDto } from '@/modules/chapters/presentation/chapters/dto/update-chapter.dto';
 
-import { CreateChapterCommand } from '@/modules/chapters/application/chapters/commands/create-chapter/create-chapter.command';
 import { DeleteChapterCommand } from '@/modules/chapters/application/chapters/commands/delete-chapter/delete-chapter.command';
 import { GetChapterByIdQuery } from '@/modules/chapters/application/chapters/queries/get-chapter-by-id/get-chapter-by-id.query';
 import { GetChapterBySlugQuery } from '@/modules/chapters/application/chapters/queries/get-chapter-by-slug/get-chapter-by-slug.query';
-import { GetChaptersQuery } from '@/modules/chapters/application/chapters/queries/get-chapters/get-chapters.query';
-import { UpdateChapterCommand } from '@/modules/chapters/application/chapters/commands/update-chapter/update-chapter.command';
-import { StartChaptersImportCommand } from '@/modules/chapters/application/chapters/commands/start-chapters-import/start-chapters-import.command';
 import { GetChaptersImportStatusQuery } from '@/modules/chapters/application/chapters/queries/get-chapters-import-status/get-chapters-import-status.query';
 import { StartChaptersImportDto } from './dto/start-chapters-import.dto';
+import { AskChapterAiRequestDto } from './dto/ask-chapter-ai.request.dto';
+import { GenerateChapterKnowledgeRequestDto } from './dto/generate-chapter-knowledge.request.dto';
 
-import { GetChapterKnowledgeQuery } from '@/modules/chapters/application/chapters/queries/get-chapter-knowledge/get-chapter-knowledge.query';
-import { AskChapterAICommand } from '@/modules/chapters/application/chapters/commands/ask-ai/ask-chapter-ai.command';
 import { ChapterKnowledgeResponseDto } from './dto/chapter-knowledge.response.dto';
-import { RecordChapterViewQuery } from '@/modules/chapters/application/chapters/queries/record-chapter-view/record-chapter-view.query';
+import { RecordChapterViewCommand } from '@/modules/chapters/application/chapters/commands/record-chapter-view/record-chapter-view.command';
 import { AIThrottleGuard } from '@/modules/ai/presentation/public-api';
 import { ImportEpubPreviewCommand } from '@/modules/chapters/application/chapters/commands/import-epub-preview/import-epub-preview.command';
-import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
 import {
-  ApiHeader,
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
-import type { JwtValidatedUser } from '@/shared/platform/interfaces/jwt-validated-user.interface';
 
 @ApiProblemResponses()
 @ApiTags('Chapters')
+@UseGuards(PoliciesGuard)
 @Controller('books/:bookSlug/chapters')
 export class ChaptersController {
   constructor(
@@ -69,48 +81,49 @@ export class ChaptersController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  @ApiOperation({ summary: 'Get Knowledge' })
-  @Get(':chapterId/knowledge')
-  async getKnowledge(
+  @ApiOperation({ summary: 'Generate chapter knowledge' })
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: ChapterKnowledgeResponseDto })
+  @CheckPolicy('read', 'Chapter')
+  @Post(':chapterId/knowledge')
+  @HttpCode(HttpStatus.OK)
+  async generateKnowledge(
+    @CurrentActor() actor: Actor,
     @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
-    @Query('force') force?: string,
+    @Body() dto: GenerateChapterKnowledgeRequestDto,
   ) {
-    const query = new GetChapterKnowledgeQuery(chapterId, force === 'true');
-    const result = await this.queryBus.execute(query);
-    return ChapterKnowledgeResponseDto.fromEntity(result);
+    const result = await this.commandBus.execute(
+      dto.toCommand(actor, chapterId),
+    );
+    return ChapterKnowledgeResponseDto.fromResult(result);
   }
 
   @ApiOperation({ summary: 'Ask AI' })
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: AskChapterAiResponseDto })
   @UseGuards(AIThrottleGuard)
+  @CheckPolicy('read', 'Chapter')
   @Post(':chapterId/ask-ai')
   @HttpCode(HttpStatus.OK)
-  @ApiOkResponse({
-    schema: {
-      type: 'object',
-      required: ['answer', 'createdAt'],
-      properties: {
-        answer: { type: 'string' },
-        createdAt: { type: 'string', format: 'date-time' },
-      },
-    },
-  })
   async askAI(
+    @CurrentActor() actor: Actor,
     @Param('bookSlug') bookSlug: string,
     @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
-    @Body('question') question: string,
+    @Body() dto: AskChapterAiRequestDto,
     @CurrentUser('id') userId: string,
   ) {
     const result = await this.commandBus.execute(
-      new AskChapterAICommand(chapterId, bookSlug, userId, question),
+      dto.toCommand(actor, chapterId, bookSlug, userId),
     );
 
-    return result;
+    return AskChapterAiResponseDto.fromResult(result);
   }
 
   @ApiOperation({ summary: 'Import Preview' })
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: ImportEpubPreviewResponseDto })
+  @CheckPolicy('manage', 'Chapter')
   @Post('import/preview')
-  @Roles('admin')
-  @UseGuards(RolesGuard)
   @UseInterceptors(
     FileInterceptor('file', {
       limits: { fileSize: 20 * 1024 * 1024 },
@@ -118,6 +131,7 @@ export class ChaptersController {
   )
   @HttpCode(HttpStatus.OK)
   async importPreview(
+    @CurrentActor() actor: Actor,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -135,118 +149,83 @@ export class ChaptersController {
       throw new BadRequestException('No file uploaded');
     }
     const result = await this.commandBus.execute(
-      new ImportEpubPreviewCommand(file.buffer, file.originalname),
+      new ImportEpubPreviewCommand(actor, file.buffer, file.originalname),
     );
-    return result;
+    return ImportEpubPreviewResponseDto.fromResult(result);
   }
 
   @ApiOperation({ summary: 'Start Import' })
+  @ApiBearerAuth()
+  @ApiCreatedResponse({ type: StartChaptersImportResponseDto })
+  @CheckPolicy('manage', 'Chapter')
   @Post('import/start')
-  @Roles('admin')
-  @UseGuards(RolesGuard)
-  @ApiHeader({
-    name: 'Idempotency-Key',
-    required: true,
-    description:
-      'Unique key for this chapter import request; reuse it to retry within 23 hours.',
-    schema: {
-      type: 'string',
-      minLength: 8,
-      maxLength: 128,
-      pattern: '^[A-Za-z0-9._~-]{8,128}$',
-    },
-  })
   async startImport(
     @Body() dto: StartChaptersImportDto,
-    @Headers('idempotency-key') idempotencyKey: string | undefined,
-    @Req() req: { user: JwtValidatedUser },
+    @IdempotencyKey({ required: true }) idempotencyKey: string,
+    @CurrentActor() actor: Actor,
   ) {
-    if (!idempotencyKey || !/^[A-Za-z0-9._~-]{8,128}$/.test(idempotencyKey)) {
-      throw new BadRequestException(
-        'Idempotency-Key must contain 8 to 128 safe characters.',
-      );
-    }
-
-    const command = new StartChaptersImportCommand(
-      req.user.id,
-      idempotencyKey,
-      dto.bookId,
-      dto.chapters,
+    const result = await this.commandBus.execute(
+      dto.toCommand(actor, idempotencyKey),
     );
-    const result = await this.commandBus.execute(command);
-    return result;
+    return StartChaptersImportResponseDto.fromResult(result);
   }
 
   @ApiOperation({ summary: 'Get Import Status' })
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: ChaptersImportStatusResponseDto })
+  @CheckPolicy('manage', 'Chapter')
   @Get('import/status/:jobId')
-  @Roles('admin')
-  @UseGuards(RolesGuard)
-  async getImportStatus(@Param('jobId') jobId: string) {
-    const query = new GetChaptersImportStatusQuery(jobId);
+  async getImportStatus(
+    @CurrentActor() actor: Actor,
+    @Param('jobId') jobId: string,
+  ) {
+    const query = new GetChaptersImportStatusQuery(actor, jobId);
     const result = await this.queryBus.execute(query);
-    return result;
+    return ChaptersImportStatusResponseDto.fromResult(result);
   }
 
   @ApiOperation({ summary: 'Get Chapters' })
+  @ApiOkResponse({ type: ChapterListResponseDto })
+  @CheckPolicy('read', 'Chapter')
   @Public()
   @Get()
   async getChapters(
+    @CurrentActor() actor: Actor,
     @Param('bookSlug') bookSlug: string,
-    @Query() filter: PaginationQueryDto,
+    @Query() filter: GetBookChaptersQueryDto,
   ) {
-    const query = new GetChaptersQuery(
-      filter.actualPage,
-      filter.actualLimit,
-      undefined,
-      undefined,
-      bookSlug,
-    );
-
-    const result = await this.queryBus.execute(query);
-
-    return result;
+    const query = filter.toQuery(actor, bookSlug);
+    const result = await this.queryBus.execute<ChapterListReadModel>(query);
+    return ChapterListResponseDto.fromReadModel(result);
   }
 
   @ApiOperation({ summary: 'Get All Chapters' })
+  @ApiOkResponse({ type: ChapterListResponseDto })
+  @CheckPolicy('read', 'Chapter')
   @Public()
   @Get('all')
-  async getAllChapters(@Param('bookSlug') bookSlug: string) {
-    const query = new GetChaptersQuery(1, 1000, undefined, undefined, bookSlug);
-
-    const result = await this.queryBus.execute(query);
-
-    return result;
+  async getAllChapters(
+    @CurrentActor() actor: Actor,
+    @Param('bookSlug') bookSlug: string,
+    @Query() pagination: GetBookChaptersQueryDto,
+  ) {
+    const query = pagination.toQuery(actor, bookSlug);
+    const result = await this.queryBus.execute<ChapterListReadModel>(query);
+    return ChapterListResponseDto.fromReadModel(result);
   }
 
   @ApiOperation({ summary: 'Get All Chapters Admin' })
-  @Roles('admin')
-  @UseGuards(RolesGuard)
+  @ApiPaginatedResponse(ChapterResponseDto, 'offset')
+  @ApiBearerAuth()
+  @CheckPolicy('manage', 'Chapter')
   @Get('admin/list')
-  async getAllChaptersAdmin(@Query() filter: FilterChapterDto) {
-    const query = new GetChaptersQuery(
-      filter.actualPage,
-      filter.actualLimit,
-      filter.title,
-      filter.bookId,
-      undefined,
-      filter.orderIndex,
-      filter.sortBy as
-        | 'createdAt'
-        | 'updatedAt'
-        | 'title'
-        | 'orderIndex'
-        | 'viewsCount'
-        | undefined,
-      filter.order,
-    );
-
-    const result = await this.queryBus.execute(query);
-
-    if ('book' in result && 'chapters' in result) {
-      return result;
-    }
-
-    const paginatedResult = result;
+  async getAllChaptersAdmin(
+    @CurrentActor() actor: Actor,
+    @Query() filter: FilterChapterDto,
+  ) {
+    const query = filter.toQuery(actor);
+    const paginatedResult =
+      await this.queryBus.execute<PaginatedResult<ChapterReadModel>>(query);
     return {
       data: ChapterResponseDto.fromArray(paginatedResult.data),
       meta: paginatedResult.meta,
@@ -254,97 +233,101 @@ export class ChaptersController {
   }
 
   @ApiOperation({ summary: 'Get Chapter By Id With Prefix' })
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: ChapterResponseDto })
+  @CheckPolicy('manage', 'Chapter')
   @Get('id/:chapterId')
-  @Roles('admin')
-  @UseGuards(RolesGuard)
   async getChapterByIdWithPrefix(
+    @CurrentActor() actor: Actor,
     @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
   ) {
-    const query = new GetChapterByIdQuery(chapterId);
+    const query = new GetChapterByIdQuery(actor, chapterId);
     const chapter = await this.queryBus.execute(query);
     return new ChapterResponseDto(chapter);
   }
 
   @ApiOperation({ summary: 'Get Chapter By Slug' })
+  @ApiOkResponse({ type: ChapterDetailResponseDto })
+  @CheckPolicy('read', 'Chapter')
   @Public()
   @Get(':chapterSlug')
   async getChapterBySlug(
+    @CurrentActor() actor: Actor,
     @Param('chapterSlug') chapterSlug: string,
     @Param('bookSlug') bookSlug: string,
   ) {
-    const query = new GetChapterBySlugQuery(chapterSlug, bookSlug);
+    const query = new GetChapterBySlugQuery(actor, chapterSlug, bookSlug);
     const result = await this.queryBus.execute(query);
-    return result;
+    return ChapterDetailResponseDto.fromReadModel(result);
   }
 
   @ApiOperation({ summary: 'Record Chapter View' })
+  @CheckPolicy('read', 'Chapter')
   @Public()
   @Post(':chapterSlug/view')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiNoContentResponse()
   async recordChapterView(
+    @CurrentActor() actor: Actor,
     @Param('chapterSlug') chapterSlug: string,
     @Param('bookSlug') bookSlug: string,
     @CurrentUser('id') userId?: string,
     @Ip() clientIp?: string,
   ) {
-    const query = new RecordChapterViewQuery(
+    const command = new RecordChapterViewCommand(
+      actor,
       bookSlug,
       chapterSlug,
       userId,
       clientIp,
     );
-    await this.queryBus.execute(query);
+    await this.commandBus.execute(command);
     return undefined;
   }
 
   @ApiOperation({ summary: 'Create' })
+  @ApiBearerAuth()
+  @CheckPolicy('create', 'Chapter')
+  @ApiProblemResponses([409, 422])
+  @ApiCreatedResponse({ type: ChapterResponseDto })
   @Post()
-  @Roles('admin')
-  @UseGuards(RolesGuard)
-  async create(@Body() createChapterDto: CreateChapterDto) {
-    const command = new CreateChapterCommand(
-      createChapterDto.title,
-      createChapterDto.bookId,
-      createChapterDto.paragraphs,
-      createChapterDto.slug,
-      createChapterDto.orderIndex,
+  async create(
+    @CurrentActor() actor: Actor,
+    @Body() createChapterDto: CreateChapterDto,
+  ) {
+    const chapterResult = await this.commandBus.execute(
+      createChapterDto.toCommand(actor),
     );
-
-    const chapterResult = await this.commandBus.execute(command);
     return ChapterResponseDto.fromResult(chapterResult);
   }
 
   @ApiOperation({ summary: 'Update' })
+  @ApiBearerAuth()
+  @CheckPolicy('update', 'Chapter')
+  @ApiOkResponse({ type: ChapterResponseDto })
   @Put(':chapterId')
-  @Roles('admin')
-  @UseGuards(RolesGuard)
   async update(
+    @CurrentActor() actor: Actor,
     @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
     @Body() updateChapterDto: UpdateChapterDto,
   ) {
-    const command = new UpdateChapterCommand({
-      id: chapterId,
-      title: updateChapterDto.title,
-      bookId: updateChapterDto.bookId,
-      paragraphs: updateChapterDto.paragraphs,
-      slug: updateChapterDto.slug,
-      orderIndex: updateChapterDto.orderIndex,
-    });
-
-    const chapterResult = await this.commandBus.execute(command);
+    const chapterResult = await this.commandBus.execute(
+      updateChapterDto.toCommand(actor, chapterId),
+    );
     return ChapterResponseDto.fromResult(chapterResult);
   }
 
   @ApiOperation({ summary: 'Delete' })
+  @ApiBearerAuth()
+  @CheckPolicy('delete', 'Chapter')
+  @ApiProblemResponses([404, 409])
   @HttpCode(204)
   @Delete(':chapterId')
-  @Roles('admin')
-  @UseGuards(RolesGuard)
   async remove(
+    @CurrentActor() actor: Actor,
     @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
   ) {
-    const command = new DeleteChapterCommand(chapterId);
+    const command = new DeleteChapterCommand(actor, chapterId);
     await this.commandBus.execute(command);
     return undefined;
   }

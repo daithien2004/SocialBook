@@ -1,40 +1,20 @@
-import { QueryHandler } from '@nestjs/cqrs';
-import { Logger } from '@nestjs/common';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
+import { ForbiddenError } from '@casl/ability';
 import { IUserRepository } from '@/modules/users/domain/users/repositories/user.repository.interface';
 import { UserId } from '@/modules/users/domain/users/value-objects/user-id.vo';
-import { UserEmail } from '@/modules/users/domain/users/value-objects/user-email.vo';
 import { CheckUserExistQuery } from './check-user-exist.query';
 
 @QueryHandler(CheckUserExistQuery)
-export class CheckUserExistHandler {
-  private readonly logger = new Logger(CheckUserExistHandler.name);
-
+export class CheckUserExistHandler implements IQueryHandler<CheckUserExistQuery> {
   constructor(private readonly userRepository: IUserRepository) {}
 
   async execute(query: CheckUserExistQuery): Promise<boolean> {
-    try {
-      if (query.id) {
-        const userId = UserId.create(query.id);
-        const user = await this.userRepository.findById(userId);
-        return !!user;
-      }
-
-      if (query.email) {
-        const user = await this.userRepository.findByEmail(
-          UserEmail.create(query.email),
-        );
-        return !!user;
-      }
-
-      if (query.username) {
-        const user = await this.userRepository.findByUsername(query.username);
-        return !!user;
-      }
-
-      return false;
-    } catch (error) {
-      this.logger.error('Failed to check user existence', error);
-      return false;
-    }
+    ForbiddenError.from(query.actor.ability).throwUnlessCan(
+      'read',
+      'PublicUser',
+    );
+    const userId = UserId.create(query.id);
+    const user = await this.userRepository.findById(userId);
+    return !!user;
   }
 }

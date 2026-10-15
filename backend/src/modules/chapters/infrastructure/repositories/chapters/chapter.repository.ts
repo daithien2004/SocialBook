@@ -103,22 +103,7 @@ export class ChapterRepository implements IChapterRepository {
     return row ? ChapterMapper.toDomain(row) : null;
   }
 
-  async findByTitle(
-    title: ChapterTitle,
-    bookId: BookId,
-  ): Promise<ChapterEntity | null> {
-    const row = await this.client.chapter.findFirst({
-      where: {
-        title: title.toString(),
-        bookId: bookId.toString(),
-        isDeleted: false,
-      },
-      include: CHAPTER_WITH_PARAGRAPHS,
-    });
-    return row ? ChapterMapper.toDomain(row) : null;
-  }
-
-  async findAll(
+  private async findAll(
     filter: ChapterFilter,
     pagination: PaginationOptions,
     sort?: SortOptions,
@@ -296,13 +281,6 @@ export class ChapterRepository implements IChapterRepository {
     return row !== null;
   }
 
-  async incrementViews(id: ChapterId): Promise<void> {
-    await this.client.chapter.updateMany({
-      where: { id: id.toString(), isDeleted: false },
-      data: { viewsCount: { increment: 1 }, version: { increment: 1 } },
-    });
-  }
-
   async incrementViewsBySlug(
     bookSlug: string,
     chapterSlug: string,
@@ -317,23 +295,6 @@ export class ChapterRepository implements IChapterRepository {
       where: { bookId: book.id, slug: chapterSlug, isDeleted: false },
       data: { viewsCount: { increment: 1 }, version: { increment: 1 } },
     });
-  }
-
-  async countByBook(bookId: BookId): Promise<number> {
-    return this.client.chapter.count({
-      where: { bookId: bookId.toString(), isDeleted: false },
-    });
-  }
-
-  async countChaptersForBooks(bookIds: string[]): Promise<Map<string, number>> {
-    if (bookIds.length === 0) return new Map();
-
-    const rows = await this.client.chapter.groupBy({
-      by: ['bookId'],
-      where: { bookId: { in: bookIds }, isDeleted: false },
-      _count: { _all: true },
-    });
-    return new Map(rows.map((row) => [row.bookId, row._count._all]));
   }
 
   async countTotal(): Promise<number> {

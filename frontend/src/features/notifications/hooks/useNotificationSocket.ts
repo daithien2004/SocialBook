@@ -113,17 +113,10 @@ export function useNotificationSocket(
         });
     }, [socket, onNotificationList]);
 
-    const createNotification = useCallback((dto: NotificationItem) => {
-        if (!socket?.connected) return;
-
-        socket.emit('createNotification', dto);
-    }, [socket]);
-
     return {
         markAsRead,
         markAllAsRead,
         refetch,
-        createNotification,
         isConnected: !!socket?.connected,
     };
 }

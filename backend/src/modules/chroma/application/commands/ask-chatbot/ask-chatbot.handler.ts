@@ -1,5 +1,5 @@
 import { AskChatbotCommand } from './ask-chatbot.command';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { IVectorRepository } from '@/modules/chroma/domain/repositories/vector.repository.interface';
 import { IAIPort } from '@/modules/ai';
@@ -7,23 +7,14 @@ import { SearchQuery } from '@/modules/chroma/domain/entities/search-query.entit
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { IBookRepository } from '@/modules/books/domain/public-api';
 import { BookId } from '@/modules/books/domain/public-api';
-
-export interface ChatbotSource {
-  title: string;
-  bookId?: string;
-  bookSlug?: string;
-  chapterTitle?: string;
-  type: 'book' | 'chapter';
-}
-
-export interface AskChatbotResult {
-  question: string;
-  answer: string;
-  sources: ChatbotSource[];
-}
+import { ForbiddenError } from '@casl/ability';
+import type {
+  AskChatbotResult,
+  ChatbotSourceResult,
+} from '@/modules/chroma/application/chroma.result';
 
 @CommandHandler(AskChatbotCommand)
-export class AskChatbotHandler {
+export class AskChatbotHandler implements ICommandHandler<AskChatbotCommand> {
   private readonly logger = new Logger(AskChatbotHandler.name);
 
   constructor(
@@ -34,6 +25,10 @@ export class AskChatbotHandler {
   ) {}
 
   async execute(command: AskChatbotCommand): Promise<AskChatbotResult> {
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'create',
+      'AIRequest',
+    );
     const { question } = command;
 
     const embedding = await this.vectorRepository.embedQuery(question);
@@ -80,7 +75,7 @@ export class AskChatbotHandler {
       }),
     );
 
-    const sources: ChatbotSource[] = results.map((r) => {
+    const sources: ChatbotSourceResult[] = results.map((r) => {
       const metadata = r.document.metadata;
       const bookId = metadata?.['bookId'] as string | undefined;
       return {

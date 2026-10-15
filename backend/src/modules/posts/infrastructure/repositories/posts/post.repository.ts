@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
 import { Prisma } from '@/core/database/generated/prisma/client';
-import { PrismaService } from '@/core/database/postgres/prisma.service';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
 import { ConcurrencyException } from '@/shared/domain/common-exceptions';
 import {
   buildPaginationMeta,
@@ -27,10 +28,12 @@ const growthMetricSchema = z.object({
 
 @Injectable()
 export class PostRepository implements IPostRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
+  ) {}
 
   async create(post: PostEntity): Promise<PostEntity> {
-    const row = await this.prisma.post.create({
+    const row = await this.transactionHost.tx.post.create({
       data: {
         id: post.id,
         userId: post.userId,
@@ -50,7 +53,7 @@ export class PostRepository implements IPostRepository {
   }
 
   async update(post: PostEntity): Promise<PostEntity> {
-    const result = await this.prisma.post.updateMany({
+    const result = await this.transactionHost.tx.post.updateMany({
       where: { id: post.id, version: post.loadedVersion },
       data: {
         bookId: post.bookId,
@@ -65,7 +68,7 @@ export class PostRepository implements IPostRepository {
     });
     if (result.count === 0)
       throw new ConcurrencyException('Post changed after it was loaded');
-    const row = await this.prisma.post.findUnique({
+    const row = await this.transactionHost.tx.post.findUnique({
       where: { id: post.id },
       include: postRelations,
     });
@@ -78,7 +81,7 @@ export class PostRepository implements IPostRepository {
     id: string,
     viewerUserId?: string,
   ): Promise<PostEntity | null> {
-    const row = await this.prisma.post.findFirst({
+    const row = await this.transactionHost.tx.post.findFirst({
       where: { id, isDeleted: false },
       include: postRelations,
     });
@@ -110,7 +113,7 @@ export class PostRepository implements IPostRepository {
           }
         : {}),
     };
-    const rows = await this.prisma.post.findMany({
+    const rows = await this.transactionHost.tx.post.findMany({
       where,
       orderBy: [{ id: 'desc' }],
       take: options.limit + 1,
@@ -148,7 +151,7 @@ export class PostRepository implements IPostRepository {
         cursorId = cursorParts.slice(1).join('_');
       }
     } else if (options.cursor) {
-      const cursorPost = await this.prisma.post.findUnique({
+      const cursorPost = await this.transactionHost.tx.post.findUnique({
         where: { id: options.cursor },
         select: { id: true, createdAt: true },
       });
@@ -163,7 +166,9 @@ export class PostRepository implements IPostRepository {
       cursorScore !== null && cursorId !== null
         ? Prisma.sql`WHERE ranked.score < ${cursorScore} OR (ranked.score = ${cursorScore} AND ranked.id < ${cursorId})`
         : Prisma.empty;
-    const rawRows = await this.prisma.$queryRaw<unknown[]>(Prisma.sql`
+    const rawRows = await this.transactionHost.tx.$queryRaw<
+      unknown[]
+    >(Prisma.sql`
       WITH ranked AS (
         SELECT p."id",
           (
@@ -181,7 +186,7 @@ export class PostRepository implements IPostRepository {
     const ranks = z.array(personalizedPostRowSchema).parse(rawRows);
     const hasMore = ranks.length > options.limit;
     const pageRanks = ranks.slice(0, options.limit);
-    const rows = await this.prisma.post.findMany({
+    const rows = await this.transactionHost.tx.post.findMany({
       where: { id: { in: pageRanks.map((rank) => rank.id) } },
       include: postRelations,
     });
@@ -207,7 +212,7 @@ export class PostRepository implements IPostRepository {
   }
 
   async delete(id: string, expectedVersion: number): Promise<void> {
-    const result = await this.prisma.post.deleteMany({
+    const result = await this.transactionHost.tx.post.deleteMany({
       where: { id, version: expectedVersion },
     });
     if (!result.count)
@@ -215,7 +220,7 @@ export class PostRepository implements IPostRepository {
   }
 
   async softDelete(id: string, expectedVersion: number): Promise<void> {
-    const result = await this.prisma.post.updateMany({
+    const result = await this.transactionHost.tx.post.updateMany({
       where: { id, version: expectedVersion },
       data: { isDeleted: true, version: { increment: 1 } },
     });
@@ -248,14 +253,14 @@ export class PostRepository implements IPostRepository {
         ? { user: { violationCount: 'desc' } }
         : { createdAt: options.sortBy === 'oldest' ? 'asc' : 'desc' };
     const [rows, total] = await Promise.all([
-      this.prisma.post.findMany({
+      this.transactionHost.tx.post.findMany({
         where,
         orderBy: [orderBy, { id: 'desc' }],
         skip: (options.page - 1) * options.limit,
         take: options.limit,
         include: postRelations,
       }),
-      this.prisma.post.count({ where }),
+      this.transactionHost.tx.post.count({ where }),
     ]);
     return {
       data: rows.map((row) => PostMapper.toDomain(row)),
@@ -271,8 +276,8 @@ export class PostRepository implements IPostRepository {
   }> {
     const where = { isFlagged: true, isDeleted: false };
     const [total, toxic, spoiler] = await Promise.all([
-      this.prisma.post.count({ where }),
-      this.prisma.post.count({
+      this.transactionHost.tx.post.count({ where }),
+      this.transactionHost.tx.post.count({
         where: {
           ...where,
           OR: [
@@ -281,7 +286,7 @@ export class PostRepository implements IPostRepository {
           ],
         },
       }),
-      this.prisma.post.count({
+      this.transactionHost.tx.post.count({
         where: {
           ...where,
           OR: [
@@ -300,29 +305,29 @@ export class PostRepository implements IPostRepository {
   }
 
   countByUser(userId: string): Promise<number> {
-    return this.prisma.post.count({
+    return this.transactionHost.tx.post.count({
       where: { userId, isDeleted: false, isFlagged: false },
     });
   }
 
   countTotal(): Promise<number> {
-    return this.prisma.post.count();
+    return this.transactionHost.tx.post.count();
   }
   countActive(): Promise<number> {
-    return this.prisma.post.count({ where: { isDeleted: false } });
+    return this.transactionHost.tx.post.count({ where: { isDeleted: false } });
   }
 
   async getGrowthMetrics(
     startDate: Date,
     groupBy: 'day' | 'month' | 'year',
-  ): Promise<Array<{ _id: string; count: number }>> {
+  ): Promise<Array<{ period: string; count: number }>> {
     const format =
       groupBy === 'year'
         ? 'YYYY'
         : groupBy === 'month'
           ? 'YYYY-MM'
           : 'YYYY-MM-DD';
-    const raw = await this.prisma.$queryRaw<unknown[]>(Prisma.sql`
+    const raw = await this.transactionHost.tx.$queryRaw<unknown[]>(Prisma.sql`
       SELECT to_char(date_trunc(${groupBy}, "createdAt"), ${format}) AS bucket, COUNT(*)::integer AS count
       FROM "posts" WHERE "createdAt" >= ${startDate}
       GROUP BY date_trunc(${groupBy}, "createdAt") ORDER BY date_trunc(${groupBy}, "createdAt") ASC
@@ -330,7 +335,7 @@ export class PostRepository implements IPostRepository {
     return z
       .array(growthMetricSchema)
       .parse(raw)
-      .map((row) => ({ _id: row.bucket, count: row.count }));
+      .map((row) => ({ period: row.bucket, count: row.count }));
   }
 
   private async enrichPosts(
@@ -340,18 +345,18 @@ export class PostRepository implements IPostRepository {
     if (!rows.length) return [];
     const ids = rows.map((row) => row.id);
     const [likeGroups, commentGroups, viewerLikes] = await Promise.all([
-      this.prisma.like.groupBy({
+      this.transactionHost.tx.like.groupBy({
         by: ['targetId'],
         where: { targetType: 'post', targetId: { in: ids }, status: true },
         _count: { _all: true },
       }),
-      this.prisma.comment.groupBy({
+      this.transactionHost.tx.comment.groupBy({
         by: ['targetId'],
         where: { targetType: 'post', targetId: { in: ids }, isDeleted: false },
         _count: { _all: true },
       }),
       viewerUserId
-        ? this.prisma.like.findMany({
+        ? this.transactionHost.tx.like.findMany({
             where: {
               userId: viewerUserId,
               targetType: 'post',

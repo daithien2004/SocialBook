@@ -1,11 +1,11 @@
-import { QueryHandler } from '@nestjs/cqrs';
+﻿import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { StatisticsReadRepository } from '@/modules/statistics/application/ports/statistics-read.repository';
 import type { ChapterEngagementReadModel } from '@/modules/statistics/application/read-models/statistics.read-model';
+import { assertCanReadStatistics } from '../../policies/statistics-access.policy';
 import { GetChapterEngagementQuery } from './get-chapter-engagement.query';
-import { assertStatisticsReadAllowed } from '@/modules/statistics/application/assert-statistics-read-policy';
 
 @QueryHandler(GetChapterEngagementQuery)
-export class GetChapterEngagementHandler {
+export class GetChapterEngagementHandler implements IQueryHandler<GetChapterEngagementQuery> {
   constructor(
     private readonly statisticsReadRepository: StatisticsReadRepository,
   ) {}
@@ -13,7 +13,7 @@ export class GetChapterEngagementHandler {
   execute(
     query: GetChapterEngagementQuery,
   ): Promise<ChapterEngagementReadModel[]> {
-    assertStatisticsReadAllowed(query.actor);
+    assertCanReadStatistics(query.actor);
     return this.statisticsReadRepository.getChapterEngagement(query.limit);
   }
 }

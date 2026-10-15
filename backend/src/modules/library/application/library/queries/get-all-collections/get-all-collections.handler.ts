@@ -1,48 +1,25 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { Collection } from '@/modules/library/domain/library/entities/collection.entity';
-import { ICollectionRepository } from '@/modules/library/domain/library/repositories/collection.repository.interface';
-import { IReadingListRepository } from '@/modules/library/domain/library/repositories/reading-list.repository.interface';
+import { CollectionReadRepository } from '@/modules/library/application/ports/collection-read.repository';
+import type { CollectionReadModel } from '@/modules/library/application/read-models/collection.read-model';
+import type { PageResult } from '@/shared/domain/pagination.types';
 import { GetAllCollectionsQuery } from './get-all-collections.query';
-
-export interface GetAllCollectionsResult {
-  collection: Collection;
-  bookCount: number;
-}
 
 @QueryHandler(GetAllCollectionsQuery)
 export class GetAllCollectionsHandler implements IQueryHandler<
   GetAllCollectionsQuery,
-  GetAllCollectionsResult[]
+  PageResult<CollectionReadModel>
 > {
   constructor(
-    private readonly collectionRepository: ICollectionRepository,
-    private readonly readingListRepository: IReadingListRepository,
+    private readonly collectionReadRepository: CollectionReadRepository,
   ) {}
 
-  async execute(
+  execute(
     query: GetAllCollectionsQuery,
-  ): Promise<GetAllCollectionsResult[]> {
-    const collections = await this.collectionRepository.findByUserId(
+  ): Promise<PageResult<CollectionReadModel>> {
+    return this.collectionReadRepository.findPage(
+      query.actor.ability,
       query.userId,
+      query.page,
     );
-
-    const isOwner = query.viewerId === query.userId;
-
-    const visible = collections.filter((c) => isOwner || c.isPublic);
-
-    const results = await Promise.all(
-      visible.map(async (collection) => {
-        const bookCount = await this.readingListRepository.countByCollectionId(
-          collection.id,
-        );
-
-        return {
-          collection,
-          bookCount,
-        };
-      }),
-    );
-
-    return results;
   }
 }

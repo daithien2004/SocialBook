@@ -1,4 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { ForbiddenError, subject } from '@casl/ability';
 import {
   NotFoundDomainException,
   BadRequestDomainException,
@@ -7,6 +8,8 @@ import { IUserRepository } from '@/modules/users/domain/users/repositories/user.
 import { UserId } from '@/modules/users/domain/users/value-objects/user-id.vo';
 import { IMediaPort } from '@/modules/media/domain/public-api';
 import { UpdateUserImageCommand } from './update-user-image.command';
+import { User } from '@/modules/users/domain/users/entities/user.entity';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(UpdateUserImageCommand)
 export class UpdateUserImageHandler implements ICommandHandler<
@@ -30,11 +33,20 @@ export class UpdateUserImageHandler implements ICommandHandler<
       throw new NotFoundDomainException('User not found');
     }
 
-    const url = await this.mediaService.uploadImage(command.file);
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'update',
+      subject('User', { id: user.id.toString() }),
+    );
 
-    user.updateProfile({ image: url });
-    await this.userRepository.save(user);
+    const url = await this.mediaService.uploadImage(command.file);
+    await this.persistUserImage(user, url);
 
     return { url };
+  }
+
+  @Transactional()
+  private async persistUserImage(user: User, url: string): Promise<void> {
+    user.updateProfile({ image: url });
+    await this.userRepository.save(user);
   }
 }

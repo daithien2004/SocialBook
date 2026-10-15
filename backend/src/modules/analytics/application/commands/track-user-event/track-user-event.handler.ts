@@ -1,21 +1,33 @@
 import { TrackUserEventCommand } from './track-user-event.command';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import { InjectRedis } from '@nestjs-modules/ioredis';
-import Redis from 'ioredis';
+import { ForbiddenError } from '@casl/ability';
+import { AnalyticsEventBufferPort } from '../../ports/analytics-event-buffer.port';
 
 @CommandHandler(TrackUserEventCommand)
-export class TrackUserEventHandler {
+export class TrackUserEventHandler implements ICommandHandler<TrackUserEventCommand> {
   private readonly logger = new Logger(TrackUserEventHandler.name);
 
-  constructor(@InjectRedis() private readonly redis: Redis) {}
+  constructor(private readonly eventBuffer: AnalyticsEventBufferPort) {}
 
   async execute(command: TrackUserEventCommand): Promise<void> {
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'create',
+      'Analytics',
+    );
     try {
-      await this.redis.rpush(
-        'analytics:events:buffer',
-        JSON.stringify(command),
-      );
+      await this.eventBuffer.append({
+        userId: command.userId,
+        eventType: command.eventType,
+        bookId: command.bookId,
+        chapterId: command.chapterId,
+        durationSeconds: command.durationSeconds,
+        progressPercent: command.progressPercent,
+        source: command.source,
+        deviceType: command.deviceType,
+        metadata: command.metadata,
+        sessionId: command.sessionId,
+      });
     } catch (error) {
       this.logger.error('Failed to buffer analytics event in Redis', error);
     }

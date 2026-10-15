@@ -11,7 +11,6 @@ import { useAppAuth } from '@/features/auth/hooks';
 import { getBookmarksByBook } from '@/features/bookmarks/api/bookmark.api';
 import { useCreateBookmark, useDeleteBookmark } from '@/features/bookmarks/api/bookmark.mutations';
 import { bookmarkKeys } from '@/lib/query-keys';
-import { chaptersQueries } from '@/features/chapters/api/chapters.queries';
 
 import { useReadingRoomSocket } from '@/features/reading-rooms/hooks/useReadingRoomSocket';
 import { userHighlightQueries } from '@/features/user-highlights/api/user-highlights.queries';
@@ -64,11 +63,6 @@ export const ChapterContent = memo(function ChapterContent({
     const isEnded = room?.status === 'ended';
     const highlights = useReadingRoomStore((state) => state.highlights);
     const { addHighlight, removeHighlight, generateHighlightInsight } = useReadingRoomSocket();
-
-    useQuery({
-        ...chaptersQueries.knowledge({ bookSlug, chapterId }),
-        enabled: !!bookSlug && !!chapterId,
-    });
 
     const { data: userHighlightsData } = useQuery({
         ...userHighlightQueries.byChapter(chapterId),

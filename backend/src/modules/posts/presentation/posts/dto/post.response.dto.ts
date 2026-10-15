@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
+import type { PostResult } from '@/modules/posts/application/posts/post.result';
 
 export class PostResponseDto {
   @ApiProperty()
@@ -55,28 +55,23 @@ export class PostResponseDto {
   @ApiProperty()
   updatedAt: Date;
 
-  constructor(post: Post, warnings?: string[]) {
-    this.id = post.id.toString();
+  constructor(post: PostResult, warnings?: string[]) {
+    this.id = post.id;
     this.content = post.content;
-    this.imageUrls = post.imageUrls || [];
-    this.isFlagged = post.isFlagged || false;
+    this.imageUrls = post.imageUrls;
+    this.isFlagged = post.isFlagged;
     this.moderationStatus = post.moderationStatus;
     this.moderationReason = post.moderationReason;
     this.warnings = warnings;
     this.createdAt = post.createdAt;
     this.updatedAt = post.updatedAt;
 
-    // Handle populated author
-    if (post.author) {
+    if (post.user) {
       this.user = {
-        id: post.author.id,
-        username: post.author.username,
-        image: post.author.image,
-        violationCount: post.author.violationCount,
+        ...post.user,
       };
     }
 
-    // Handle populated book
     if (post.book) {
       this.book = {
         id: post.book.id,
@@ -92,11 +87,7 @@ export class PostResponseDto {
     this.likedByCurrentUser = post.likedByCurrentUser;
   }
 
-  static fromDomain(post: Post): PostResponseDto {
-    return new PostResponseDto(post);
-  }
-
-  static fromArray(posts: Post[]): PostResponseDto[] {
+  static fromArray(posts: PostResult[]): PostResponseDto[] {
     return posts.map((post) => new PostResponseDto(post));
   }
 }

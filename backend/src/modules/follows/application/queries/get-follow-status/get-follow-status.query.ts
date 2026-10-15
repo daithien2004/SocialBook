@@ -1,4 +1,5 @@
 import { Query } from '@nestjs/cqrs';
+import type { Actor } from '@/shared/casl/actor';
 
 export class GetFollowStatusQuery extends Query<{
   userId: string;
@@ -8,7 +9,7 @@ export class GetFollowStatusQuery extends Query<{
   followId: string | undefined;
 }> {
   constructor(
-    public readonly userId: string,
+    public readonly actor: Actor,
     public readonly targetId: string,
   ) {
     super();

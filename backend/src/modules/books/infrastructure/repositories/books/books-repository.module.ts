@@ -1,4 +1,6 @@
 import { BookReadRepository } from '@/modules/books/application/ports/book-read.repository';
+import { BookSearchReadRepository } from '@/modules/books/application/ports/book-search-read.repository';
+import { BookIndexReadRepository } from '@/modules/books/application/ports/book-index-read.repository';
 import { IBookRepository } from '@/modules/books/domain/books/repositories/book.repository.interface';
 import { Module } from '@nestjs/common';
 import { PrismaBookReadRepository } from './prisma-book-read.repository';
@@ -15,6 +17,7 @@ import { BookOutboxRepository } from '../../outbox/book-outbox.repository';
 @Module({
   imports: [ChromaInfrastructureModule],
   providers: [
+    PrismaBookReadRepository,
     BookOutboxRepository,
     { provide: BookOutboxPort, useExisting: BookOutboxRepository },
     {
@@ -31,12 +34,22 @@ import { BookOutboxRepository } from '../../outbox/book-outbox.repository';
     },
     {
       provide: BookReadRepository,
-      useClass: PrismaBookReadRepository,
+      useExisting: PrismaBookReadRepository,
+    },
+    {
+      provide: BookSearchReadRepository,
+      useExisting: PrismaBookReadRepository,
+    },
+    {
+      provide: BookIndexReadRepository,
+      useExisting: PrismaBookReadRepository,
     },
   ],
   exports: [
     IBookRepository,
     BookReadRepository,
+    BookSearchReadRepository,
+    BookIndexReadRepository,
     IBookCachePort,
     IViewRankingCachePort,
     BookOutboxPort,

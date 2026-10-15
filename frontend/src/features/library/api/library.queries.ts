@@ -8,6 +8,7 @@ import {
   getCollections,
   getKnowledgeGraph,
   getLibraryBooks,
+  getLibraryBooksPage,
 } from './library.api';
 import type {
   Collection,
@@ -19,6 +20,18 @@ import type {
 } from '../types/library.interface';
 
 export const libraryQueries = {
+  bookPages: (params: { status: LibraryStatus | string; limit: number }) => ({
+    queryKey: libraryKeys.bookPages(params.status, params.limit),
+    initialPageParam: 1,
+    queryFn: ({ pageParam }: { pageParam: number }) =>
+      getLibraryBooksPage({ ...params, page: pageParam }),
+    getNextPageParam: (lastPage: Awaited<ReturnType<typeof getLibraryBooksPage>>) =>
+      lastPage.meta.page < lastPage.meta.totalPages
+        ? lastPage.meta.page + 1
+        : undefined,
+    staleTime: STALE_TIME.SEMI_STATIC,
+    gcTime: GC_TIME.SEMI_STATIC,
+  }),
   books: (params: { status: LibraryStatus | string; limit?: number }) => ({
     queryKey: libraryKeys.books(params.status, params.limit),
     queryFn: (): Promise<LibraryItem[]> => getLibraryBooks(params),

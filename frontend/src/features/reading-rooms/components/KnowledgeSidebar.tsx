@@ -5,10 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { chaptersQueries } from '@/features/chapters/api/chapters.queries';
-import { getChapterKnowledge } from '@/features/chapters/api/chapters.api';
-import { useAskChapterAI } from '@/features/chapters/api/chapters.mutations';
+import {
+  useAskChapterAI,
+  useGenerateChapterKnowledge,
+} from '@/features/chapters/api/chapters.mutations';
 import { useAppAuth } from '@/features/auth/hooks/useAppAuth';
 
 import { KnowledgeEntity } from '@/features/chapters/types/chapter.interface';
@@ -35,24 +35,30 @@ interface KnowledgeSidebarProps {
 export const KnowledgeSidebar = ({ bookSlug, chapterId, roomId }: KnowledgeSidebarProps) => {
   const { isAuthenticated, user } = useAppAuth();
 
-  const { data, isLoading: isQueryLoading, error, refetch } = useQuery({
-    ...chaptersQueries.knowledge({ bookSlug, chapterId }),
-    enabled: !!chapterId && isAuthenticated,
-  });
+  const knowledge = useGenerateChapterKnowledge();
+  const { data, error } = knowledge;
+  const { mutate: generateKnowledge, mutateAsync: generateKnowledgeAsync } =
+    knowledge;
+  const isLoading = knowledge.isPending;
+  const initialGenerationKey = useRef<string | null>(null);
 
-  const [isForcing, setIsForcing] = useState(false);
-
-  const isLoading = isQueryLoading || isForcing;
+  useEffect(() => {
+    const requestKey = `${bookSlug}:${chapterId}`;
+    if (
+      chapterId &&
+      isAuthenticated &&
+      initialGenerationKey.current !== requestKey
+    ) {
+      initialGenerationKey.current = requestKey;
+      generateKnowledge({ bookSlug, chapterId, force: false });
+    }
+  }, [bookSlug, chapterId, generateKnowledge, isAuthenticated]);
 
   const handleRefresh = async () => {
     try {
-      setIsForcing(true);
-      await getChapterKnowledge({ bookSlug, chapterId, force: true });
-      refetch();
+      await generateKnowledgeAsync({ bookSlug, chapterId, force: true });
     } catch {
       toast.error('Không thể tải lại kiến thức. Vui lòng thử lại sau.');
-    } finally {
-      setIsForcing(false);
     }
   };
 

@@ -31,25 +31,6 @@ export class UserHighlightRepository implements IUserHighlightRepository {
     return row ? UserHighlightMapper.toDomain(row) : null;
   }
 
-  async findByBookId(userId: string, bookId: string): Promise<UserHighlight[]> {
-    const rows = await this.transactionHost.tx.userHighlight.findMany({
-      where: { userId, bookId },
-      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-    });
-    return rows.map((row) => UserHighlightMapper.toDomain(row));
-  }
-
-  async findByChapterId(
-    userId: string,
-    chapterId: string,
-  ): Promise<UserHighlight[]> {
-    const rows = await this.transactionHost.tx.userHighlight.findMany({
-      where: { userId, chapterId },
-      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-    });
-    return rows.map((row) => UserHighlightMapper.toDomain(row));
-  }
-
   async delete(id: string): Promise<void> {
     await this.transactionHost.tx.userHighlight.deleteMany({ where: { id } });
   }

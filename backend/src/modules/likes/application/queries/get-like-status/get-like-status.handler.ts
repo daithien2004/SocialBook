@@ -4,9 +4,7 @@ import { ILikeRepository } from '@/modules/likes/domain/repositories/like.reposi
 import { UserId } from '@/modules/likes/domain/value-objects/user-id.vo';
 import { TargetId } from '@/modules/likes/domain/value-objects/target-id.vo';
 
-export interface GetLikeStatusResult {
-  isLiked: boolean;
-}
+import type { GetLikeStatusResult } from '@/modules/likes/application/like.result';
 
 @QueryHandler(GetLikeStatusQuery)
 export class GetLikeStatusHandler implements IQueryHandler<
@@ -16,7 +14,7 @@ export class GetLikeStatusHandler implements IQueryHandler<
   constructor(private readonly likeRepository: ILikeRepository) {}
 
   async execute(request: GetLikeStatusQuery): Promise<GetLikeStatusResult> {
-    const userId = UserId.create(request.userId);
+    const userId = UserId.create(request.actor.userId);
     const targetId = TargetId.create(request.targetId);
 
     const existingLike = await this.likeRepository.findByUserAndTarget(

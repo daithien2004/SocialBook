@@ -30,6 +30,7 @@ import {
 } from '@/shared/platform/decorators/api-response.decorators';
 import {
   paginate,
+  type PageResult,
   type PaginatedResult,
 } from '@/shared/domain/pagination.types';
 import type { BookmarkReadModel } from '../../application/read-models/bookmark.read-model';
@@ -87,10 +88,9 @@ export class BookmarkController {
     @Param('bookId', new ParseUUIDPipe({ version: '4' })) bookId: string,
     @Query() request: BookmarksByBookRequestDto,
   ): Promise<PaginatedResult<BookmarkResponseDto>> {
-    const page = await this.queryBus.execute<{
-      items: BookmarkReadModel[];
-      total: number;
-    }>(request.toQuery(actor, bookId));
+    const page = await this.queryBus.execute<PageResult<BookmarkReadModel>>(
+      request.toQuery(actor, bookId),
+    );
 
     return paginate(page.items, page.total, request, (items) =>
       BookmarkResponseDto.fromArray(items),

@@ -4,6 +4,9 @@ import { ICollectionRepository } from '@/modules/library/domain/library/reposito
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { CreateCollectionCommand } from './create-collection.command';
+import { assertLibraryAccess } from '@/modules/library/application/policies/library-access.policy';
+import { ForbiddenError } from '@casl/ability';
+import { Transactional } from '@nestjs-cls/transactional';
 
 export interface CollectionResult {
   id: string;
@@ -25,7 +28,13 @@ export class CreateCollectionHandler implements ICommandHandler<
     private readonly idGenerator: IIdGenerator,
   ) {}
 
+  @Transactional()
   async execute(command: CreateCollectionCommand): Promise<Collection> {
+    assertLibraryAccess(command.actor, 'manage', command.userId);
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'create',
+      'LibraryCollection',
+    );
     const existing = await this.collectionRepository.findByUserIdAndName(
       command.userId,
       command.name,

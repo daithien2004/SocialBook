@@ -129,6 +129,63 @@ function collectImportPaths(filePath, content) {
   return importPaths;
 }
 
+function collectCqrsHandlerContractErrors(filePath, content, relativePath) {
+  const sourceFile = ts.createSourceFile(
+    filePath,
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+  );
+  const contractErrors = [];
+
+  function visit(node) {
+    if (ts.isClassDeclaration(node)) {
+      const decorators = ts.canHaveDecorators(node)
+        ? (ts.getDecorators(node) ?? [])
+        : [];
+      const handlerDecorator = decorators.find((decorator) => {
+        const expression = decorator.expression;
+        return (
+          ts.isCallExpression(expression) &&
+          ts.isIdentifier(expression.expression) &&
+          (expression.expression.text === 'CommandHandler' ||
+            expression.expression.text === 'QueryHandler')
+        );
+      });
+
+      if (handlerDecorator) {
+        const expression = handlerDecorator.expression;
+        const expectedInterface =
+          ts.isCallExpression(expression) &&
+          ts.isIdentifier(expression.expression) &&
+          expression.expression.text === 'CommandHandler'
+            ? 'ICommandHandler'
+            : 'IQueryHandler';
+        const implementsInterface = (node.heritageClauses ?? []).some(
+          (clause) =>
+            clause.token === ts.SyntaxKind.ImplementsKeyword &&
+            clause.types.some(
+              (type) =>
+                ts.isIdentifier(type.expression) &&
+                type.expression.text === expectedInterface,
+            ),
+        );
+
+        if (!implementsInterface) {
+          contractErrors.push(
+            `${relativePath}: @${expectedInterface === 'ICommandHandler' ? 'CommandHandler' : 'QueryHandler'} class must implement ${expectedInterface}`,
+          );
+        }
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return contractErrors;
+}
+
 const files = await collectTypeScriptFiles(sourceDirectory);
 
 for (const [entryPoint, modeImport] of [
@@ -157,6 +214,24 @@ for (const filePath of files) {
   const isDomainFile = relativePath.split(path.sep).includes('domain');
   const sourceRoot = relativePath.split(path.sep)[0];
   const importPaths = collectImportPaths(filePath, content);
+  const relativeSegments = relativePath.split(path.sep);
+  const isModulePersistenceFile =
+    relativeSegments[0] === 'modules' &&
+    relativeSegments.includes('infrastructure') &&
+    /\.(?:repository|store)\.ts$/u.test(path.basename(filePath));
+
+  errors.push(
+    ...collectCqrsHandlerContractErrors(filePath, content, relativePath),
+  );
+
+  if (
+    isModulePersistenceFile &&
+    importPaths.some((importPath) => /(?:^|\/)prisma\.service$/u.test(importPath))
+  ) {
+    errors.push(
+      `${relativePath}: Prisma repositories and stores must use TransactionHost so they join the active transaction`,
+    );
+  }
 
   if (
     content.includes('@Global(') &&

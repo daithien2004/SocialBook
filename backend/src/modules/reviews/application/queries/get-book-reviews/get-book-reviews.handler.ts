@@ -1,13 +1,17 @@
 import { GetBookReviewsQuery } from './get-book-reviews.query';
-import { QueryHandler } from '@nestjs/cqrs';
-import { IReviewRepository } from '@/modules/reviews/domain/repositories/review.repository.interface';
-import { Review } from '@/modules/reviews/domain/entities/review.entity';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
+import { ReviewReadRepository } from '@/modules/reviews/application/ports/review-read.repository';
 
 @QueryHandler(GetBookReviewsQuery)
-export class GetBookReviewsHandler {
-  constructor(private readonly reviewRepository: IReviewRepository) {}
+export class GetBookReviewsHandler implements IQueryHandler<GetBookReviewsQuery> {
+  constructor(private readonly reviewReadRepository: ReviewReadRepository) {}
 
-  async execute(bookId: string): Promise<Review[]> {
-    return this.reviewRepository.findByBookId(bookId);
+  execute(query: GetBookReviewsQuery) {
+    return this.reviewReadRepository.findByBookId(
+      query.bookId,
+      query.actor.ability,
+      query.actor.userId,
+      query.page,
+    );
   }
 }

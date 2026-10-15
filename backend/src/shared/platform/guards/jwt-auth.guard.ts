@@ -33,7 +33,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       throw (
         err ||
         new UnauthorizedException(
-          'Access Token khÃ´ng há»£p lá»‡ hoáº·c khÃ´ng cÃ³ táº¡i header!',
+          'Access Token không hợp lệ hoặc không có tại header!',
         )
       );
     }

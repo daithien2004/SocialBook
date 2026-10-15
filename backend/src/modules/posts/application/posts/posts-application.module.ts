@@ -47,20 +47,5 @@ import { NotificationsInfrastructureModule } from '@/modules/notifications/infra
     ProcessPostModerationHandler,
     PostModerationService,
   ],
-  exports: [
-    ApprovePostHandler,
-    CreatePostHandler,
-    DeletePostHandler,
-    GetFlaggedPostsHandler,
-    GetModerationStatsHandler,
-    GetPostHandler,
-    GetPostsByUserHandler,
-    GetPostsHandler,
-    RejectPostHandler,
-    RemovePostImageHandler,
-    UpdatePostHandler,
-    ProcessPostModerationHandler,
-    PostModerationService,
-  ],
 })
 export class PostsApplicationModule {}

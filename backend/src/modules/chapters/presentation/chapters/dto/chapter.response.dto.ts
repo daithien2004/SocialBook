@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ChapterResult } from '@/modules/chapters/application/chapters/queries/get-chapters/get-chapters.result';
+import { ChapterReadModel } from '@/modules/chapters/application/read-models/chapter.read-model';
 
 class ChapterParagraphResponseDto {
   @ApiProperty()
@@ -46,7 +46,7 @@ export class ChapterResponseDto {
   @ApiProperty()
   updatedAt: Date;
 
-  constructor(chapter: ChapterResult) {
+  constructor(chapter: ChapterReadModel) {
     this.id = chapter.id;
     this.title = chapter.title;
     this.slug = chapter.slug;
@@ -64,11 +64,11 @@ export class ChapterResponseDto {
     this.updatedAt = chapter.updatedAt;
   }
 
-  static fromResult(chapter: ChapterResult): ChapterResponseDto {
+  static fromResult(chapter: ChapterReadModel): ChapterResponseDto {
     return new ChapterResponseDto(chapter);
   }
 
-  static fromArray(chapters: ChapterResult[]): ChapterResponseDto[] {
+  static fromArray(chapters: ChapterReadModel[]): ChapterResponseDto[] {
     return chapters.map((chapter) => new ChapterResponseDto(chapter));
   }
 }

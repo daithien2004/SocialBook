@@ -6,6 +6,7 @@ import {
   Post,
   Query as QueryParam,
   RequestTimeoutException,
+  UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiNoContentResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -19,9 +20,14 @@ import { GetTrendingKeywordsQuery } from '@/modules/search/application/queries/g
 import { SearchQueryDto } from './dto/search-query.dto';
 import { RecordSearchDto } from './dto/record-search.dto';
 import { SearchBookResponseDto } from './dto/search-book.response.dto';
+import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
+import type { Actor } from '@/shared/casl/actor';
+import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
 
 @ApiProblemResponses()
 @ApiTags('Search')
+@UseGuards(PoliciesGuard)
 @Controller('search')
 export class SearchController {
   constructor(
@@ -30,11 +36,15 @@ export class SearchController {
   ) {}
 
   @ApiOperation({ summary: 'Search' })
+  @CheckPolicy('read', 'Search')
   @Public()
   @Get()
   @ApiPaginatedResponse(SearchBookResponseDto, 'offset')
-  async search(@QueryParam() dto: SearchQueryDto) {
-    const query = dto.toQuery();
+  async search(
+    @CurrentActor() actor: Actor,
+    @QueryParam() dto: SearchQueryDto,
+  ) {
+    const query = dto.toQuery(actor);
     let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
 
     try {
@@ -61,12 +71,13 @@ export class SearchController {
   }
 
   @ApiOperation({ summary: 'Get Trending Keywords' })
+  @CheckPolicy('read', 'Search')
   @Public()
   @Get('trending-keywords')
   @ApiPaginatedResponse('string', 'offset')
-  async getTrendingKeywords() {
+  async getTrendingKeywords(@CurrentActor() actor: Actor) {
     const keywords = await this.queryBus.execute(
-      new GetTrendingKeywordsQuery(),
+      new GetTrendingKeywordsQuery(actor),
     );
     return {
       data: keywords,
@@ -79,11 +90,15 @@ export class SearchController {
   }
 
   @ApiOperation({ summary: 'Record Search' })
+  @CheckPolicy('create', 'Search')
   @Public()
   @Post('record')
   @HttpCode(204)
   @ApiNoContentResponse()
-  async recordSearch(@Body() dto: RecordSearchDto): Promise<void> {
-    await this.commandBus.execute(dto.toCommand());
+  async recordSearch(
+    @CurrentActor() actor: Actor,
+    @Body() dto: RecordSearchDto,
+  ): Promise<void> {
+    await this.commandBus.execute(dto.toCommand(actor));
   }
 }

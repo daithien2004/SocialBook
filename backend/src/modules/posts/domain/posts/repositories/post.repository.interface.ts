@@ -51,5 +51,5 @@ export abstract class IPostRepository {
   abstract getGrowthMetrics(
     startDate: Date,
     groupBy: 'day' | 'month' | 'year',
-  ): Promise<Array<{ _id: string; count: number }>>;
+  ): Promise<Array<{ period: string; count: number }>>;
 }

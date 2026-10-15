@@ -10,6 +10,17 @@ import type {
   Genre as PrismaGenre,
   Author as PrismaAuthor,
   User as PrismaUser,
+  Review as PrismaReview,
+  Comment as PrismaComment,
+  Chapter as PrismaChapter,
+  Post as PrismaPost,
+  Like as PrismaLike,
+  AIRequest as PrismaAIRequest,
+  Notification as PrismaNotification,
+  Follow as PrismaFollow,
+  UserHighlight as PrismaUserHighlight,
+  TextToSpeech as PrismaTextToSpeech,
+  LibraryCollection as PrismaCollection,
 } from '@/core/database/generated/prisma/client';
 
 type ReadingRoomSubject = Pick<PrismaReadingRoom, 'id' | 'hostId' | 'status'>;
@@ -26,9 +37,30 @@ type BookSubject = Pick<PrismaBook, 'id' | 'status' | 'isDeleted'>;
 type GenreSubject = Pick<PrismaGenre, 'id'>;
 type AuthorSubject = Pick<PrismaAuthor, 'id'>;
 type UserSubject = Pick<PrismaUser, 'id'>;
+type ReviewSubject = Pick<PrismaReview, 'id' | 'userId' | 'moderationStatus'>;
+type CommentSubject = Pick<
+  PrismaComment,
+  'userId' | 'moderationStatus' | 'isDeleted'
+>;
+type ChapterSubject = Pick<PrismaChapter, 'id' | 'bookId' | 'isDeleted'>;
+type PostSubject = Pick<
+  PrismaPost,
+  'id' | 'userId' | 'isDeleted' | 'isFlagged'
+>;
+type LikeSubject = Pick<
+  PrismaLike,
+  'id' | 'userId' | 'targetId' | 'targetType'
+>;
+type AIRequestSubject = Pick<PrismaAIRequest, 'id' | 'userId'>;
+type NotificationSubject = Pick<PrismaNotification, 'id' | 'userId'>;
+type FollowSubject = Pick<PrismaFollow, 'id' | 'userId' | 'targetId'>;
+type UserHighlightSubject = Pick<PrismaUserHighlight, 'id' | 'userId'>;
+type TextToSpeechSubject = Pick<PrismaTextToSpeech, 'id' | 'chapterId'>;
+type CollectionSubject = Pick<PrismaCollection, 'id' | 'userId' | 'isPublic'>;
+type LibrarySubject = { userId: string };
 
 export type AppAction =
-  | 'create' | 'read' | 'update' | 'delete' | 'join' | 'like' | 'manage';
+  'create' | 'read' | 'update' | 'delete' | 'join' | 'like' | 'manage';
 
 export type AppSubject =
   | 'all'
@@ -38,12 +70,29 @@ export type AppSubject =
   | 'Statistics'
   | 'Bookmark'
   | 'Book'
+  | 'Review'
+  | 'Comment'
+  | 'Chapter'
+  | 'Post'
+  | 'Like'
+  | 'AIRequest'
+  | 'Notification'
+  | 'Follow'
+  | 'UserHighlight'
+  | 'TextToSpeech'
+  | 'Recommendation'
   | 'Genre'
   | 'GenreAdministration'
   | 'Author'
   | 'AuthorAdministration'
   | 'AIRateLimitConfiguration'
-  | 'User';
+  | 'User'
+  | 'PublicUser'
+  | 'Search'
+  | 'ToxicWord'
+  | 'Analytics'
+  | 'LibraryCollection'
+  | 'Library';
 
 export type AppAbility = Ability<
   [
@@ -59,6 +108,18 @@ export type AppAbility = Ability<
           Genre: GenreSubject;
           Author: AuthorSubject;
           User: UserSubject;
+          Review: ReviewSubject;
+          Comment: CommentSubject;
+          Chapter: ChapterSubject;
+          Post: PostSubject;
+          Like: LikeSubject;
+          AIRequest: AIRequestSubject;
+          Notification: NotificationSubject;
+          Follow: FollowSubject;
+          UserHighlight: UserHighlightSubject;
+          TextToSpeech: TextToSpeechSubject;
+          LibraryCollection: CollectionSubject;
+          Library: LibrarySubject;
         }>
     ),
   ],

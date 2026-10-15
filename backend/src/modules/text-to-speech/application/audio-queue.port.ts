@@ -1,7 +1,7 @@
 import type { GenerateAudioJobPayload } from './jobs/tts-job.payload';
 
-export const IAudioQueuePort = Symbol('IAudioQueuePort');
-
-export interface IAudioQueuePort {
-  queueAudioGeneration(payload: GenerateAudioJobPayload): Promise<void>;
+export abstract class AudioQueuePort {
+  abstract queueAudioGeneration(
+    payload: GenerateAudioJobPayload,
+  ): Promise<void>;
 }

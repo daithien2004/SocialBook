@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ElevenLabsAdapter } from './adapters/elevenlabs.adapter';
-import { ITextToSpeechPort } from '@/modules/text-to-speech/domain/interfaces/text-to-speech.port';
+import { TextToSpeechProvider } from '@/modules/text-to-speech/domain/ports/text-to-speech.provider';
 import { MediaInfrastructureModule } from '@/modules/media/infrastructure/public-api';
 
 @Module({
   imports: [MediaInfrastructureModule],
   providers: [
     {
-      provide: ITextToSpeechPort,
+      provide: TextToSpeechProvider,
       useClass: ElevenLabsAdapter,
     },
   ],
-  exports: [ITextToSpeechPort],
+  exports: [TextToSpeechProvider],
 })
 export class TtsInfrastructureModule {}

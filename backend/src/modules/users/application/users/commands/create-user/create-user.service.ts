@@ -6,8 +6,10 @@ import { IUserRepository } from '@/modules/users/domain/public-api';
 import { User } from '@/modules/users/domain/users/entities/user.entity';
 import { UserEmail } from '@/modules/users/domain/users/value-objects/user-email.vo';
 import { UserId } from '@/modules/users/domain/users/value-objects/user-id.vo';
-import { CreateUserCommand } from './create-user.command';
-import { UserCreationPort } from '@/modules/users/application/user-creation.port';
+import {
+  UserCreationInput,
+  UserCreationPort,
+} from '@/modules/users/application/user-creation.port';
 
 @Injectable()
 export class CreateUserService extends UserCreationPort {
@@ -19,29 +21,29 @@ export class CreateUserService extends UserCreationPort {
     super();
   }
 
-  override async create(command: CreateUserCommand): Promise<User> {
-    const email = UserEmail.create(command.email);
+  override async create(input: UserCreationInput): Promise<User> {
+    const email = UserEmail.create(input.email);
     if (await this.userRepository.existsByEmail(email)) {
       throw new ConflictDomainException('Email already exists');
     }
 
-    if (await this.userRepository.existsByUsername(command.username)) {
+    if (await this.userRepository.existsByUsername(input.username)) {
       throw new ConflictDomainException('Username already exists');
     }
 
-    const password = command.password
-      ? await this.passwordHasher.hash(command.password)
-      : command.password;
+    const password = input.password
+      ? await this.passwordHasher.hash(input.password)
+      : input.password;
 
     const user = User.create({
       id: UserId.create(this.idGenerator.generate()),
-      roleId: command.roleId || 'default-role-id',
-      username: command.username,
-      email: command.email,
+      roleId: input.roleId || 'default-role-id',
+      username: input.username,
+      email: input.email,
       password,
-      image: command.image,
-      provider: command.provider,
-      providerId: command.providerId,
+      image: input.image,
+      provider: input.provider,
+      providerId: input.providerId,
     });
 
     await this.userRepository.save(user);

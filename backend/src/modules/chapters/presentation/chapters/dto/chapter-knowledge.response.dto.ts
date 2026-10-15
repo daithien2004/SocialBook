@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ChapterKnowledge } from '@/modules/chapters/domain/chapters/entities/chapter-knowledge.entity';
+import type { ChapterKnowledgeResult } from '@/modules/chapters/application/chapters/commands/generate-chapter-knowledge/generate-chapter-knowledge.result';
 
 class KnowledgeEntityResponseDto {
   @ApiProperty()
@@ -51,27 +51,29 @@ export class ChapterKnowledgeResponseDto {
   @ApiProperty()
   updatedAt: Date;
 
-  constructor(entity: ChapterKnowledge) {
-    this.id = entity.id;
-    this.chapterId = entity.chapterId;
-    this.entities = entity.entities.map((e) => ({
+  constructor(result: ChapterKnowledgeResult) {
+    this.id = result.id;
+    this.chapterId = result.chapterId;
+    this.entities = result.entities.map((e) => ({
       name: e.name,
       type: e.type,
       description: e.description,
       importance: e.importance,
     }));
-    this.relationships = entity.relationships.map((r) => ({
+    this.relationships = result.relationships.map((r) => ({
       source: r.source,
       target: r.target,
       type: r.type,
       description: r.description,
     }));
-    this.summary = entity.summary;
-    this.createdAt = entity.createdAt;
-    this.updatedAt = entity.updatedAt;
+    this.summary = result.summary;
+    this.createdAt = result.createdAt;
+    this.updatedAt = result.updatedAt;
   }
 
-  static fromEntity(entity: ChapterKnowledge): ChapterKnowledgeResponseDto {
-    return new ChapterKnowledgeResponseDto(entity);
+  static fromResult(
+    result: ChapterKnowledgeResult,
+  ): ChapterKnowledgeResponseDto {
+    return new ChapterKnowledgeResponseDto(result);
   }
 }

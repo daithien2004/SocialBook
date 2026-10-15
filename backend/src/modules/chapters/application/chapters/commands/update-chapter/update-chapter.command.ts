@@ -1,8 +1,10 @@
 import { Command } from '@nestjs/cqrs';
 
-import { ChapterResult } from '@/modules/chapters/application/chapters/queries/get-chapters/get-chapters.result';
+import { ChapterReadModel } from '@/modules/chapters/application/read-models/chapter.read-model';
+import type { Actor } from '@/shared/casl/actor';
 
 interface UpdateChapterCommandProps {
+  actor: Actor;
   id: string;
   title?: string;
   bookId?: string;
@@ -11,7 +13,8 @@ interface UpdateChapterCommandProps {
   orderIndex?: number;
 }
 
-export class UpdateChapterCommand extends Command<ChapterResult> {
+export class UpdateChapterCommand extends Command<ChapterReadModel> {
+  public readonly actor: Actor;
   public readonly id: string;
   public readonly title?: string;
   public readonly bookId?: string;
@@ -21,6 +24,7 @@ export class UpdateChapterCommand extends Command<ChapterResult> {
 
   constructor(props: UpdateChapterCommandProps) {
     super();
+    this.actor = props.actor;
     this.id = props.id;
     this.title = props.title;
     this.bookId = props.bookId;

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Review } from '@/modules/reviews/domain/entities/review.entity';
+import type { ReviewReadModel } from '../../application/read-models/review.read-model';
 
 export class ReviewResponseDto {
   @ApiProperty()
@@ -38,41 +38,35 @@ export class ReviewResponseDto {
   @ApiPropertyOptional()
   isLiked?: boolean;
 
-  constructor(review: Review) {
-    this.id = review.id.toString();
+  constructor(review: ReviewReadModel) {
+    this.id = review.id;
     this.content = review.content;
     this.rating = review.rating;
-    this.likesCount = review.likesCount || 0;
-    this.verifiedPurchase = false; // Default - can be updated if entity has this field
-    this.isFlagged = review.isFlagged || false;
+    this.likesCount = review.likesCount;
+    this.verifiedPurchase = review.verifiedPurchase;
+    this.isFlagged = review.isFlagged;
     this.moderationStatus = review.moderationStatus;
     this.createdAt = review.createdAt;
     this.updatedAt = review.updatedAt;
 
-    // Handle populated user
-    if (review.user) {
-      this.user = {
-        id: review.user.id,
-        username: review.user.username,
-        image: review.user.image,
-      };
-    }
-
-    // Handle populated book
-    if (review.book) {
-      this.book = {
-        id: review.book.id,
-        title: review.book.title,
-        coverUrl: review.book.coverUrl,
-      };
-    }
+    this.user = {
+      id: review.user.id,
+      username: review.user.username,
+      image: review.user.image ?? undefined,
+    };
+    this.book = {
+      id: review.book.id,
+      title: review.book.title,
+      coverUrl: review.book.coverUrl ?? undefined,
+    };
+    this.isLiked = review.isLiked;
   }
 
-  static fromDomain(review: Review): ReviewResponseDto {
+  static fromReadModel(review: ReviewReadModel): ReviewResponseDto {
     return new ReviewResponseDto(review);
   }
 
-  static fromArray(reviews: Review[]): ReviewResponseDto[] {
+  static fromReadModels(reviews: ReviewReadModel[]): ReviewResponseDto[] {
     return reviews.map((review) => new ReviewResponseDto(review));
   }
 }

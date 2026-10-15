@@ -1,17 +1,19 @@
 import { IncrementPlayCountCommand } from './increment-play-count.command';
-import { CommandHandler } from '@nestjs/cqrs';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { AudioPlayedEvent } from '@/modules/analytics/application/public-api';
-import { EventNames } from '@/shared/platform/constants/event-names.constant';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { ForbiddenError } from '@casl/ability';
+import { TextToSpeechPlayCountStore } from '../../ports/text-to-speech-play-count.store';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(IncrementPlayCountCommand)
-export class IncrementPlayCountHandler {
-  constructor(private readonly eventEmitter: EventEmitter2) {}
+export class IncrementPlayCountHandler implements ICommandHandler<IncrementPlayCountCommand> {
+  constructor(private readonly playCountStore: TextToSpeechPlayCountStore) {}
 
-  execute(command: IncrementPlayCountCommand): void {
-    this.eventEmitter.emit(
-      EventNames.AUDIO_PLAYED,
-      new AudioPlayedEvent(command.chapterId),
+  @Transactional()
+  async execute(command: IncrementPlayCountCommand): Promise<void> {
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'update',
+      'TextToSpeech',
     );
+    await this.playCountStore.incrementCompletedByChapterId(command.chapterId);
   }
 }

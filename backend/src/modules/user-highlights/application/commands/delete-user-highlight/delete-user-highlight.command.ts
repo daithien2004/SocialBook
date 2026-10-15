@@ -1,11 +1,10 @@
 import { Command } from '@nestjs/cqrs';
-import type { AppAbility } from '@socialbook/shared';
+import type { Actor } from '@/shared/casl/actor';
 
 export class DeleteUserHighlightCommand extends Command<void> {
   constructor(
     public readonly highlightId: string,
-    public readonly userId: string,
-    public readonly ability: AppAbility,
+    public readonly actor: Actor,
   ) {
     super();
   }

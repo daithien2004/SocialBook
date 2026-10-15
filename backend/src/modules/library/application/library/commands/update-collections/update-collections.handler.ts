@@ -1,12 +1,15 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ReadingList } from '@/modules/library/domain/library/entities/reading-list.entity';
-import { LibraryItemReadModel } from '@/modules/library/domain/library/read-models/library-item.read-model';
+import type { LibraryItemReadModel } from '@/modules/library/application/read-models/library-item.read-model';
+import { LibraryReadRepository } from '@/modules/library/application/ports/library-read.repository';
 import { IReadingListRepository } from '@/modules/library/domain/library/repositories/reading-list.repository.interface';
 import { BookId } from '@/modules/library/domain/library/value-objects/book-id.vo';
 import { UserId } from '@/modules/library/domain/library/value-objects/user-id.vo';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { InternalServerDomainException } from '@/shared/domain/common-exceptions';
 import { UpdateCollectionsCommand } from './update-collections.command';
+import { assertLibraryAccess } from '@/modules/library/application/policies/library-access.policy';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(UpdateCollectionsCommand)
 export class UpdateCollectionsHandler implements ICommandHandler<
@@ -15,12 +18,15 @@ export class UpdateCollectionsHandler implements ICommandHandler<
 > {
   constructor(
     private readonly readingListRepository: IReadingListRepository,
+    private readonly libraryReadRepository: LibraryReadRepository,
     private readonly idGenerator: IIdGenerator,
   ) {}
 
+  @Transactional()
   async execute(
     command: UpdateCollectionsCommand,
   ): Promise<LibraryItemReadModel> {
+    assertLibraryAccess(command.actor, 'manage', command.userId);
     const userId = UserId.create(command.userId);
     const bookId = BookId.create(command.bookId);
 
@@ -40,9 +46,9 @@ export class UpdateCollectionsHandler implements ICommandHandler<
     readingList.updateCollections(command.collectionIds);
     await this.readingListRepository.save(readingList);
 
-    const result = await this.readingListRepository.findDetailByUserIdAndBookId(
-      userId,
-      bookId,
+    const result = await this.libraryReadRepository.findDetailByUserIdAndBookId(
+      userId.toString(),
+      bookId.toString(),
     );
     if (!result) {
       throw new InternalServerDomainException(

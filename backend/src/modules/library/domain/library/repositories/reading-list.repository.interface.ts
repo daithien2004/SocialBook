@@ -1,5 +1,4 @@
-import { ReadingList, ReadingStatus } from '../entities/reading-list.entity';
-import { LibraryItemReadModel } from '../read-models/library-item.read-model';
+import { ReadingList } from '../entities/reading-list.entity';
 import { BookId } from '../value-objects/book-id.vo';
 import { UserId } from '../value-objects/user-id.vo';
 
@@ -11,17 +10,4 @@ export abstract class IReadingListRepository {
   ): Promise<ReadingList | null>;
   abstract remove(userId: UserId, bookId: BookId): Promise<void>;
   abstract exists(userId: UserId, bookId: BookId): Promise<boolean>;
-  abstract countByCollectionId(collectionId: string): Promise<number>;
-  abstract findByCollectionId(
-    collectionId: string,
-  ): Promise<LibraryItemReadModel[]>;
-  abstract findDetailByUserIdAndBookId(
-    userId: UserId,
-    bookId: BookId,
-  ): Promise<LibraryItemReadModel | null>;
-  abstract findAllDetailByUserId(
-    userId: UserId,
-    status?: ReadingStatus | ReadingStatus[],
-    limit?: number,
-  ): Promise<LibraryItemReadModel[]>;
 }

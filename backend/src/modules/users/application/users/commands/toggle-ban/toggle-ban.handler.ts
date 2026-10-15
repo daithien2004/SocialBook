@@ -1,4 +1,5 @@
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { ForbiddenError } from '@casl/ability';
 import { randomUUID } from 'node:crypto';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
@@ -9,7 +10,7 @@ import { UserRoleChangeOutboxPort } from '../../user-role-change-outbox.port';
 import { ToggleBanCommand } from './toggle-ban.command';
 
 @CommandHandler(ToggleBanCommand)
-export class ToggleBanHandler {
+export class ToggleBanHandler implements ICommandHandler<ToggleBanCommand> {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly unitOfWork: UnitOfWorkPort,
@@ -17,6 +18,7 @@ export class ToggleBanHandler {
   ) {}
 
   async execute(command: ToggleBanCommand): Promise<User> {
+    ForbiddenError.from(command.actor.ability).throwUnlessCan('manage', 'User');
     const userId = UserId.create(command.userId);
     return this.unitOfWork.execute(async () => {
       const user = await this.userRepository.findById(userId);

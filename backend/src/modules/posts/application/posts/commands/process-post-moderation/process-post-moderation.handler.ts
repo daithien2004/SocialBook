@@ -5,15 +5,12 @@ import { PostModeratedJobPayload } from '@/modules/notifications/application/pub
 import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.repository.interface';
 import { CheckContentCommand } from '@/modules/content-moderation/application/public-api';
 
-import { Command } from '@nestjs/cqrs';
-export class ProcessPostModerationCommand extends Command<void> {
-  constructor(
-    public readonly postId: string,
-    public readonly content: string,
-  ) {
-    super();
-  }
-}
+import { ProcessPostModerationCommand } from './process-post-moderation.command';
+import { ForbiddenDomainException } from '@/shared/domain/common-exceptions';
+import { PostErrorMessages } from '@/modules/posts/application/error-messages';
+import { subject } from '@casl/ability';
+import { Transactional } from '@nestjs-cls/transactional';
+import type { Post } from '@/modules/posts/domain/posts/entities/post.entity';
 
 @CommandHandler(ProcessPostModerationCommand)
 export class ProcessPostModerationHandler implements ICommandHandler<
@@ -34,7 +31,7 @@ export class ProcessPostModerationHandler implements ICommandHandler<
     this.logger.debug(`[AI Moderation] Processing post ${postId}`);
 
     const result = await this.commandBus.execute(
-      new CheckContentCommand(content),
+      new CheckContentCommand(command.actor, content),
     );
 
     if (result.action === 'ALLOW') {
@@ -42,7 +39,8 @@ export class ProcessPostModerationHandler implements ICommandHandler<
       if (!post) return;
       post.approve();
       post.clearModeration();
-      await this.postRepository.update(post);
+      this.assertCanModerate(command, post);
+      await this.persistPost(post);
       this.logger.debug(`[AI Moderation] Post ${postId} APPROVED.`);
       return;
     }
@@ -50,6 +48,7 @@ export class ProcessPostModerationHandler implements ICommandHandler<
     if (result.action === 'BLOCK' || result.action === 'REVIEW') {
       const post = await this.postRepository.findById(postId);
       if (!post) return;
+      this.assertCanModerate(command, post);
 
       let reason: string;
       if (result.action === 'BLOCK') {
@@ -69,7 +68,7 @@ export class ProcessPostModerationHandler implements ICommandHandler<
       }
 
       post.flag(reason);
-      await this.postRepository.update(post);
+      await this.persistPost(post);
       this.logger.log(
         `[AI Moderation] Post ${postId} flagged [${result.action}]: ${reason}`,
       );
@@ -83,5 +82,31 @@ export class ProcessPostModerationHandler implements ICommandHandler<
         ),
       );
     }
+  }
+
+  private assertCanModerate(
+    command: ProcessPostModerationCommand,
+    post: Post,
+  ): void {
+    if (
+      !command.actor.ability.can(
+        'update',
+        subject('Post', {
+          id: post.id,
+          userId: post.userId,
+          isDeleted: post.isDeleted,
+          isFlagged: post.isFlagged,
+        }),
+      )
+    ) {
+      throw new ForbiddenDomainException(
+        PostErrorMessages.POST_MODERATION_FORBIDDEN,
+      );
+    }
+  }
+
+  @Transactional()
+  private async persistPost(post: Post): Promise<void> {
+    await this.postRepository.update(post);
   }
 }

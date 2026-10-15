@@ -1,9 +1,10 @@
 import { Command } from '@nestjs/cqrs';
 
-import { ReindexResult } from '@/modules/chroma/application/commands/reindex-all/reindex-all.handler';
+import type { ReindexResult } from '@/modules/chroma/application/chroma.result';
+import type { Actor } from '@/shared/casl/actor';
 
 export class ReindexAllCommand extends Command<ReindexResult> {
-  constructor() {
+  constructor(public readonly actor: Actor) {
     super();
   }
 }

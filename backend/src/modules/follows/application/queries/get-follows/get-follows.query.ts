@@ -1,9 +1,11 @@
 import { Query } from '@nestjs/cqrs';
-import { Follow } from '@/modules/follows/domain/entities/follow.entity';
-import { PaginatedResult } from '@/shared/domain/pagination.types';
+import type { PageResult } from '@/shared/domain/pagination.types';
+import type { Actor } from '@/shared/casl/actor';
+import type { FollowResult } from '../../follow.result';
 
-export class GetFollowsQuery extends Query<PaginatedResult<Follow>> {
+export class GetFollowsQuery extends Query<PageResult<FollowResult>> {
   constructor(
+    public readonly actor: Actor,
     public readonly userId?: string,
     public readonly targetId?: string,
     public readonly page?: number,

@@ -1,7 +1,10 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { CommandBus } from '@nestjs/cqrs';
 import { UnrecoverableError, type Job } from 'bullmq';
-import { UpdateProgressCommand } from '@/modules/library/application/public-api';
+import {
+  createLibraryActor,
+  UpdateProgressCommand,
+} from '@/modules/library/application/public-api';
 import { READING_PROGRESS_QUEUE } from './reading-progress-queue.constants';
 import { ReadingProgressJobSchema } from './reading-progress-job.schema';
 
@@ -25,7 +28,14 @@ export class ReadingProgressQueueProcessor extends WorkerHost {
 
     const { userId, bookId, chapterId, progress } = result.data;
     await this.commandBus.execute(
-      new UpdateProgressCommand(userId, bookId, chapterId, progress, true),
+      new UpdateProgressCommand(
+        createLibraryActor(userId),
+        userId,
+        bookId,
+        chapterId,
+        progress,
+        true,
+      ),
     );
   }
 }

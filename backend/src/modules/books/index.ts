@@ -3,6 +3,9 @@ export { TouchBookForReadingRoomCommand } from './application/books/commands/tou
 export type { BookListReadModel } from './application/read-models/book-list.read-model';
 export type { BookDetailReadModel } from './application/read-models/book-detail.read-model';
 export type { BookFiltersReadModel } from './application/read-models/book-filters.read-model';
+export { BookSearchReadRepository } from './application/ports/book-search-read.repository';
+export type { BookSearchReadModel } from './application/read-models/book-search.read-model';
+export { BookIndexReadRepository } from './application/ports/book-index-read.repository';
 export { CreateBookCommand } from './application/books/commands/create-book/create-book.command';
 export { UpdateBookCommand } from './application/books/commands/update-book/update-book.command';
 export { DeleteBookCommand } from './application/books/commands/delete-book/delete-book.command';

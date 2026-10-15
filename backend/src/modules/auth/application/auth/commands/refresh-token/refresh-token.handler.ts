@@ -1,5 +1,5 @@
 import { RefreshTokenCommand } from './refresh-token.command';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UnauthorizedDomainException } from '@/modules/auth/domain/auth/exceptions/auth-exceptions';
 import { Inject } from '@nestjs/common';
 import { IPasswordHasher } from '@/shared/domain/password-hasher.interface';
@@ -13,7 +13,7 @@ import { TokenRotationPort } from '@/modules/auth/application/public-api';
 const FRESH_TOKENS_TTL_SECONDS = 10;
 
 @CommandHandler(RefreshTokenCommand)
-export class RefreshTokenHandler {
+export class RefreshTokenHandler implements ICommandHandler<RefreshTokenCommand> {
   private readonly GRACE_MS = 30_000;
 
   constructor(

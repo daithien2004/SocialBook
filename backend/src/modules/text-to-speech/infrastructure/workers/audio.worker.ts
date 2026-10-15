@@ -1,12 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job, UnrecoverableError } from 'bullmq';
-import { ITextToSpeechRepository } from '@/modules/text-to-speech/domain/repositories/text-to-speech.repository.interface';
-import { ITextToSpeechPort } from '@/modules/text-to-speech/domain/interfaces/text-to-speech.port';
-import { IChapterRepository } from '@/modules/chapters/domain/public-api';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { TextToSpeechRepository } from '@/modules/text-to-speech/domain/repositories/text-to-speech.repository';
+import { TextToSpeechProvider } from '@/modules/text-to-speech/domain/ports/text-to-speech.provider';
+import { AbilityFactory } from '@/shared/casl/ability.factory';
+import {
+  GetChapterAudioSourceQuery,
+  UpdateChapterAudioStatusCommand,
+} from '@/modules/chapters';
 import { TTSStatus } from '@/modules/text-to-speech/domain/entities/text-to-speech.entity';
 import { getErrorMessage } from '@/shared/platform/utils/error.util';
-import { ChapterId } from '@/modules/chapters/domain/public-api';
 import {
   GenerateAudioJobPayload,
   GenerateAudioJobPayloadSchema,
@@ -14,8 +18,8 @@ import {
 
 @Processor('audio-generation', {
   concurrency: 2,
-  // limiter: DÃ¹ concurrency cho phÃ©p 2 job song song, váº«n giá»›i háº¡n tá»‘i Ä‘a
-  // 10 láº§n gá»i TTS provider / phÃºt Ä‘á»ƒ khÃ´ng bá»‹ ban do rate-limit.
+  // limiter: Dù concurrency cho phép 2 job song song, vẫn giới hạn tối đa
+  // 10 lần gọi TTS provider / phút để không bị ban do rate-limit.
   limiter: { max: 10, duration: 60_000 },
 })
 @Injectable()
@@ -23,9 +27,11 @@ export class AudioWorker extends WorkerHost {
   private readonly logger = new Logger(AudioWorker.name);
 
   constructor(
-    private readonly ttsRepository: ITextToSpeechRepository,
-    private readonly ttsProvider: ITextToSpeechPort,
-    private readonly chapterRepository: IChapterRepository,
+    private readonly ttsRepository: TextToSpeechRepository,
+    private readonly ttsProvider: TextToSpeechProvider,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+    private readonly abilityFactory: AbilityFactory,
   ) {
     super();
   }
@@ -59,6 +65,10 @@ export class AudioWorker extends WorkerHost {
   }
 
   private async handleGenerateAudio(payload: GenerateAudioJobPayload) {
+    const actor = this.abilityFactory.createActor({
+      userId: 'system:text-to-speech',
+      roles: ['admin'],
+    });
     // 1. Fetch TTS Record
     const ttsRecord = await this.ttsRepository.findById(payload.ttsRecordId);
 
@@ -80,9 +90,12 @@ export class AudioWorker extends WorkerHost {
     try {
       // 2. Update status to PROCESSING
       await this.ttsRepository.updateStatus(ttsRecord.id, TTSStatus.PROCESSING);
-      await this.chapterRepository.updateTtsStatus(
-        payload.chapterId,
-        'processing',
+      await this.commandBus.execute(
+        new UpdateChapterAudioStatusCommand(
+          actor,
+          payload.chapterId,
+          'processing',
+        ),
       );
 
       const existingAudioUrl = ttsRecord.audioUrl;
@@ -100,8 +113,8 @@ export class AudioWorker extends WorkerHost {
           `Generating audio for chapter ${payload.chapterId} using voice ${payload.voice}`,
         );
 
-        const chapter = await this.chapterRepository.findById(
-          ChapterId.create(payload.chapterId),
+        const chapter = await this.queryBus.execute(
+          new GetChapterAudioSourceQuery(actor, payload.chapterId),
         );
         if (!chapter) {
           throw new UnrecoverableError(
@@ -129,10 +142,13 @@ export class AudioWorker extends WorkerHost {
       ttsRecord.complete(audioUrl, payload.format, duration);
       await this.ttsRepository.save(ttsRecord);
 
-      await this.chapterRepository.updateTtsStatus(
-        payload.chapterId,
-        'completed',
-        audioUrl,
+      await this.commandBus.execute(
+        new UpdateChapterAudioStatusCommand(
+          actor,
+          payload.chapterId,
+          'completed',
+          audioUrl,
+        ),
       );
 
       this.logger.log(
@@ -146,7 +162,9 @@ export class AudioWorker extends WorkerHost {
 
       ttsRecord.fail(errorMessage);
       await this.ttsRepository.save(ttsRecord);
-      await this.chapterRepository.updateTtsStatus(payload.chapterId, 'failed');
+      await this.commandBus.execute(
+        new UpdateChapterAudioStatusCommand(actor, payload.chapterId, 'failed'),
+      );
 
       throw error; // Rethrow to let BullMQ retry or mark as failed
     }

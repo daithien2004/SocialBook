@@ -19,8 +19,8 @@ export class CaslCacheListener {
   async handleUserRoleChangedEvent(event: UserRoleChangedEvent) {
     try {
       this.logger.debug(`Clearing authz caches for user: ${event.userId}`);
-      // XoÃ¡ cache role/ban mÃ  JwtStrategy.validate Ä‘á»c (auth:user:{id})
-      // vÃ  cache permissions CASL (permissions:{id}) Ä‘á»ƒ role má»›i cÃ³ hiá»‡u lá»±c sá»›m.
+      // Xoá cache role/ban mÃ  JwtStrategy.validate đọc (auth:user:{id})
+      // vÃ  cache permissions CASL (permissions:{id}) để role mới có hiệu lực sớm.
       await Promise.all([
         this.redis.del(getAuthUserCacheKey(event.userId)),
         this.redis.del(`permissions:${event.userId}`),

@@ -1,21 +1,26 @@
-import { QueryHandler } from '@nestjs/cqrs';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { GetUserNotificationsQuery } from './get-user-notifications.query';
-import { INotificationRepository } from '@/modules/notifications/domain/repositories/notification.repository.interface';
-import { Notification } from '@/modules/notifications/domain/entities/notification.entity';
+import type { PageResult } from '@/shared/domain/pagination.types';
+import type { NotificationResult } from '@/modules/notifications/application/notification.result';
+import { NotificationReadRepository } from '../../ports/notification-read.repository';
 
 @QueryHandler(GetUserNotificationsQuery)
-export class GetUserNotificationsHandler {
+export class GetUserNotificationsHandler implements IQueryHandler<GetUserNotificationsQuery> {
   constructor(
-    private readonly notificationRepository: INotificationRepository,
+    private readonly notificationReadRepository: NotificationReadRepository,
   ) {}
 
-  async execute(query: GetUserNotificationsQuery): Promise<Notification[]> {
-    const offset = ((query as any).page - 1) * (query as any).limit;
-    return this.notificationRepository.findAllByUser(
-      (query as any).userId,
-      (query as any).limit,
+  async execute(
+    query: GetUserNotificationsQuery,
+  ): Promise<PageResult<NotificationResult>> {
+    const offset = (query.page - 1) * query.limit;
+    const page = await this.notificationReadRepository.findPageByUser(
+      query.actor.ability,
+      query.actor.userId,
+      query.limit,
       offset,
-      (query as any).isRead,
+      query.isRead,
     );
+    return page;
   }
 }

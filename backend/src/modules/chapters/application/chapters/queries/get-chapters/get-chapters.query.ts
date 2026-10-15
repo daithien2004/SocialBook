@@ -1,22 +1,25 @@
 import { Query } from '@nestjs/cqrs';
 import { PaginatedResult } from '@/shared/domain/pagination.types';
-import { ChapterListReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-list.read-model';
-import { ChapterResult } from '@/modules/chapters/application/chapters/queries/get-chapters/get-chapters.result';
+import { ChapterReadModel } from '@/modules/chapters/application/read-models/chapter.read-model';
+import type { Actor } from '@/shared/casl/actor';
+import type {
+  ChapterFilter,
+  ChapterSortField,
+} from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
+import type {
+  PaginationOptions,
+  SortOptions,
+} from '@/shared/domain/pagination.types';
 
-export class GetChaptersQuery extends Query<
-  PaginatedResult<ChapterResult> | ChapterListReadModel
-> {
-  constructor(
-    public readonly page: number = 1,
-    public readonly limit: number = 10,
-    public readonly title?: string,
-    public readonly bookId?: string,
-    public readonly bookSlug?: string,
-    public readonly orderIndex?: number,
-    public readonly sortBy?:
-      'createdAt' | 'updatedAt' | 'title' | 'orderIndex' | 'viewsCount',
-    public readonly order?: 'asc' | 'desc',
-  ) {
+interface GetChaptersQueryProps {
+  actor: Actor;
+  filter: ChapterFilter;
+  pagination: PaginationOptions;
+  sort: SortOptions<ChapterSortField>;
+}
+
+export class GetChaptersQuery extends Query<PaginatedResult<ChapterReadModel>> {
+  constructor(public readonly props: GetChaptersQueryProps) {
     super();
   }
 }

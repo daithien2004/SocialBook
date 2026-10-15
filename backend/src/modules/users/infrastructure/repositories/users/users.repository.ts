@@ -168,7 +168,7 @@ export class UsersRepository implements IUserRepository {
   async getGrowthMetrics(
     startDate: Date,
     groupBy: 'day' | 'month' | 'year',
-  ): Promise<Array<{ _id: string; count: number }>> {
+  ): Promise<Array<{ period: string; count: number }>> {
     const dateFormat =
       groupBy === 'year'
         ? 'YYYY'
@@ -176,9 +176,9 @@ export class UsersRepository implements IUserRepository {
           ? 'YYYY-MM'
           : 'YYYY-MM-DD';
     const rows = await this.client.$queryRaw<
-      Array<{ _id: string; count: number }>
+      Array<{ period: string; count: number }>
     >(Prisma.sql`
-      SELECT to_char(date_trunc(${groupBy}, "createdAt"), ${dateFormat}) AS "_id",
+      SELECT to_char(date_trunc(${groupBy}, "createdAt"), ${dateFormat}) AS "period",
              count(*)::int AS "count"
       FROM "users"
       WHERE "createdAt" >= ${startDate}

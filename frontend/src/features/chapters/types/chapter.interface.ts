@@ -192,7 +192,7 @@ export interface ChapterKnowledge {
   summary?: string;
 }
 
-export interface GetChapterKnowledgeParams {
+export interface GenerateChapterKnowledgeParams {
   bookSlug: string;
   chapterId: string;
   force?: boolean;

@@ -2,6 +2,8 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger, Inject } from '@nestjs/common';
 import { INotificationQueuePort } from '@/modules/notifications/application/public-api';
 import { CommentCreatedJobPayload } from '@/modules/notifications/application/public-api';
+import { ForbiddenError } from '@casl/ability';
+import { Transactional } from '@nestjs-cls/transactional';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { ICommentRepository } from '@/modules/comments/domain/repositories/comment.repository.interface';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
@@ -27,59 +29,60 @@ export class CreateCommentHandler implements ICommandHandler<
   ) {}
 
   async execute(command: CreateCommentCommand): Promise<Comment> {
+    const comment = await this.create(command);
     try {
-      const targetId = TargetId.create(command.targetId);
-      const targetType = CommentTargetType.create(command.targetType);
-
-      const { effectiveParentId } =
-        await this.commentRepository.resolveParentId(
-          targetId,
-          targetType,
-          command.parentId,
-        );
-
-      // Kiểm tra nhanh bằng regex (từ ngữ cực kỳ thô tục) - đồng bộ, không cần AI
-      const quickCheck = containsVietnameseToxicWords(command.content);
-      if (quickCheck) {
-        throw new BadRequestDomainException(
-          `Nội dung chứa từ ngữ thô tục không phù hợp: "${quickCheck.matchedWord}" (nhóm: ${quickCheck.group}).`,
-        );
-      }
-
-      const comment = Comment.create({
-        id: CommentId.create(this.idGenerator.generate()),
-        userId: command.userId,
-        targetType: command.targetType,
-        targetId: command.targetId,
-        content: command.content,
-        parentId: effectiveParentId ?? undefined,
-        moderationStatus: 'approved',
-      });
-
-      await this.commentRepository.save(comment);
-
       this.logger.log(
-        `Comment created successfully: ${comment.id.toString()} by user ${command.userId}`,
+        `Comment created successfully: ${comment.id.toString()} by user ${command.actor.userId}`,
       );
-
-      // Push event directly to BullMQ
       await this.notificationQueue.queueCommentCreated(
         new CommentCreatedJobPayload(
           comment.id.toString(),
-          command.userId,
+          command.actor.userId,
           command.targetId,
           command.targetType,
           comment.parentId?.toString(),
         ),
       );
-
-      return comment;
-    } catch (error) {
+    } catch (error: unknown) {
       this.logger.error(
-        `Failed to create comment for user ${command.userId}`,
-        error,
+        `Comment notification enqueue failed for ${comment.id.toString()}`,
+        error instanceof Error ? error.stack : String(error),
       );
-      throw error;
     }
+    return comment;
+  }
+
+  @Transactional()
+  private async create(command: CreateCommentCommand): Promise<Comment> {
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'create',
+      'Comment',
+    );
+    const targetId = TargetId.create(command.targetId);
+    const targetType = CommentTargetType.create(command.targetType);
+    const { effectiveParentId } = await this.commentRepository.resolveParentId(
+      targetId,
+      targetType,
+      command.parentId,
+    );
+
+    const quickCheck = containsVietnameseToxicWords(command.content);
+    if (quickCheck) {
+      throw new BadRequestDomainException(
+        `Nội dung chứa từ ngữ thô tục không phù hợp: "${quickCheck.matchedWord}" (nhóm: ${quickCheck.group}).`,
+      );
+    }
+
+    const comment = Comment.create({
+      id: CommentId.create(this.idGenerator.generate()),
+      userId: command.actor.userId,
+      targetType: command.targetType,
+      targetId: command.targetId,
+      content: command.content,
+      parentId: effectiveParentId ?? undefined,
+      moderationStatus: 'approved',
+    });
+    await this.commentRepository.save(comment);
+    return comment;
   }
 }

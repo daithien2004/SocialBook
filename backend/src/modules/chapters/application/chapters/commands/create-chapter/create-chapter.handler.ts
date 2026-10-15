@@ -7,20 +7,27 @@ import { ChapterId } from '@/modules/chapters/domain/chapters/value-objects/chap
 import { ChapterTitle } from '@/modules/chapters/domain/chapters/value-objects/chapter-title.vo';
 import { BookId } from '@/modules/chapters/domain/chapters/value-objects/book-id.vo';
 import { CreateChapterCommand } from './create-chapter.command';
-import { ChapterResult } from '../../queries/get-chapters/get-chapters.result';
+import { ChapterReadModel } from '@/modules/chapters/application/read-models/chapter.read-model';
 import { ChapterApplicationMapper } from '../../mappers/chapter.mapper';
+import { ForbiddenError } from '@casl/ability';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(CreateChapterCommand)
 export class CreateChapterHandler implements ICommandHandler<
   CreateChapterCommand,
-  ChapterResult
+  ChapterReadModel
 > {
   constructor(
     private readonly chapterRepository: IChapterRepository,
     private readonly idGenerator: IIdGenerator,
   ) {}
 
-  async execute(command: CreateChapterCommand): Promise<ChapterResult> {
+  @Transactional()
+  async execute(command: CreateChapterCommand): Promise<ChapterReadModel> {
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'create',
+      'Chapter',
+    );
     const title = ChapterTitle.create(command.title);
     const bookId = BookId.create(command.bookId);
 
@@ -62,6 +69,6 @@ export class CreateChapterHandler implements ICommandHandler<
 
     await this.chapterRepository.save(chapter);
 
-    return ChapterApplicationMapper.toResult(chapter);
+    return ChapterApplicationMapper.toReadModel(chapter);
   }
 }

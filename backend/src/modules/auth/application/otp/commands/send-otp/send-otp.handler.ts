@@ -1,6 +1,6 @@
 import { SendOtpCommand } from './send-otp.command';
 import { randomInt } from 'node:crypto';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { getErrorMessage } from '@/shared/platform/utils/error.util';
 import { Logger } from '@nestjs/common';
 import { InternalServerDomainException } from '@/shared/domain/common-exceptions';
@@ -9,7 +9,7 @@ import { IOtpRepository } from '@/modules/auth/domain/auth/otp/repositories/otp.
 import { Otp } from '@/modules/auth/domain/auth/otp/entities/otp.entity';
 
 @CommandHandler(SendOtpCommand)
-export class SendOtpHandler {
+export class SendOtpHandler implements ICommandHandler<SendOtpCommand> {
   private readonly OTP_EXPIRY_MINUTES = 5;
   private readonly logger = new Logger(SendOtpHandler.name);
 

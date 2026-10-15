@@ -2,6 +2,7 @@ import { User as UserEntity } from '@/modules/users/domain/users/entities/user.e
 import { ReadingPreferencesProps } from '@/modules/users/domain/users/value-objects/reading-preferences.vo';
 import { ReadingPreferences } from '@/modules/users/domain/users/value-objects/reading-preferences.vo';
 import { Prisma } from '@/core/database/generated/prisma/client';
+import type { ReadingPreferencesReadModel } from '@/modules/users/application/read-models/reading-preferences.read-model';
 
 type UserWithFavoriteGenres = Prisma.UserGetPayload<{
   include: { favoriteGenres: { select: { genreId: true } } };
@@ -80,6 +81,29 @@ function toReadingPreferencesJson(
 }
 
 export class UserMapper {
+  static toReadingPreferencesReadModel(
+    value: Prisma.JsonValue | null,
+  ): ReadingPreferencesReadModel {
+    const preferences = ReadingPreferences.create(
+      toReadingPreferences(value) ?? {},
+    );
+    return {
+      theme: preferences.theme,
+      fontSize: preferences.fontSize,
+      fontFamily: preferences.fontFamily,
+      lineHeight: preferences.lineHeight,
+      letterSpacing: preferences.letterSpacing,
+      backgroundColor: preferences.backgroundColor,
+      textColor: preferences.textColor,
+      textAlign: preferences.textAlign,
+      marginWidth: preferences.marginWidth,
+      warmth: preferences.warmth,
+      brightness: preferences.brightness,
+      preferredGenres: preferences.preferredGenres,
+      dailyReadingGoal: preferences.dailyReadingGoal,
+    };
+  }
+
   static toDomain(row: UserWithFavoriteGenres): UserEntity {
     return UserEntity.reconstitute({
       id: row.id,

@@ -1,6 +1,6 @@
 import { VerifyOtpCommand } from './verify-otp.command';
 import { VerifyOtpCommand as VerifyOtpTokenCommand } from '@/modules/auth/application/otp/commands/verify-otp/verify-otp.command';
-import { CommandBus, CommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   BadRequestDomainException,
   NotFoundDomainException,
@@ -9,7 +9,7 @@ import { IUserRepository } from '@/modules/users/domain/public-api';
 import { UserEmail } from '@/modules/users/domain/public-api';
 
 @CommandHandler(VerifyOtpCommand)
-export class VerifyOtpHandler {
+export class VerifyOtpHandler implements ICommandHandler<VerifyOtpCommand> {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly commandBus: CommandBus,
@@ -17,6 +17,7 @@ export class VerifyOtpHandler {
 
   async execute(command: VerifyOtpCommand): Promise<string> {
     const verifyTokenCommand = new VerifyOtpTokenCommand(
+      command.actor,
       command.email,
       command.otp,
     );

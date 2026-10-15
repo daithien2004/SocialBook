@@ -258,11 +258,6 @@ export class Chapter extends Entity<ChapterId> {
     this.markAsUpdated();
   }
 
-  incrementViews(): void {
-    this._props.viewsCount += 1;
-    this.markAsUpdated();
-  }
-
   getCharacterCount(): number {
     return this._props.paragraphs.reduce((count, paragraph) => {
       return count + paragraph.content.length;

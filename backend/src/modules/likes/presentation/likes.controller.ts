@@ -1,10 +1,3 @@
-import { ApiTags } from '@nestjs/swagger';
-import { ApiOperation } from '@nestjs/swagger';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { ToggleLikeCommand } from '@/modules/likes/application/commands/toggle-like/toggle-like.command';
-import { GetLikeCountQuery } from '@/modules/likes/application/queries/get-like-count/get-like-count.query';
-import { GetLikeStatusQuery } from '@/modules/likes/application/queries/get-like-status/get-like-status.query';
-
 import {
   Body,
   Controller,
@@ -13,16 +6,32 @@ import {
   HttpStatus,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-
-import { RequireAuth } from '@/shared/platform/decorators/auth-swagger.decorator';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import type { Actor } from '@/shared/casl/actor';
+import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
+import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
 import { Public } from '@/shared/platform/decorators/custom.decorator';
-import { TargetType } from '@/modules/likes/domain/value-objects/target-type.vo';
-import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
 import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.decorators';
+import { LikeTargetQueryDto } from './dto/like-target.query.dto';
+import { ToggleLikeDto } from './dto/toggle-like.dto';
+import {
+  LikeCountResponseDto,
+  LikeStatusResponseDto,
+  ToggleLikeResponseDto,
+} from './dto/like.response.dto';
 
 @ApiProblemResponses()
 @ApiTags('Likes')
+@UseGuards(PoliciesGuard)
 @Controller('likes')
 export class LikesController {
   constructor(
@@ -30,47 +39,45 @@ export class LikesController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  @ApiOperation({ summary: 'Toggle' })
+  @ApiOperation({ summary: 'Toggle a like' })
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: ToggleLikeResponseDto })
+  @CheckPolicy('like', 'Like')
   @Post('toggle')
-  @RequireAuth()
   @HttpCode(HttpStatus.OK)
   async toggle(
-    @CurrentUser('id') userId: string,
-    @Body() dto: { targetId: string; targetType: string },
-  ) {
-    const result = await this.commandBus.execute(
-      new ToggleLikeCommand(userId, dto.targetId, dto.targetType as TargetType),
-    );
-
-    return result;
+    @CurrentActor() actor: Actor,
+    @Body() dto: ToggleLikeDto,
+  ): Promise<ToggleLikeResponseDto> {
+    const result = await this.commandBus.execute(dto.toCommand(actor));
+    return ToggleLikeResponseDto.fromResult(result);
   }
 
-  @ApiOperation({ summary: 'Get Count' })
+  @ApiOperation({ summary: 'Get like count' })
+  @ApiOkResponse({ type: LikeCountResponseDto })
+  @CheckPolicy('read', 'Like')
   @Public()
   @Get('count')
   @HttpCode(HttpStatus.OK)
-  async getCount(@Query() dto: { targetId: string; targetType: string }) {
-    const data = await this.queryBus.execute(
-      new GetLikeCountQuery(dto.targetId, dto.targetType as TargetType),
-    );
-    return data;
+  async getCount(
+    @CurrentActor() actor: Actor,
+    @Query() dto: LikeTargetQueryDto,
+  ): Promise<LikeCountResponseDto> {
+    const result = await this.queryBus.execute(dto.toCountQuery(actor));
+    return LikeCountResponseDto.fromResult(result);
   }
 
-  @ApiOperation({ summary: 'Get Status' })
+  @ApiOperation({ summary: "Get current user's like status" })
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: LikeStatusResponseDto })
+  @CheckPolicy('read', 'Like')
   @Get('status')
-  @RequireAuth()
   @HttpCode(HttpStatus.OK)
   async getStatus(
-    @CurrentUser('id') userId: string,
-    @Query() dto: { targetId: string; targetType: string },
-  ) {
-    const data = await this.queryBus.execute(
-      new GetLikeStatusQuery(
-        userId,
-        dto.targetId,
-        dto.targetType as TargetType,
-      ),
-    );
-    return data;
+    @CurrentActor() actor: Actor,
+    @Query() dto: LikeTargetQueryDto,
+  ): Promise<LikeStatusResponseDto> {
+    const result = await this.queryBus.execute(dto.toStatusQuery(actor));
+    return LikeStatusResponseDto.fromResult(result);
   }
 }

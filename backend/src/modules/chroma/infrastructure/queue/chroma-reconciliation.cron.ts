@@ -14,17 +14,17 @@ export class ChromaReconciliationCron {
     @InjectQueue('chroma') private readonly chromaQueue: Queue,
   ) {}
 
-  // Cháº¡y má»—i 10 phÃºt, tá»± Ä‘á»™ng dÃ² tÃ¬m nhá»¯ng quyá»ƒn sÃ¡ch Ä‘Ã£ publish nhÆ°ng chÆ°a cÃ³ vectorIndexedAt
+  // Chạy mỗi 10 phút, tự động dò tìm những quyển sách đã publish nhưng chưa có vectorIndexedAt
   @Cron(CronExpression.EVERY_10_MINUTES)
   async reconcileUnindexedBooks() {
     if (!isWorkerProcess()) {
-      return; // Äáº£m báº£o chá»‰ cháº¡y á»Ÿ Worker (náº¿u cron module Ä‘Æ°á»£c náº¡p cáº£ á»Ÿ API thÃ¬ Ä‘Ã¢y lÃ  lá»›p báº£o vá»‡ thá»© 2)
+      return; // Đảm bảo chỉ chạy ở Worker (nếu cron module được nạp cả ở API thì đây là lớp bảo vệ thứ 2)
     }
 
     this.logger.log('Starting Chroma vector index reconciliation...');
 
     try {
-      // Giá»›i háº¡n 50 cuá»‘n má»—i láº§n cháº¡y Ä‘á»ƒ trÃ¡nh táº¡o quÃ¡ nhiá»u job cÃ¹ng lÃºc
+      // Giới hạn 50 cuốn mỗi lần chạy để tránh tạo quá nhiều job cùng lúc
       const unindexedBooks = await this.bookRepository.findUnindexedBooks(50);
 
       if (unindexedBooks.length === 0) {
@@ -46,7 +46,7 @@ export class ChromaReconciliationCron {
           continue;
         }
 
-        // Enqueue vá»›i jobId Ä‘á»ƒ dedup
+        // Enqueue với jobId để dedup
         await this.chromaQueue.add(
           'index-book',
           { bookId: book.id.toString() },

@@ -1,5 +1,6 @@
 import { UpdateReviewCommand } from './update-review.command';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { Transactional } from '@nestjs-cls/transactional';
 import { ReviewErrorMessages } from '@/modules/reviews/application/error-messages';
 import {
   BadRequestDomainException,
@@ -7,27 +8,24 @@ import {
   ForbiddenDomainException,
 } from '@/shared/domain/common-exceptions';
 import { IReviewRepository } from '@/modules/reviews/domain/repositories/review.repository.interface';
-import { Review } from '@/modules/reviews/domain/entities/review.entity';
-import { UpdateReviewDto } from '@/modules/reviews/application/dto/update-review.dto';
 import { containsVietnameseToxicWords } from '@/modules/content-moderation';
-import { Action, Subject, AppAbility } from '@socialbook/shared';
 import { subject } from '@casl/ability';
+import { ReviewResultMapper } from '../../mappers/review-result.mapper';
+import type { ReviewReadModel } from '../../read-models/review.read-model';
 
 @CommandHandler(UpdateReviewCommand)
-export class UpdateReviewHandler {
+export class UpdateReviewHandler implements ICommandHandler<UpdateReviewCommand> {
   constructor(private readonly reviewRepository: IReviewRepository) {}
 
-  async execute(
-    reviewId: string,
-    dto: UpdateReviewDto,
-    ability: AppAbility,
-  ): Promise<Review> {
+  @Transactional()
+  async execute(command: UpdateReviewCommand): Promise<ReviewReadModel> {
+    const { reviewId, dto, actor } = command;
     const review = await this.reviewRepository.findById(reviewId);
     if (!review) {
       throw new NotFoundDomainException(ReviewErrorMessages.REVIEW_NOT_FOUND);
     }
 
-    if (!ability.can(Action.Update, subject(Subject.Review, review))) {
+    if (!actor.ability.can('update', subject('Review', review))) {
       throw new ForbiddenDomainException(
         ReviewErrorMessages.REVIEW_UPDATE_FORBIDDEN,
       );
@@ -39,7 +37,7 @@ export class UpdateReviewHandler {
       const quickCheck = containsVietnameseToxicWords(dto.content);
       if (quickCheck) {
         throw new BadRequestDomainException(
-          `Ná»™i dung chá»©a tá»« ngá»¯ thÃ´ tá»¥c khÃ´ng phÃ¹ há»£p: "${quickCheck.matchedWord}" (nhÃ³m: ${quickCheck.group}).`,
+          `Nội dung chứa từ ngữ thô tục không phù hợp: "${quickCheck.matchedWord}" (nhóm: ${quickCheck.group}).`,
         );
       }
       review.updateContent(dto.content);
@@ -52,9 +50,16 @@ export class UpdateReviewHandler {
     }
 
     if (updated) {
-      return this.reviewRepository.update(review);
+      const persisted = await this.reviewRepository.update(review);
+      return ReviewResultMapper.fromDomain(
+        persisted,
+        persisted.likedBy.includes(actor.userId),
+      );
     }
 
-    return review;
+    return ReviewResultMapper.fromDomain(
+      review,
+      review.likedBy.includes(actor.userId),
+    );
   }
 }

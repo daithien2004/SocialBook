@@ -1,17 +1,17 @@
-import { GetOverviewStatsQuery } from './get-overview-stats.query';
-import { QueryHandler } from '@nestjs/cqrs';
+﻿import { GetOverviewStatsQuery } from './get-overview-stats.query';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { StatisticsReadRepository } from '@/modules/statistics/application/ports/statistics-read.repository';
 import type { OverviewStatsReadModel } from '@/modules/statistics/application/read-models/statistics.read-model';
-import { assertStatisticsReadAllowed } from '@/modules/statistics/application/assert-statistics-read-policy';
+import { assertCanReadStatistics } from '../../policies/statistics-access.policy';
 
 @QueryHandler(GetOverviewStatsQuery)
-export class GetOverviewStatsHandler {
+export class GetOverviewStatsHandler implements IQueryHandler<GetOverviewStatsQuery> {
   constructor(
     private readonly statisticsReadRepository: StatisticsReadRepository,
   ) {}
 
   async execute(query: GetOverviewStatsQuery): Promise<OverviewStatsReadModel> {
-    assertStatisticsReadAllowed(query.actor);
+    assertCanReadStatistics(query.actor);
     const recentSince = new Date();
     recentSince.setDate(recentSince.getDate() - 30);
     const previousSince = new Date(

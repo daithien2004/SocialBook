@@ -1,11 +1,15 @@
 import { Query } from '@nestjs/cqrs';
+import type { Actor } from '@/shared/casl/actor';
+import type { PageParams, PageResult } from '@/shared/domain/pagination.types';
+import type { CollectionReadModel } from '@/modules/library/application/read-models/collection.read-model';
 
-import { GetAllCollectionsResult } from '@/modules/library/application/library/queries/get-all-collections/get-all-collections.handler';
-
-export class GetAllCollectionsQuery extends Query<GetAllCollectionsResult[]> {
+export class GetAllCollectionsQuery extends Query<
+  PageResult<CollectionReadModel>
+> {
   constructor(
-    public readonly userId: string,
-    public readonly viewerId?: string,
+    public readonly actor: Actor,
+    public readonly userId: string | undefined,
+    public readonly page: PageParams,
   ) {
     super();
   }

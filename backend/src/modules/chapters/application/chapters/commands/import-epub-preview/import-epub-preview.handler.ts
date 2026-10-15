@@ -1,15 +1,9 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { ForbiddenError } from '@casl/ability';
 import { ImportEpubPreviewCommand } from './import-epub-preview.command';
 import { Logger } from '@nestjs/common';
-import {
-  IEpubParserPort,
-  ParsedChapter,
-} from '@/modules/chapters/domain/chapters/interfaces/epub-parser.port';
-
-export interface ImportEpubPreviewResult {
-  chapters: ParsedChapter[];
-  totalChapters: number;
-}
+import { IEpubParserPort } from '@/modules/chapters/domain/chapters/interfaces/epub-parser.port';
+import type { ImportEpubPreviewResult } from './import-epub-preview.result';
 
 @CommandHandler(ImportEpubPreviewCommand)
 export class ImportEpubPreviewHandler implements ICommandHandler<
@@ -23,6 +17,10 @@ export class ImportEpubPreviewHandler implements ICommandHandler<
   async execute(
     command: ImportEpubPreviewCommand,
   ): Promise<ImportEpubPreviewResult> {
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'manage',
+      'Chapter',
+    );
     try {
       this.logger.log(`Parsing EPUB file: ${command.fileName}`);
       const chapters = await this.epubParser.parseEpub(

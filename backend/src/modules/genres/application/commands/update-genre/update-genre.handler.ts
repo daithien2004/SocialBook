@@ -1,5 +1,5 @@
 import { ForbiddenError, subject } from '@casl/ability';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Transactional } from '@nestjs-cls/transactional';
 import {
   ConflictDomainException,
@@ -13,7 +13,7 @@ import { GenreResultMapper } from '../../mappers/genre-result.mapper';
 import { UpdateGenreCommand } from './update-genre.command';
 
 @CommandHandler(UpdateGenreCommand)
-export class UpdateGenreHandler {
+export class UpdateGenreHandler implements ICommandHandler<UpdateGenreCommand> {
   constructor(private readonly genreRepository: IGenreRepository) {}
 
   @Transactional()

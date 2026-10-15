@@ -14,6 +14,9 @@ import { AuthorsInfrastructureModule } from '@/modules/authors';
 import { ChromaInfrastructureModule } from '@/modules/chroma/infrastructure/public-api';
 import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { SearchCacheModule } from './infrastructure/cache/search-cache.module';
+import { AbilityFactory } from '@/shared/casl/ability.factory';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
+import { defineSearchAbilities } from './application/policies/search.ability';
 
 @Module({
   imports: [
@@ -34,6 +37,11 @@ import { SearchCacheModule } from './infrastructure/cache/search-cache.module';
     GetTrendingKeywordsHandler,
     SearchQueryExpansionService,
     SearchRankingService,
+    {
+      provide: AbilityFactory,
+      useFactory: () => new AbilityFactory([defineSearchAbilities]),
+    },
+    PoliciesGuard,
   ],
   exports: [SearchCacheModule],
 })

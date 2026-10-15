@@ -1,7 +1,7 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
-import { IReadingListRepository } from '@/modules/library/domain/library/repositories/reading-list.repository.interface';
+import { LibraryReadRepository } from '@/modules/library/application/ports/library-read.repository';
 import { IBookRepository } from '@/modules/books/domain/public-api';
 import { IUserRepository } from '@/modules/users/domain/public-api';
 import { UserId } from '@/modules/users/domain/public-api';
@@ -11,30 +11,12 @@ import { GetKnowledgeGraphQuery } from './get-knowledge-graph.query';
 import { IAIPort } from '@/modules/ai';
 import { GenreId, GenreReadRepository } from '@/modules/genres';
 import slugify from 'slugify';
-
-export interface GraphNode {
-  id: string;
-  label: string;
-  type: 'user' | 'book' | 'genre' | 'author' | 'tag';
-  val: number;
-  img?: string;
-  color?: string;
-  isGap?: boolean;
-  reason?: string;
-  slug?: string;
-  url?: string;
-}
-
-export interface GraphLink {
-  source: string;
-  target: string;
-  type: 'read' | 'belongs_to' | 'written_by' | 'has_tag' | 'semantic';
-}
-
-export interface KnowledgeGraphResult {
-  nodes: GraphNode[];
-  links: GraphLink[];
-}
+import { assertLibraryAccess } from '@/modules/library/application/policies/library-access.policy';
+import type {
+  KnowledgeGraphNodeResult,
+  KnowledgeGraphLinkResult,
+  KnowledgeGraphResult,
+} from '@/modules/library/application/library/knowledge-graph.result';
 
 @QueryHandler(GetKnowledgeGraphQuery)
 export class GetKnowledgeGraphHandler implements IQueryHandler<
@@ -44,7 +26,7 @@ export class GetKnowledgeGraphHandler implements IQueryHandler<
   private readonly logger = new Logger(GetKnowledgeGraphHandler.name);
 
   constructor(
-    private readonly readingListRepository: IReadingListRepository,
+    private readonly libraryReadRepository: LibraryReadRepository,
     private readonly bookRepository: IBookRepository,
     private readonly userRepository: IUserRepository,
     private readonly genreRepository: GenreReadRepository,
@@ -52,6 +34,7 @@ export class GetKnowledgeGraphHandler implements IQueryHandler<
   ) {}
 
   async execute(query: GetKnowledgeGraphQuery): Promise<KnowledgeGraphResult> {
+    assertLibraryAccess(query.actor, 'read', query.userId);
     const userId = UserId.create(query.userId);
     const user = await this.userRepository.findById(userId);
     if (!user) {
@@ -60,10 +43,10 @@ export class GetKnowledgeGraphHandler implements IQueryHandler<
 
     // 1. Fetch completed / reading reading list
     const completedItems =
-      await this.readingListRepository.findAllDetailByUserId(userId, [
-        ReadingStatus.COMPLETED,
-        ReadingStatus.READING,
-      ]);
+      await this.libraryReadRepository.findAllDetailByUserId(
+        userId.toString(),
+        [ReadingStatus.COMPLETED, ReadingStatus.READING],
+      );
 
     if (completedItems.length === 0) {
       return {
@@ -84,8 +67,8 @@ export class GetKnowledgeGraphHandler implements IQueryHandler<
     const bookIds = completedItems.map((item) => BookId.create(item.bookId.id));
     const books = await this.bookRepository.findByIds(bookIds);
 
-    const nodes: GraphNode[] = [];
-    const links: GraphLink[] = [];
+    const nodes: KnowledgeGraphNodeResult[] = [];
+    const links: KnowledgeGraphLinkResult[] = [];
 
     // Central User Node
     nodes.push({

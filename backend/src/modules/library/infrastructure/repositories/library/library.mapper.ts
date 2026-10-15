@@ -3,7 +3,7 @@ import {
   ReadingList,
   ReadingStatus,
 } from '@/modules/library/domain/library/entities/reading-list.entity';
-import { LibraryItemReadModel } from '@/modules/library/domain/library/read-models/library-item.read-model';
+import { LibraryItemReadModel } from '@/modules/library/application/read-models/library-item.read-model';
 
 export const READING_LIST_WITH_RELATIONS = {
   collections: { select: { collectionId: true } },

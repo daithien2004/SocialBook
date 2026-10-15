@@ -1,9 +1,10 @@
-import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
+import type { Actor } from '@/shared/casl/actor';
 import { Query } from '@nestjs/cqrs';
-export class GetPostQuery extends Query<Post> {
+import type { PostResult } from '@/modules/posts/application/posts/post.result';
+export class GetPostQuery extends Query<PostResult> {
   constructor(
     public readonly postId: string,
-    public readonly viewerUserId?: string,
+    public readonly actor: Actor,
   ) {
     super();
   }

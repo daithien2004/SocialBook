@@ -6,7 +6,14 @@ import { Logger } from '@nestjs/common';
 import { instrument } from '@socket.io/admin-ui';
 
 function isSocketIoServer(server: unknown): server is Server {
-  return server instanceof Server;
+  return (
+    typeof server === 'object' &&
+    server !== null &&
+    'adapter' in server &&
+    typeof server.adapter === 'function' &&
+    'of' in server &&
+    typeof server.of === 'function'
+  );
 }
 
 export class RedisIoAdapter extends IoAdapter {

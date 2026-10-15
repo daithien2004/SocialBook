@@ -1,10 +1,10 @@
-import { ForbiddenError } from '@casl/ability';
-import { QueryHandler } from '@nestjs/cqrs';
+﻿import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { AIRateLimitConfigPort } from '../../ports/ai-rate-limit-config.port';
 import { GetRateLimitConfigQuery } from './get-rate-limit-config.query';
+import { ForbiddenError } from '@casl/ability';
 
 @QueryHandler(GetRateLimitConfigQuery)
-export class GetRateLimitConfigHandler {
+export class GetRateLimitConfigHandler implements IQueryHandler<GetRateLimitConfigQuery> {
   constructor(private readonly config: AIRateLimitConfigPort) {}
 
   execute(query: GetRateLimitConfigQuery) {

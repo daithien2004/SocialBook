@@ -17,6 +17,5 @@ export const QueryHandlers = [GetLikeCountHandler, GetLikeStatusHandler];
     NotificationsInfrastructureModule,
   ],
   providers: [...CommandHandlers, ...QueryHandlers],
-  exports: [GetLikeCountHandler, GetLikeStatusHandler, ToggleLikeHandler],
 })
 export class LikesApplicationModule {}

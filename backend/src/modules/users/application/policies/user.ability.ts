@@ -6,6 +6,8 @@ export const defineUserAbilities: AbilityDefinition = (
   principal,
   builder: AbilityBuilder<AppAbility>,
 ) => {
+  builder.can('read', 'PublicUser');
+  builder.can('update', 'User', { id: principal.userId });
   builder.can('read', 'User', { id: principal.userId });
   if (principal.roles.includes('admin')) {
     builder.can('manage', 'User');

@@ -69,8 +69,8 @@ export class CloudinaryAdapter implements IMediaPort, OnModuleInit {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: 'tts', // hoáº·c 'socialbook/audios'
-          resource_type: 'video', // Cloudinary dÃ¹ng 'video' for audio
+          folder: 'tts', // hoặc 'socialbook/audios'
+          resource_type: 'video', // Cloudinary dùng 'video' for audio
           format: 'mp3',
         },
         (error, result) => {

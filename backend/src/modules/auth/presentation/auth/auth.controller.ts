@@ -87,16 +87,17 @@ export class AuthController {
   @ApiOperation({ summary: 'Log in' })
   @Public()
   @Throttle({ global: { limit: 5 } })
-  @UseGuards(LoginGuard)
+  @UseGuards(LoginGuard, PoliciesGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: AccessTokenResponseDto })
   async login(
+    @CurrentActor() actor: Actor,
     @Req() req: { user: User; ip: string; headers: Record<string, string> },
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ accessToken: string }> {
     const userAgent = req.headers['user-agent'] || 'unknown';
-    const command = new LoginCommand(req.user, req.ip, userAgent);
+    const command = new LoginCommand(actor, req.user, req.ip, userAgent);
     const result = await this.commandBus.execute(command);
 
     this.applyCookie(
@@ -104,19 +105,19 @@ export class AuthController {
       this.cookieService.refreshTokenCookie(result.refreshToken),
     );
 
-    return { accessToken: result.accessToken };
+    return AccessTokenResponseDto.fromToken(result.accessToken);
   }
 
   @ApiOperation({ summary: 'Get Profile' })
+  @UseGuards(PoliciesGuard)
   @Get('profile')
   @ApiOkResponse({ type: ProfileResponseDto })
-  getProfile(@Req() req: { user: JwtValidatedUser }): ProfileResponseDto {
+  getProfile(
+    @CurrentActor() _actor: Actor,
+    @Req() req: { user: JwtValidatedUser },
+  ): ProfileResponseDto {
     const { id, email, role } = req.user;
-    return {
-      id,
-      email,
-      role,
-    };
+    return ProfileResponseDto.fromValues(id, email, role);
   }
 
   @ApiOperation({ summary: 'Get Me' })
@@ -129,24 +130,26 @@ export class AuthController {
     @Req() req: { user: JwtValidatedUser },
   ): Promise<MeResponseDto> {
     const user = await this.queryBus.execute(new GetCurrentUserQuery(actor));
-    return {
+    return MeResponseDto.fromValues({
       id: user.id,
       email: req.user.email,
       role: req.user.role,
       username: user.username,
       image: user.image,
-    };
+    });
   }
 
   @ApiOperation({ summary: 'Log out' })
   @HttpCode(204)
+  @UseGuards(PoliciesGuard)
   @Post('logout')
   @ApiNoContentResponse()
   async logout(
+    @CurrentActor() actor: Actor,
     @Req() req: { user: { id: string } },
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    const command = new LogoutCommand(req.user.id);
+    const command = new LogoutCommand(actor, req.user.id);
     await this.commandBus.execute(command);
 
     const refresh = this.cookieService.clearRefreshToken();
@@ -156,26 +159,37 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Get Ws Ticket' })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), PoliciesGuard)
   @Post('ws-ticket')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: WsTicketResponseDto })
   async getWsTicket(
+    @CurrentActor() actor: Actor,
     @Req() req: { user: JwtPayload },
   ): Promise<{ ticket: string }> {
-    const command = new GenerateWsTicketCommand(req.user.sub, req.user.role);
+    const command = new GenerateWsTicketCommand(
+      actor,
+      req.user.sub,
+      req.user.role,
+    );
     const ticket = await this.commandBus.execute(command);
-    return { ticket };
+    return WsTicketResponseDto.fromTicket(ticket);
   }
 
   @ApiOperation({ summary: 'Sign up' })
   @Public()
   @Throttle({ global: { limit: 5 } })
+  @UseGuards(PoliciesGuard)
   @Post('signup')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiNoContentResponse()
-  async signup(@Body() dto: SignupLocalDto) {
-    const command = new RegisterCommand(dto.email, dto.username, dto.password);
+  async signup(@CurrentActor() actor: Actor, @Body() dto: SignupLocalDto) {
+    const command = new RegisterCommand(
+      actor,
+      dto.email,
+      dto.username,
+      dto.password,
+    );
     await this.commandBus.execute(command);
 
     return undefined;
@@ -184,11 +198,12 @@ export class AuthController {
   @ApiOperation({ summary: 'Verify Otp' })
   @Public()
   @Throttle({ global: { limit: 5 } })
+  @UseGuards(PoliciesGuard)
   @Post('verify-otp')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiNoContentResponse()
-  async verifyOtp(@Body() body: VerifyOtpDto) {
-    const command = new VerifyOtpCommand(body.email, body.otp);
+  async verifyOtp(@CurrentActor() actor: Actor, @Body() body: VerifyOtpDto) {
+    const command = new VerifyOtpCommand(actor, body.email, body.otp);
     await this.commandBus.execute(command);
     return undefined;
   }
@@ -196,25 +211,25 @@ export class AuthController {
   @ApiOperation({ summary: 'Resend Otp' })
   @Public()
   @Throttle({ global: { limit: 3 } })
+  @UseGuards(PoliciesGuard)
   @Post('resend-otp')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: ResendOtpResponseDto })
-  async resendOtp(@Body() body: ResendOtpDto) {
-    const command = new ResendOtpCommand(body.email);
+  async resendOtp(@CurrentActor() actor: Actor, @Body() body: ResendOtpDto) {
+    const command = new ResendOtpCommand(actor, body.email);
     const result = await this.commandBus.execute(command);
-    return {
-      resendCooldown: result.resendCooldown,
-    };
+    return ResendOtpResponseDto.fromCooldown(result.resendCooldown);
   }
 
   @ApiOperation({ summary: 'Refresh' })
-  @UseGuards(AuthGuard('jwt-refresh'))
+  @UseGuards(AuthGuard('jwt-refresh'), PoliciesGuard)
   @Public()
   @Throttle({ global: { limit: 10 } })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: AccessTokenResponseDto })
   async refresh(
+    @CurrentActor() actor: Actor,
     @Req()
     req: {
       user: JwtPayload;
@@ -228,7 +243,7 @@ export class AuthController {
     const refreshToken = body.refreshToken ?? req.cookies?.sb_refresh_token;
     if (!refreshToken) {
       throw new HttpException(
-        'Vui lÃ²ng cung cáº¥p Refresh token',
+        'Vui lòng cung cấp Refresh token',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -236,6 +251,7 @@ export class AuthController {
     const userAgent = req.headers['user-agent'] || 'unknown';
 
     const command = new RefreshTokenCommand(
+      actor,
       req.user.sub,
       refreshToken,
       req.ip,
@@ -249,17 +265,21 @@ export class AuthController {
       this.cookieService.refreshTokenCookie(newRefreshToken),
     );
 
-    return { accessToken };
+    return AccessTokenResponseDto.fromToken(accessToken);
   }
 
   @ApiOperation({ summary: 'Request password reset Password' })
   @Public()
   @Throttle({ global: { limit: 3 } })
+  @UseGuards(PoliciesGuard)
   @Post('forgot-password')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiNoContentResponse()
-  async forgotPassword(@Body() dto: ForgotPasswordDto) {
-    const command = new ForgotPasswordCommand(dto.email);
+  async forgotPassword(
+    @CurrentActor() actor: Actor,
+    @Body() dto: ForgotPasswordDto,
+  ) {
+    const command = new ForgotPasswordCommand(actor, dto.email);
     await this.commandBus.execute(command);
     return undefined;
   }
@@ -267,11 +287,16 @@ export class AuthController {
   @ApiOperation({ summary: 'Reset Password' })
   @Public()
   @Throttle({ global: { limit: 3 } })
+  @UseGuards(PoliciesGuard)
   @Post('reset-password')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiNoContentResponse()
-  async resetPassword(@Body() dto: ResetPasswordDto) {
+  async resetPassword(
+    @CurrentActor() actor: Actor,
+    @Body() dto: ResetPasswordDto,
+  ) {
     const command = new ResetPasswordCommand(
+      actor,
       dto.email,
       dto.otp,
       dto.newPassword,

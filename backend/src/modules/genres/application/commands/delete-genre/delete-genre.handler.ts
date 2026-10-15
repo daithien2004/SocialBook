@@ -1,5 +1,5 @@
 import { ForbiddenError, subject } from '@casl/ability';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Transactional } from '@nestjs-cls/transactional';
 import {
   ConflictDomainException,
@@ -12,7 +12,7 @@ import { GenreReadRepository } from '../../ports/genre-read.repository';
 import { DeleteGenreCommand } from './delete-genre.command';
 
 @CommandHandler(DeleteGenreCommand)
-export class DeleteGenreHandler {
+export class DeleteGenreHandler implements ICommandHandler<DeleteGenreCommand> {
   constructor(
     private readonly genreRepository: IGenreRepository,
     private readonly genreReadRepository: GenreReadRepository,

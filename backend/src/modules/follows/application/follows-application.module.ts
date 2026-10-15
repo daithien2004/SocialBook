@@ -9,23 +9,13 @@ import { FollowsInfrastructureModule } from '../infrastructure/follows-infrastru
 import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
 import { NotificationsInfrastructureModule } from '@/modules/notifications/infrastructure/public-api';
 
-export const CommandHandlers = [CreateFollowHandler, DeleteFollowHandler];
-
-export const QueryHandlers = [
-  GetFollowStatusHandler,
-  GetFollowsHandler,
-  GetFollowingHandler,
-  GetFollowersHandler,
-];
-
 @Module({
   imports: [
     FollowsInfrastructureModule,
     IdGeneratorModule,
     NotificationsInfrastructureModule,
   ],
-  providers: [...CommandHandlers, ...QueryHandlers],
-  exports: [
+  providers: [
     CreateFollowHandler,
     DeleteFollowHandler,
     GetFollowStatusHandler,

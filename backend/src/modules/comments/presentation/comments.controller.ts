@@ -1,5 +1,4 @@
 import { ApiTags } from '@nestjs/swagger';
-import { Comment } from '@/modules/comments/domain/entities/comment.entity';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
 import {
@@ -12,20 +11,21 @@ import {
   Post,
   Put,
   Query,
-  UseGuards,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 import { Public } from '@/shared/platform/decorators/custom.decorator';
-import { Roles } from '@/shared/platform/decorators/roles.decorator';
-import { RolesGuard } from '@/shared/platform/guards/roles.guard';
-import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
-import { CurrentAbility } from '@/shared/platform/decorators/current-ability.decorator';
-import type { AppAbility } from '@socialbook/shared';
+import type { Actor } from '@/shared/casl/actor';
+import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
+import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
 
 import {
   CommentResponseDto,
-  CommentStatsDto,
+  CommentCountResponseDto,
+  CommentListItemResponseDto,
 } from '@/modules/comments/presentation/dto/comment.response.dto';
 import {
   CommentCountDto,
@@ -51,9 +51,11 @@ import {
   ApiOkResponse,
   ApiOperation,
 } from '@nestjs/swagger';
+import type { PaginatedResult } from '@/shared/domain/pagination.types';
 
 @ApiProblemResponses()
 @ApiTags('Comments')
+@UseGuards(PoliciesGuard)
 @Controller('comments')
 export class CommentsController {
   constructor(
@@ -61,15 +63,18 @@ export class CommentsController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  @ApiOperation({ summary: 'Create' })
+  @ApiBearerAuth()
+  @CheckPolicy('create', 'Comment')
+  @ApiOperation({ summary: 'Create a comment' })
+  @ApiProblemResponses([400, 401, 404])
   @Post()
   @ApiCreatedResponse({ type: CommentResponseDto })
   async create(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Body() dto: CreateCommentDto,
-  ) {
+  ): Promise<CommentResponseDto> {
     const command = new CreateCommentCommand(
-      userId,
+      actor,
       dto.targetType,
       dto.targetId,
       dto.content,
@@ -81,142 +86,111 @@ export class CommentsController {
     return new CommentResponseDto(comment);
   }
 
-  @ApiOperation({ summary: 'Get By Target' })
+  @ApiOperation({ summary: 'List comments for a target' })
+  @CheckPolicy('read', 'Comment')
+  @ApiProblemResponses([400])
   @Public()
-  @ApiPaginatedResponse(CommentResponseDto, 'cursor')
+  @ApiPaginatedResponse(CommentListItemResponseDto, 'offset')
   @Get('target')
   async getByTarget(
-    @CurrentUser('id') userId: string | undefined,
+    @CurrentActor() actor: Actor,
     @Query() query: GetCommentsDto,
-  ) {
+  ): Promise<PaginatedResult<CommentListItemResponseDto>> {
     const getQuery = new GetCommentsQuery(
+      actor,
       query.targetId,
       query.parentId,
       query.page,
       query.limit,
-      query.cursor,
-      query.sortBy as 'createdAt' | 'updatedAt' | 'likesCount' | undefined,
+      query.sortBy,
       query.order,
-      userId,
     );
     const result = await this.queryBus.execute(getQuery);
 
-    return { data: result.data, meta: result.meta };
+    return {
+      data: CommentListItemResponseDto.fromReadModels(result.data),
+      meta: result.meta,
+    };
   }
 
-  @ApiOperation({ summary: 'Get Count' })
+  @ApiOperation({ summary: 'Count comments for a target' })
+  @CheckPolicy('read', 'Comment')
+  @ApiProblemResponses([400])
   @Public()
   @Get('count')
-  @ApiOkResponse({ schema: { type: 'integer' } })
-  async getCount(@Query() query: CommentCountDto) {
+  @ApiOkResponse({ type: CommentCountResponseDto })
+  async getCount(
+    @CurrentActor() actor: Actor,
+    @Query() query: CommentCountDto,
+  ): Promise<CommentCountResponseDto> {
     const countQuery = new GetCommentCountQuery(
+      actor,
       query.targetId,
       query.targetType,
       query.parentId,
     );
     const result = await this.queryBus.execute(countQuery);
 
-    return result;
+    return new CommentCountResponseDto(result.count);
   }
 
-  @ApiOperation({ summary: 'Get By Id' })
-  @Get(':id')
-  @Public()
-  @ApiOkResponse({
-    schema: { type: 'object', nullable: true, example: null },
-  })
-  getById() {
-    return null;
-  }
-
-  @ApiOperation({ summary: 'Update' })
+  @ApiBearerAuth()
+  @CheckPolicy('update', 'Comment')
+  @ApiOperation({ summary: 'Update a comment' })
+  @ApiProblemResponses([400, 401, 403, 404])
   @Put(':id')
   @ApiOkResponse({ type: CommentResponseDto })
   async update(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @CurrentUser('id') userId: string,
-    @CurrentAbility() ability: AppAbility,
+    @CurrentActor() actor: Actor,
     @Body() dto: UpdateCommentDto,
-  ) {
-    const command = new UpdateCommentCommand(id, userId, ability, dto.content);
+  ): Promise<CommentResponseDto> {
+    const command = new UpdateCommentCommand(id, actor, dto.content);
 
     const comment = await this.commandBus.execute(command);
 
     return new CommentResponseDto(comment);
   }
 
-  @ApiOperation({ summary: 'Delete' })
+  @ApiBearerAuth()
+  @CheckPolicy('delete', 'Comment')
+  @ApiOperation({ summary: 'Delete a comment' })
+  @ApiProblemResponses([401, 403, 404])
   @HttpCode(204)
   @Delete(':id')
   @ApiNoContentResponse()
   async remove(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @CurrentUser('id') userId: string,
-    @CurrentAbility() ability: AppAbility,
-  ) {
-    const command = new DeleteCommentCommand(id, userId, ability);
+    @CurrentActor() actor: Actor,
+  ): Promise<void> {
+    const command = new DeleteCommentCommand(id, actor);
 
     await this.commandBus.execute(command);
 
     return undefined;
   }
 
-  @ApiOperation({ summary: 'Flag' })
-  @Post(':id/flag')
-  @ApiCreatedResponse({
-    schema: { type: 'object', nullable: true, example: null },
-  })
-  flag() {
-    return null;
-  }
-
-  @ApiOperation({ summary: 'Moderate' })
+  @ApiBearerAuth()
+  @CheckPolicy('manage', 'Comment')
+  @ApiOperation({ summary: 'Moderate a comment' })
+  @ApiProblemResponses([400, 401, 403, 404])
   @Post(':id/moderate')
   @HttpCode(204)
   @ApiNoContentResponse()
-  @Roles('admin')
-  @UseGuards(RolesGuard)
   async moderate(
+    @CurrentActor() actor: Actor,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() dto: ModerateCommentDto,
-  ) {
-    const command = new ModerateCommentCommand(id, dto.status, dto.reason);
+  ): Promise<void> {
+    const command = new ModerateCommentCommand(
+      actor,
+      id,
+      dto.status,
+      dto.reason,
+    );
 
     await this.commandBus.execute(command);
 
     return undefined;
-  }
-
-  @ApiOperation({ summary: 'Get Stats' })
-  @Get('stats')
-  @ApiOkResponse({ type: CommentStatsDto })
-  @Roles('admin')
-  @UseGuards(RolesGuard)
-  getStats() {
-    return new CommentStatsDto(0, 0, 0, 0, 0, {});
-  }
-
-  @ApiOperation({ summary: 'Get Pending Moderation' })
-  @Get('moderation/pending')
-  @ApiPaginatedResponse(CommentResponseDto, 'offset')
-  @Roles('admin')
-  @UseGuards(RolesGuard)
-  getPendingModeration() {
-    return {
-      data: [],
-      meta: { page: 1, pageSize: 10, total: 0, totalPages: 0 },
-    };
-  }
-
-  @ApiOperation({ summary: 'Get Flagged' })
-  @Get('moderation/flagged')
-  @ApiPaginatedResponse(CommentResponseDto, 'offset')
-  @Roles('admin')
-  @UseGuards(RolesGuard)
-  getFlagged() {
-    return {
-      data: [],
-      meta: { page: 1, pageSize: 10, total: 0, totalPages: 0 },
-    };
   }
 }

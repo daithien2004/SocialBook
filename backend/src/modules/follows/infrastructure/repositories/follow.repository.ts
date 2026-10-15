@@ -5,7 +5,8 @@ import {
   PaginationOptions,
   SortOptions,
 } from '@/shared/domain/pagination.types';
-import { PrismaService } from '@/core/database/postgres/prisma.service';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
 import { Follow as FollowEntity } from '@/modules/follows/domain/entities/follow.entity';
 import {
   FollowFilter,
@@ -19,7 +20,9 @@ import { FollowMapper, FollowWithUserInfo } from './follow.mapper';
 
 @Injectable()
 export class FollowRepository implements IFollowRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
+  ) {}
 
   findByUser(
     userId: UserId,
@@ -40,7 +43,7 @@ export class FollowRepository implements IFollowRepository {
   ): Promise<PaginatedFollowsWithUserInfo> {
     const where = { userId, status: true, isDeleted: false };
     const [rows, total] = await Promise.all([
-      this.prisma.follow.findMany({
+      this.transactionHost.tx.follow.findMany({
         where,
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         skip: (page - 1) * limit,
@@ -61,7 +64,7 @@ export class FollowRepository implements IFollowRepository {
           },
         },
       }),
-      this.prisma.follow.count({ where }),
+      this.transactionHost.tx.follow.count({ where }),
     ]);
     return {
       data: rows.map((row): FollowWithUserInfo => ({
@@ -69,6 +72,7 @@ export class FollowRepository implements IFollowRepository {
         userId: row.userId,
         targetId: row.targetId,
         status: row.status,
+        isActive: row.status,
         username: row.target.username,
         image: row.target.image ?? undefined,
         postCount: row.target._count.posts,
@@ -88,7 +92,7 @@ export class FollowRepository implements IFollowRepository {
   ): Promise<PaginatedFollowsWithUserInfo> {
     const where = { targetId, status: true, isDeleted: false };
     const [rows, total] = await Promise.all([
-      this.prisma.follow.findMany({
+      this.transactionHost.tx.follow.findMany({
         where,
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         skip: (page - 1) * limit,
@@ -109,7 +113,7 @@ export class FollowRepository implements IFollowRepository {
           },
         },
       }),
-      this.prisma.follow.count({ where }),
+      this.transactionHost.tx.follow.count({ where }),
     ]);
     return {
       data: rows.map((row): FollowWithUserInfo => ({
@@ -117,6 +121,7 @@ export class FollowRepository implements IFollowRepository {
         userId: row.userId,
         targetId: row.targetId,
         status: row.status,
+        isActive: row.status,
         username: row.user.username,
         image: row.user.image ?? undefined,
         postCount: row.user._count.posts,
@@ -166,7 +171,7 @@ export class FollowRepository implements IFollowRepository {
   }
 
   async save(follow: FollowEntity): Promise<void> {
-    await this.prisma.follow.upsert({
+    await this.transactionHost.tx.follow.upsert({
       where: {
         userId_targetId: {
           userId: follow.userId.toString(),
@@ -194,7 +199,7 @@ export class FollowRepository implements IFollowRepository {
     userId: UserId,
     targetId: TargetId,
   ): Promise<FollowEntity | null> {
-    const row = await this.prisma.follow.findUnique({
+    const row = await this.transactionHost.tx.follow.findUnique({
       where: {
         userId_targetId: {
           userId: userId.toString(),
@@ -210,7 +215,7 @@ export class FollowRepository implements IFollowRepository {
     targetId: TargetId,
   ): Promise<FollowStatusResult> {
     const [follow, isOwner] = await Promise.all([
-      this.prisma.follow.findUnique({
+      this.transactionHost.tx.follow.findUnique({
         where: {
           userId_targetId: {
             userId: userId.toString(),
@@ -231,7 +236,7 @@ export class FollowRepository implements IFollowRepository {
   }
 
   countFollowers(targetId: TargetId): Promise<number> {
-    return this.prisma.follow.count({
+    return this.transactionHost.tx.follow.count({
       where: { targetId: targetId.toString(), status: true, isDeleted: false },
     });
   }
@@ -257,13 +262,13 @@ export class FollowRepository implements IFollowRepository {
               sort?.order === 'asc' ? ('asc' as const) : ('desc' as const),
           };
     const [rows, total] = await Promise.all([
-      this.prisma.follow.findMany({
+      this.transactionHost.tx.follow.findMany({
         where: filter,
         orderBy: [orderBy, { id: 'desc' }],
         skip: (pagination.page - 1) * pagination.limit,
         take: pagination.limit,
       }),
-      this.prisma.follow.count({ where: filter }),
+      this.transactionHost.tx.follow.count({ where: filter }),
     ]);
     return {
       data: rows.map((row) => FollowMapper.toDomain(row)),

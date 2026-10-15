@@ -1,12 +1,9 @@
 import { Command } from '@nestjs/cqrs';
-import { Post } from '@/modules/posts/domain/posts/entities/post.entity';
+import type { Actor } from '@/shared/casl/actor';
 
-export class CreatePostCommand extends Command<{
-  post: Post;
-  moderationMessage?: string;
-}> {
+export class CreatePostCommand extends Command<string> {
   constructor(
-    public readonly userId: string,
+    public readonly actor: Actor,
     public readonly bookId: string,
     public readonly content: string,
     public readonly files?: Express.Multer.File[],

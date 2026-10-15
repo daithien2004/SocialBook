@@ -1,76 +1,61 @@
 import { Injectable } from '@nestjs/common';
+import { QueryBus, CommandBus } from '@nestjs/cqrs';
+import { OnEvent } from '@nestjs/event-emitter';
 import { Server } from 'socket.io';
-import { CreateNotificationCommand } from '@/modules/notifications/application/public-api';
-import { CreateNotificationDto } from './create-notification.dto';
-import { NotificationResponseDto } from '@/modules/notifications/presentation/dto/notification.response.dto';
-import { CreateNotificationHandler } from '@/modules/notifications/application/public-api';
-import { GetUserNotificationsHandler } from '@/modules/notifications/application/public-api';
-import { GetUserNotificationsQuery } from '@/modules/notifications/application/public-api';
-import { MarkNotificationReadHandler } from '@/modules/notifications/application/public-api';
-import { MarkNotificationReadCommand } from '@/modules/notifications/application/public-api';
-import { MarkAllNotificationsReadHandler } from '@/modules/notifications/application/public-api';
-import { MarkAllNotificationsReadCommand } from '@/modules/notifications/application/public-api';
+import { AbilityFactory } from '@/shared/casl/ability.factory';
+import { EventNames } from '@/shared/platform/constants/event-names.constant';
+import { GetUserNotificationsQuery } from '../../application/queries/get-user-notification/get-user-notifications.query';
+import { MarkNotificationReadCommand } from '../../application/commands/mark-notification/mark-notification-read.command';
+import { MarkAllNotificationsReadCommand } from '../../application/commands/mark-notification/mark-all-notifications-read.command';
+import type { NotificationResult } from '../../application/notification.result';
+import { NotificationResponseDto } from '../dto/notification.response.dto';
 
 @Injectable()
 export class NotificationsService {
   private server: Server | null = null;
-  setServer(server: Server) {
+
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+    private readonly abilityFactory: AbilityFactory,
+  ) {}
+
+  setServer(server: Server): void {
     this.server = server;
   }
 
-  constructor(
-    private readonly createNotificationUseCase: CreateNotificationHandler,
-    private readonly getUserNotificationsUseCase: GetUserNotificationsHandler,
-    private readonly markNotificationReadUseCase: MarkNotificationReadHandler,
-    private readonly markAllNotificationsReadUseCase: MarkAllNotificationsReadHandler,
-  ) {}
+  private actorFor(userId: string) {
+    return this.abilityFactory.createActor({ userId, roles: [] });
+  }
 
-  private userRoom(userId: string) {
+  private userRoom(userId: string): string {
     return `user:${userId}`;
   }
 
-  async create(data: CreateNotificationDto) {
-    const command = new CreateNotificationCommand(
-      data.userId,
-      data.title,
-      data.message,
-      data.type,
-      data.meta,
-      data.actionUrl,
-    );
-    const notification = await this.createNotificationUseCase.execute(command);
-
-    const responseDto = new NotificationResponseDto(notification);
-
-    if (this.server) {
-      this.server
-        .to(this.userRoom(data.userId))
-        .emit('notification:new', responseDto);
-    }
-    return responseDto;
-  }
-
   async findAllByUser(userId: string, limit = 50) {
-    const query = new GetUserNotificationsQuery(userId, 1, limit);
-    const notifications = await this.getUserNotificationsUseCase.execute(query);
-    return NotificationResponseDto.fromArray(notifications);
+    const actor = this.actorFor(userId);
+    const page = await this.queryBus.execute(
+      new GetUserNotificationsQuery(actor, 1, limit),
+    );
+    return NotificationResponseDto.fromArray(page.items);
   }
 
-  async markRead(userId: string, id: string) {
-    const command = new MarkNotificationReadCommand(userId, id);
-    await this.markNotificationReadUseCase.execute(command);
-    if (this.server) {
-      this.server.to(this.userRoom(userId)).emit('notification:read', { id });
-    }
-    return { ok: true };
+  async markRead(userId: string, id: string): Promise<void> {
+    const actor = this.actorFor(userId);
+    await this.commandBus.execute(new MarkNotificationReadCommand(actor, id));
+    this.server?.to(this.userRoom(userId)).emit('notification:read', { id });
   }
 
-  async markAllRead(userId: string) {
-    const command = new MarkAllNotificationsReadCommand(userId);
-    await this.markAllNotificationsReadUseCase.execute(command);
-    if (this.server) {
-      this.server.to(this.userRoom(userId)).emit('notification:readAll');
-    }
-    return { ok: true };
+  async markAllRead(userId: string): Promise<void> {
+    const actor = this.actorFor(userId);
+    await this.commandBus.execute(new MarkAllNotificationsReadCommand(actor));
+    this.server?.to(this.userRoom(userId)).emit('notification:readAll');
+  }
+
+  @OnEvent(EventNames.NOTIFICATION_CREATED)
+  handleNotificationCreated(result: NotificationResult): void {
+    this.server
+      ?.to(this.userRoom(result.userId))
+      .emit('notification:new', NotificationResponseDto.fromResult(result));
   }
 }

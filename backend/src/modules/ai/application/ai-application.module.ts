@@ -25,11 +25,6 @@ import { UpdateRateLimitConfigHandler } from './commands/update-rate-limit-confi
     GetRateLimitConfigHandler,
     UpdateRateLimitConfigHandler,
   ],
-  exports: [
-    AIRequestRepositoryModule,
-    AIInfrastructureModule,
-    GenerateTextHandler,
-    SummarizeChapterHandler,
-  ],
+  exports: [AIRequestRepositoryModule, AIInfrastructureModule],
 })
 export class AIApplicationModule {}

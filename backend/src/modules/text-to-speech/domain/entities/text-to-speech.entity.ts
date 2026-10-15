@@ -209,9 +209,4 @@ export class TextToSpeech extends Entity<string> {
     this._props.errorMessage = errorMessage;
     this.markAsUpdated();
   }
-
-  public incrementPlayCount(): void {
-    this._props.playCount = this._props.playCount + 1;
-    this._props.lastPlayedAt = new Date();
-  }
 }

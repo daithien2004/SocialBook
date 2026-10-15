@@ -1,6 +1,3 @@
-import { ApiTags } from '@nestjs/swagger';
-import { buildPaginationMeta } from '@/shared/domain/pagination.types';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   Body,
   Controller,
@@ -8,37 +5,42 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
   UseGuards,
-  ParseUUIDPipe,
 } from '@nestjs/common';
-
-import { Roles } from '@/shared/platform/decorators/roles.decorator';
-import { RolesGuard } from '@/shared/platform/guards/roles.guard';
-import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
-
-import { CreateNotificationCommand } from '@/modules/notifications/application/commands/create-notification/create-notification.command';
-import { GetUserNotificationsQuery } from '@/modules/notifications/application/queries/get-user-notification/get-user-notifications.query';
-import { MarkNotificationReadCommand } from '@/modules/notifications/application/commands/mark-notification/mark-notification-read.command';
-import { MarkAllNotificationsReadCommand } from '@/modules/notifications/application/commands/mark-notification/mark-all-notifications-read.command';
-import { CreateNotificationDto } from '@/modules/notifications/presentation/dto/create-notification.dto';
-
-import { FilterNotificationDto } from '@/modules/notifications/presentation/dto/filter-notification.dto';
-import { NotificationResponseDto } from '@/modules/notifications/presentation/dto/notification.response.dto';
-import {
-  ApiPaginatedResponse,
-  ApiProblemResponses,
-} from '@/shared/platform/decorators/api-response.decorators';
 import {
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOperation,
+  ApiTags,
 } from '@nestjs/swagger';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import type { Actor } from '@/shared/casl/actor';
+import type { PaginatedResult } from '@/shared/domain/pagination.types';
+import { paginate } from '@/shared/domain/pagination.types';
+import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
+import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
+import { Roles } from '@/shared/platform/decorators/roles.decorator';
+import { RolesGuard } from '@/shared/platform/guards/roles.guard';
+import {
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
+import { MarkAllNotificationsReadCommand } from '@/modules/notifications/application/commands/mark-notification/mark-all-notifications-read.command';
+import { MarkNotificationReadCommand } from '@/modules/notifications/application/commands/mark-notification/mark-notification-read.command';
+import { CreateNotificationDto } from '@/modules/notifications/presentation/dto/create-notification.dto';
+import { FilterNotificationDto } from '@/modules/notifications/presentation/dto/filter-notification.dto';
+import { NotificationResponseDto } from '@/modules/notifications/presentation/dto/notification.response.dto';
+import { GetNotificationByIdQuery } from '@/modules/notifications/application/queries/get-notification-by-id/get-notification-by-id.query';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 
 @ApiProblemResponses()
 @ApiTags('Notifications')
+@UseGuards(PoliciesGuard)
 @Controller('notifications')
 export class NotificationController {
   constructor(
@@ -46,75 +48,58 @@ export class NotificationController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  @ApiOperation({ summary: 'Get My Notifications' })
-  @Get()
+  @ApiOperation({ summary: "Get current user's notifications" })
+  @CheckPolicy('read', 'Notification')
   @ApiPaginatedResponse(NotificationResponseDto, 'offset')
+  @Get()
   async getMyNotifications(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Query() filter: FilterNotificationDto,
-  ) {
-    const query = new GetUserNotificationsQuery(
-      userId,
-      filter.actualPage,
-      filter.actualLimit,
-      filter.isRead,
+  ): Promise<PaginatedResult<NotificationResponseDto>> {
+    const page = await this.queryBus.execute(filter.toQuery(actor));
+    return paginate(page.items, page.total, filter, (items) =>
+      NotificationResponseDto.fromArray(items),
     );
-
-    const result = await this.queryBus.execute(query);
-
-    const data = result.map(
-      (notification: any) => new NotificationResponseDto(notification),
-    );
-    return {
-      data: data,
-      meta: buildPaginationMeta(
-        filter.actualPage,
-        Math.max(data.length, 1),
-        data.length,
-      ),
-    };
   }
 
-  @ApiOperation({ summary: 'Mark All Read' })
+  @ApiOperation({ summary: 'Mark all notifications as read' })
+  @CheckPolicy('update', 'Notification')
+  @ApiNoContentResponse()
   @Patch('read-all')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiNoContentResponse()
-  async markAllRead(@CurrentUser('id') userId: string) {
-    const command = new MarkAllNotificationsReadCommand(userId);
-    await this.commandBus.execute(command);
-    return undefined;
+  async markAllRead(@CurrentActor() actor: Actor): Promise<void> {
+    await this.commandBus.execute(new MarkAllNotificationsReadCommand(actor));
   }
 
-  @ApiOperation({ summary: 'Mark Read' })
+  @ApiOperation({ summary: 'Mark a notification as read' })
+  @CheckPolicy('update', 'Notification')
+  @ApiNoContentResponse()
   @Patch(':id/read')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiNoContentResponse()
   async markRead(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @CurrentUser('id') userId: string,
-  ) {
-    const command = new MarkNotificationReadCommand(userId, id);
-    await this.commandBus.execute(command);
-    return undefined;
+    @CurrentActor() actor: Actor,
+  ): Promise<void> {
+    await this.commandBus.execute(new MarkNotificationReadCommand(actor, id));
   }
 
-  @ApiOperation({ summary: 'Create' })
-  @Post()
+  @ApiOperation({ summary: 'Create a notification' })
+  @CheckPolicy('create', 'Notification')
   @ApiCreatedResponse({ type: NotificationResponseDto })
+  @Post()
   @Roles('admin')
   @UseGuards(RolesGuard)
-  async create(@Body() dto: CreateNotificationDto) {
-    const command = new CreateNotificationCommand(
-      dto.userId,
-      dto.title,
-      dto.message,
-      dto.type,
-      dto.meta,
-      dto.actionUrl,
+  async create(
+    @CurrentActor() actor: Actor,
+    @Body() dto: CreateNotificationDto,
+  ): Promise<NotificationResponseDto> {
+    const id = await this.commandBus.execute(dto.toCommand(actor));
+    const result = await this.queryBus.execute(
+      new GetNotificationByIdQuery(actor, id),
     );
-
-    const notification = await this.commandBus.execute(command);
-
-    return new NotificationResponseDto(notification);
+    if (!result) {
+      throw new NotFoundDomainException('NOTIFICATION_NOT_FOUND');
+    }
+    return NotificationResponseDto.fromResult(result);
   }
 }

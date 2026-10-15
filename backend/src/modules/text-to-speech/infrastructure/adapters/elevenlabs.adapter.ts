@@ -3,14 +3,14 @@ import { ConfigService } from '@nestjs/config';
 import { Readable } from 'stream';
 import { IMediaPort } from '@/modules/media/domain/public-api';
 import {
-  ITextToSpeechPort,
+  TextToSpeechProvider,
   AudioGenerationOptions,
-} from '@/modules/text-to-speech/domain/interfaces/text-to-speech.port';
+} from '@/modules/text-to-speech/domain/ports/text-to-speech.provider';
 
 const AUDIO_GENERATION_TIMEOUT_MS = 60_000;
 
 @Injectable()
-export class ElevenLabsAdapter implements ITextToSpeechPort {
+export class ElevenLabsAdapter implements TextToSpeechProvider {
   constructor(
     private readonly configService: ConfigService,
     private readonly mediaService: IMediaPort,

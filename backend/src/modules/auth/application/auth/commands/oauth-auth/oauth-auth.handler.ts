@@ -1,5 +1,5 @@
 import { OAuthAuthCommand } from './oauth-auth.command';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import {
   ConflictDomainException,
@@ -12,12 +12,12 @@ import {
 import { IUserRepository } from '@/modules/users/domain/public-api';
 import { IRoleRepository } from '@/modules/roles/domain/public-api';
 import { UserEmail } from '@/modules/users/domain/public-api';
-import { CreateUserCommand } from '@/modules/users/application/public-api';
 import { UserCreationPort } from '@/modules/users/application/public-api';
 import { TokenService } from '../../services/token.service';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(OAuthAuthCommand)
-export class OAuthAuthHandler {
+export class OAuthAuthHandler implements ICommandHandler<OAuthAuthCommand> {
   private readonly logger = new Logger(OAuthAuthHandler.name);
 
   constructor(
@@ -27,6 +27,7 @@ export class OAuthAuthHandler {
     private readonly tokenService: TokenService,
   ) {}
 
+  @Transactional()
   async execute(command: OAuthAuthCommand) {
     const p = command.profile;
     if (!p.emailVerified) {
@@ -49,16 +50,14 @@ export class OAuthAuthHandler {
           'Đã có lỗi xảy ra trong quá trình đăng ký',
         );
       }
-      const createCommand = new CreateUserCommand(
-        p.name || p.email.split('@')[0],
-        p.email,
-        undefined,
-        userRole.id,
-        p.image,
-        p.provider,
-        p.providerId,
-      );
-      const newUser = await this.createUserService.create(createCommand);
+      const newUser = await this.createUserService.create({
+        username: p.name || p.email.split('@')[0],
+        email: p.email,
+        roleId: userRole.id,
+        image: p.image,
+        provider: p.provider,
+        providerId: p.providerId,
+      });
       newUser.verify();
       await this.userRepository.save(newUser);
 

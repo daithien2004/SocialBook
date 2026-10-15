@@ -1,9 +1,11 @@
 import { Command } from '@nestjs/cqrs';
-export class ApprovePostCommand extends Command<{
-  success: boolean;
-  message: string;
-}> {
-  constructor(public readonly postId: string) {
+import type { Actor } from '@/shared/casl/actor';
+
+export class ApprovePostCommand extends Command<void> {
+  constructor(
+    public readonly postId: string,
+    public readonly actor: Actor,
+  ) {
     super();
   }
 }

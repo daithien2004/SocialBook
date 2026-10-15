@@ -26,11 +26,6 @@ export abstract class IChapterRepository {
   abstract touchIfInBook(id: ChapterId, bookId: BookId): Promise<string | null>;
   abstract findByParagraphId(paragraphId: string): Promise<Chapter | null>;
   abstract findBySlug(slug: string, bookId: BookId): Promise<Chapter | null>;
-  abstract findAll(
-    filter: ChapterFilter,
-    pagination: PaginationOptions,
-    sort?: SortOptions,
-  ): Promise<PaginatedResult<Chapter>>;
   abstract findByBook(
     bookId: BookId,
     pagination: PaginationOptions,
@@ -52,17 +47,12 @@ export abstract class IChapterRepository {
     excludeId?: ChapterId,
   ): Promise<boolean>;
 
-  abstract incrementViews(id: ChapterId): Promise<void>;
   abstract incrementViewsBySlug(
     bookSlug: string,
     chapterSlug: string,
   ): Promise<void>;
 
-  abstract countByBook(bookId: BookId): Promise<number>;
   abstract getMaxOrderIndex(bookId: BookId): Promise<number>;
-  abstract countChaptersForBooks(
-    bookIds: string[],
-  ): Promise<Map<string, number>>;
   abstract countTotal(): Promise<number>;
   abstract updateTtsStatus(
     chapterId: string,

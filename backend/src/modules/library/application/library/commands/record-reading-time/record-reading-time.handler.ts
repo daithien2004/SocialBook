@@ -5,6 +5,8 @@ import { ChapterId } from '@/modules/library/domain/library/value-objects/chapte
 import { ReadingProgress } from '@/modules/library/domain/library/entities/reading-progress.entity';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { RecordReadingTimeCommand } from './record-reading-time.command';
+import { assertLibraryAccess } from '@/modules/library/application/policies/library-access.policy';
+import { Transactional } from '@nestjs-cls/transactional';
 
 export interface RecordReadingTimeResult {
   readingProgress: ReadingProgress;
@@ -21,9 +23,11 @@ export class RecordReadingTimeHandler implements ICommandHandler<
     private readonly idGenerator: IIdGenerator,
   ) {}
 
+  @Transactional()
   async execute(
     command: RecordReadingTimeCommand,
   ): Promise<RecordReadingTimeResult> {
+    assertLibraryAccess(command.actor, 'manage', command.userId);
     const userIdVO = UserId.create(command.userId);
     const chapterId = ChapterId.create(command.chapterId);
 

@@ -1,17 +1,17 @@
-import { QueryHandler } from '@nestjs/cqrs';
+﻿import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { StatisticsReadRepository } from '@/modules/statistics/application/ports/statistics-read.repository';
 import type { ReadingHeatmapReadModel } from '@/modules/statistics/application/read-models/statistics.read-model';
+import { assertCanReadStatistics } from '../../policies/statistics-access.policy';
 import { GetReadingHeatmapQuery } from './get-reading-heatmap.query';
-import { assertStatisticsReadAllowed } from '@/modules/statistics/application/assert-statistics-read-policy';
 
 @QueryHandler(GetReadingHeatmapQuery)
-export class GetReadingHeatmapHandler {
+export class GetReadingHeatmapHandler implements IQueryHandler<GetReadingHeatmapQuery> {
   constructor(
     private readonly statisticsReadRepository: StatisticsReadRepository,
   ) {}
 
   execute(query: GetReadingHeatmapQuery): Promise<ReadingHeatmapReadModel[]> {
-    assertStatisticsReadAllowed(query.actor);
+    assertCanReadStatistics(query.actor);
     return this.statisticsReadRepository.getReadingHeatmap();
   }
 }

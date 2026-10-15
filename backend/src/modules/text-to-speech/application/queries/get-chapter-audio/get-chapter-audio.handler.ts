@@ -1,13 +1,15 @@
 import { GetChapterAudioQuery } from './get-chapter-audio.query';
-import { QueryHandler } from '@nestjs/cqrs';
-import { ITextToSpeechRepository } from '@/modules/text-to-speech/domain/repositories/text-to-speech.repository.interface';
-import { TextToSpeech } from '@/modules/text-to-speech/domain/entities/text-to-speech.entity';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
+import { TextToSpeechReadRepository } from '../../ports/text-to-speech-read.repository';
 
 @QueryHandler(GetChapterAudioQuery)
-export class GetChapterAudioHandler {
-  constructor(private readonly ttsRepository: ITextToSpeechRepository) {}
+export class GetChapterAudioHandler implements IQueryHandler<GetChapterAudioQuery> {
+  constructor(private readonly readRepository: TextToSpeechReadRepository) {}
 
-  async execute(query: GetChapterAudioQuery): Promise<TextToSpeech | null> {
-    return this.ttsRepository.findCompletedByChapterId(query.chapterId);
+  execute(query: GetChapterAudioQuery) {
+    return this.readRepository.findCompletedByChapterId(
+      query.actor.ability,
+      query.chapterId,
+    );
   }
 }

@@ -5,6 +5,7 @@ import { BooksReadingRoomsIntegrationModule } from './application/public-api/boo
 import { AbilityFactory } from '@/shared/casl/ability.factory';
 import { PoliciesGuard } from '@/shared/casl/policies.guard';
 import { defineBookAbilities } from './application/policies/book.ability';
+import { defineLikeAbilities } from '@/modules/likes';
 
 @Module({
   imports: [BooksApplicationModule, BooksReadingRoomsIntegrationModule],
@@ -12,7 +13,8 @@ import { defineBookAbilities } from './application/policies/book.ability';
   providers: [
     {
       provide: AbilityFactory,
-      useFactory: () => new AbilityFactory([defineBookAbilities]),
+      useFactory: () =>
+        new AbilityFactory([defineBookAbilities, defineLikeAbilities]),
     },
     PoliciesGuard,
   ],

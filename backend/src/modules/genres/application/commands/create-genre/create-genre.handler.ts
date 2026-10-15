@@ -1,5 +1,5 @@
 import { ForbiddenError } from '@casl/ability';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Transactional } from '@nestjs-cls/transactional';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
@@ -12,7 +12,7 @@ import { GenreResultMapper } from '../../mappers/genre-result.mapper';
 import { CreateGenreCommand } from './create-genre.command';
 
 @CommandHandler(CreateGenreCommand)
-export class CreateGenreHandler {
+export class CreateGenreHandler implements ICommandHandler<CreateGenreCommand> {
   constructor(
     private readonly genreRepository: IGenreRepository,
     private readonly idGenerator: IIdGenerator,

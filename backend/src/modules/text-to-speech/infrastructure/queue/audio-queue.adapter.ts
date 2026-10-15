@@ -5,15 +5,15 @@ import {
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { IAudioQueuePort } from '@/modules/text-to-speech/application/public-api';
+import { AudioQueuePort } from '@/modules/text-to-speech/application/audio-queue.port';
 import { GenerateAudioJobPayload } from '@/modules/text-to-speech/application/public-api';
 
 // Giới hạn tổng số job đang chờ trong queue — bảo vệ toàn hệ thống.
-// TODO: Thêm per-user limit khi ITextToSpeechRepository có method countByUserAndStatus.
+// TODO: Add per-user limiting if the product introduces user-owned audio generation.
 const MAX_GLOBAL_QUEUE_SIZE = 100;
 
 @Injectable()
-export class AudioQueueAdapter implements IAudioQueuePort {
+export class AudioQueueAdapter implements AudioQueuePort {
   private readonly logger = new Logger(AudioQueueAdapter.name);
 
   constructor(

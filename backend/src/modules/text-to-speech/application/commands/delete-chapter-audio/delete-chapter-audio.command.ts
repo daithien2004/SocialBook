@@ -1,6 +1,10 @@
 import { Command } from '@nestjs/cqrs';
+import type { Actor } from '@/shared/casl/actor';
 export class DeleteChapterAudioCommand extends Command<void> {
-  constructor(public readonly chapterId: string) {
+  constructor(
+    public readonly actor: Actor,
+    public readonly chapterId: string,
+  ) {
     super();
   }
 }

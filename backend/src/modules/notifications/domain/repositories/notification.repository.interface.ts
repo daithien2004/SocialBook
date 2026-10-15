@@ -8,6 +8,7 @@ export abstract class INotificationRepository {
     offset?: number,
     isRead?: boolean,
   ): Promise<Notification[]>;
+  abstract countByUser(userId: string, isRead?: boolean): Promise<number>;
   abstract markAsRead(userId: string, notificationId: string): Promise<void>;
   abstract markAllAsRead(userId: string): Promise<void>;
 }

@@ -9,6 +9,9 @@ import { PostsRepositoryModule } from '@/modules/posts/infrastructure/public-api
 import { CommentsInfrastructureModule } from '@/modules/comments/infrastructure/public-api';
 import { UsersRepositoryModule } from '@/modules/users/infrastructure/public-api';
 import { TargetResolutionModule } from '@/modules/target-resolution/application/public-api';
+import { AbilityFactory } from '@/shared/casl/ability.factory';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
+import { defineNotificationAbilities } from './application/policies/notification.ability';
 
 @Module({
   imports: [
@@ -21,6 +24,13 @@ import { TargetResolutionModule } from '@/modules/target-resolution/application/
     TargetResolutionModule,
   ],
   controllers: [NotificationController],
-  providers: [...(isWorkerProcess() ? [NotificationWorker] : [])],
+  providers: [
+    {
+      provide: AbilityFactory,
+      useFactory: () => new AbilityFactory([defineNotificationAbilities]),
+    },
+    PoliciesGuard,
+    ...(isWorkerProcess() ? [NotificationWorker] : []),
+  ],
 })
 export class NotificationsModule {}

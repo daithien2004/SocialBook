@@ -7,6 +7,8 @@ import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
 import { PrismaUnitOfWork } from '@/core/database/postgres/prisma-unit-of-work';
 import { CurrentUserReadRepository } from '../../../application/ports/current-user-read.repository';
 import { PrismaCurrentUserReadRepository } from './prisma-current-user-read.repository';
+import { UsersReadRepository } from '../../../application/ports/users-read.repository';
+import { PrismaUsersReadRepository } from './prisma-users-read.repository';
 
 @Module({
   providers: [
@@ -20,6 +22,10 @@ import { PrismaCurrentUserReadRepository } from './prisma-current-user-read.repo
       provide: CurrentUserReadRepository,
       useClass: PrismaCurrentUserReadRepository,
     },
+    {
+      provide: UsersReadRepository,
+      useClass: PrismaUsersReadRepository,
+    },
     UserRoleChangeOutboxRepository,
     {
       provide: UserRoleChangeOutboxPort,
@@ -29,6 +35,7 @@ import { PrismaCurrentUserReadRepository } from './prisma-current-user-read.repo
   exports: [
     IUserRepository,
     CurrentUserReadRepository,
+    UsersReadRepository,
     UserRoleChangeOutboxPort,
     UnitOfWorkPort,
   ],

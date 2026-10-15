@@ -7,6 +7,7 @@ import { RateLimitConfigModule } from './infrastructure/rate-limit/public-api';
 import { AbilityFactory } from '@/shared/casl/ability.factory';
 import { PoliciesGuard } from '@/shared/casl/policies.guard';
 import { defineAiConfigurationAbilities } from './application/policies/ai-configuration.ability';
+import { defineAIRequestAbilities } from './application/policies/ai-request.ability';
 
 @Module({
   imports: [AIApplicationModule, AIThrottleModule, RateLimitConfigModule],
@@ -14,7 +15,11 @@ import { defineAiConfigurationAbilities } from './application/policies/ai-config
   providers: [
     {
       provide: AbilityFactory,
-      useFactory: () => new AbilityFactory([defineAiConfigurationAbilities]),
+      useFactory: () =>
+        new AbilityFactory([
+          defineAiConfigurationAbilities,
+          defineAIRequestAbilities,
+        ]),
     },
     PoliciesGuard,
   ],

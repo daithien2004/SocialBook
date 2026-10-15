@@ -1,5 +1,5 @@
 import { ForbiddenError } from '@casl/ability';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Transactional } from '@nestjs-cls/transactional';
 import { IMediaPort } from '@/modules/media/domain/public-api';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
@@ -12,7 +12,7 @@ import { AuthorErrorMessages } from '../../error-messages';
 import { CreateAuthorCommand } from './create-author.command';
 
 @CommandHandler(CreateAuthorCommand)
-export class CreateAuthorHandler {
+export class CreateAuthorHandler implements ICommandHandler<CreateAuthorCommand> {
   constructor(
     private readonly authorRepository: AuthorRepository,
     private readonly idGenerator: IIdGenerator,

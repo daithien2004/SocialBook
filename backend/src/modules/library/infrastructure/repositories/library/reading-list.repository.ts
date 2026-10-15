@@ -1,19 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
-import { Prisma } from '@/core/database/generated/prisma/client';
 import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
-import {
-  ReadingList,
-  ReadingStatus,
-} from '@/modules/library/domain/library/entities/reading-list.entity';
-import { LibraryItemReadModel } from '@/modules/library/domain/library/read-models/library-item.read-model';
+import { ReadingList } from '@/modules/library/domain/library/entities/reading-list.entity';
 import { IReadingListRepository } from '@/modules/library/domain/library/repositories/reading-list.repository.interface';
 import { BookId } from '@/modules/library/domain/library/value-objects/book-id.vo';
 import { UserId } from '@/modules/library/domain/library/value-objects/user-id.vo';
 import {
-  LIBRARY_ITEM_WITH_RELATIONS,
   READING_LIST_WITH_RELATIONS,
-  toLibraryItemReadModel,
   toReadingListDomain,
 } from './library.mapper';
 
@@ -82,60 +75,5 @@ export class ReadingListRepository implements IReadingListRepository {
       where: { userId: userId.toString(), bookId: bookId.toString() },
     });
     return count > 0;
-  }
-
-  countByCollectionId(collectionId: string): Promise<number> {
-    return this.transactionHost.tx.readingListCollection.count({
-      where: { collectionId },
-    });
-  }
-
-  async findByCollectionId(
-    collectionId: string,
-  ): Promise<LibraryItemReadModel[]> {
-    const rows = await this.transactionHost.tx.readingList.findMany({
-      where: { collections: { some: { collectionId } } },
-      include: LIBRARY_ITEM_WITH_RELATIONS,
-      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
-    });
-    return rows.map((row) => toLibraryItemReadModel(row));
-  }
-
-  async findDetailByUserIdAndBookId(
-    userId: UserId,
-    bookId: BookId,
-  ): Promise<LibraryItemReadModel | null> {
-    const row = await this.transactionHost.tx.readingList.findUnique({
-      where: {
-        userId_bookId: {
-          userId: userId.toString(),
-          bookId: bookId.toString(),
-        },
-      },
-      include: LIBRARY_ITEM_WITH_RELATIONS,
-    });
-    return row ? toLibraryItemReadModel(row) : null;
-  }
-
-  async findAllDetailByUserId(
-    userId: UserId,
-    status?: ReadingStatus | ReadingStatus[],
-    limit?: number,
-  ): Promise<LibraryItemReadModel[]> {
-    const statusFilter: Prisma.ReadingListWhereInput['status'] = Array.isArray(
-      status,
-    )
-      ? { in: status }
-      : status;
-    const rows = await this.transactionHost.tx.readingList.findMany({
-      where: {
-        userId: userId.toString(),
-        ...(statusFilter ? { status: statusFilter } : {}),
-      },
-      include: LIBRARY_ITEM_WITH_RELATIONS,
-      orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
-      ...(limit ? { take: limit } : {}),
-    });
-    return rows.map((row) => toLibraryItemReadModel(row));
   }
 }

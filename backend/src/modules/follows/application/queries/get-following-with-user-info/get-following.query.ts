@@ -1,8 +1,13 @@
 import { Query } from '@nestjs/cqrs';
-import { PaginatedFollowsWithUserInfo } from '@/modules/follows/domain/repositories/follow.repository.interface';
+import type { Actor } from '@/shared/casl/actor';
+import type { PageResult } from '@/shared/domain/pagination.types';
+import type { FollowWithUserInfoResult } from '../../follow.result';
 
-export class GetFollowingQuery extends Query<PaginatedFollowsWithUserInfo> {
+export class GetFollowingQuery extends Query<
+  PageResult<FollowWithUserInfoResult>
+> {
   constructor(
+    public readonly actor: Actor,
     public readonly userId: string,
     public readonly page: number = 1,
     public readonly limit: number = 20,

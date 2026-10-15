@@ -11,8 +11,6 @@ import { GenresInfrastructureModule } from '@/modules/genres';
 import { ScoringService } from './services/scoring.service';
 import { AnalyticsListener } from './listeners/analytics.listener';
 import { BookAnalyticsListener } from './listeners/book-analytics.listener';
-import { TtsAnalyticsListener } from './listeners/tts-analytics.listener';
-import { TextToSpeechInfrastructureModule } from '@/modules/text-to-speech/infrastructure/public-api';
 import { TargetResolutionModule } from '@/modules/target-resolution/application/public-api';
 import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 
@@ -23,7 +21,6 @@ import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
     IdGeneratorModule,
     BooksRepositoryModule,
     GenresInfrastructureModule,
-    TextToSpeechInfrastructureModule,
     TargetResolutionModule,
   ],
   providers: [
@@ -34,13 +31,6 @@ import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
     ScoringService,
     AnalyticsListener,
     BookAnalyticsListener,
-    TtsAnalyticsListener,
-  ],
-  exports: [
-    TrackUserEventHandler,
-    GetTrendingBooksHandler,
-    GetTopActiveReadersHandler,
-    ScoringService,
   ],
 })
 export class AnalyticsApplicationModule {}

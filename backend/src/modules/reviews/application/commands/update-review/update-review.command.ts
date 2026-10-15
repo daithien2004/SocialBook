@@ -1,13 +1,13 @@
 import { Command } from '@nestjs/cqrs';
-import { UpdateReviewDto } from '@/modules/reviews/presentation/dto/update-review.dto';
-import type { AppAbility } from '@socialbook/shared';
-import { Review } from '@/modules/reviews/domain/entities/review.entity';
+import type { Actor } from '@/shared/casl/actor';
+import type { UpdateReviewDto } from '@/modules/reviews/application/dto/update-review.dto';
+import type { ReviewReadModel } from '../../read-models/review.read-model';
 
-export class UpdateReviewCommand extends Command<Review> {
+export class UpdateReviewCommand extends Command<ReviewReadModel> {
   constructor(
+    public readonly actor: Actor,
     public readonly reviewId: string,
     public readonly dto: UpdateReviewDto,
-    public readonly ability: AppAbility,
   ) {
     super();
   }

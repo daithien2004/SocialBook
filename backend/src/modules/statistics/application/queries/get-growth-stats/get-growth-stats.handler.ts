@@ -1,18 +1,18 @@
-import { GetGrowthStatsQuery } from './get-growth-stats.query';
-import { QueryHandler } from '@nestjs/cqrs';
+﻿import { GetGrowthStatsQuery } from './get-growth-stats.query';
+import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { StatisticsReadRepository } from '@/modules/statistics/application/ports/statistics-read.repository';
 import type { GrowthMetricReadModel } from '@/modules/statistics/application/read-models/statistics.read-model';
-import { assertStatisticsReadAllowed } from '@/modules/statistics/application/assert-statistics-read-policy';
+import { assertCanReadStatistics } from '../../policies/statistics-access.policy';
 
 @QueryHandler(GetGrowthStatsQuery)
-export class GetGrowthStatsHandler {
+export class GetGrowthStatsHandler implements IQueryHandler<GetGrowthStatsQuery> {
   constructor(
     private readonly statisticsReadRepository: StatisticsReadRepository,
   ) {}
 
   async execute(query: GetGrowthStatsQuery): Promise<GrowthMetricReadModel[]> {
+    assertCanReadStatistics(query.actor);
     const { days, groupBy } = query;
-    assertStatisticsReadAllowed(query.actor);
     const startDate = new Date();
     startDate.setHours(0, 0, 0, 0);
 

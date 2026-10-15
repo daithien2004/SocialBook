@@ -98,10 +98,10 @@ export class BookResponseDto {
       id: result.id,
       title: result.title,
       slug: result.slug,
-      authorId: result.authorId._id,
+      authorId: result.authorId.id,
       authorName: result.authorId.name,
       genres: result.genres.map((g) => ({
-        id: g._id,
+        id: g.id,
         name: g.name,
         slug: g.slug,
       })),

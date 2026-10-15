@@ -1,203 +1,131 @@
-import { ApiTags } from '@nestjs/swagger';
-import { buildPaginationMeta } from '@/shared/domain/pagination.types';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
-  HttpCode,
-  Controller,
-  Post,
   Body,
-  UseGuards,
-  Get,
-  Param,
-  Patch,
+  Controller,
   Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
   ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
-
-import { JwtAuthGuard } from '@/shared/platform/guards/jwt-auth.guard';
-import { CurrentUser } from '@/shared/platform/decorators/current-user.decorator';
-import { CurrentAbility } from '@/shared/platform/decorators/current-ability.decorator';
-import type { AppAbility } from '@socialbook/shared';
-import { CreateUserHighlightCommand } from '@/modules/user-highlights/application/commands/create-user-highlight/create-user-highlight.command';
-import { UpdateUserHighlightCommand } from '@/modules/user-highlights/application/commands/update-user-highlight/update-user-highlight.command';
-import { DeleteUserHighlightCommand } from '@/modules/user-highlights/application/commands/delete-user-highlight/delete-user-highlight.command';
-import { GetUserHighlightsQuery } from '@/modules/user-highlights/application/queries/get-user-highlights/get-user-highlights.query';
-import { CreateUserHighlightDto } from './dto/create-user-highlight.dto';
-import { UpdateUserHighlightDto } from './dto/update-user-highlight.dto';
-import {
-  ApiPaginatedResponse,
-  ApiProblemResponses,
-} from '@/shared/platform/decorators/api-response.decorators';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
-  ApiProperty,
-  ApiPropertyOptional,
   ApiOperation,
+  ApiTags,
 } from '@nestjs/swagger';
-
-class UserHighlightResponseDto {
-  @ApiProperty()
-  id!: string;
-
-  @ApiPropertyOptional()
-  bookId?: string;
-
-  @ApiPropertyOptional()
-  chapterId?: string;
-
-  @ApiPropertyOptional()
-  paragraphId?: string;
-
-  @ApiPropertyOptional()
-  content?: string;
-
-  @ApiPropertyOptional()
-  color?: string;
-
-  @ApiPropertyOptional()
-  note?: string;
-
-  @ApiPropertyOptional()
-  createdAt?: Date;
-
-  @ApiPropertyOptional()
-  updatedAt?: Date;
-}
+import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
+import type { Actor } from '@/shared/casl/actor';
+import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
+import type { PaginatedResult } from '@/shared/domain/pagination.types';
+import { paginate } from '@/shared/domain/pagination.types';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
+import {
+  ApiPaginatedResponse,
+  ApiProblemResponses,
+} from '@/shared/platform/decorators/api-response.decorators';
+import { CreateUserHighlightDto } from './dto/create-user-highlight.dto';
+import { UpdateUserHighlightDto } from './dto/update-user-highlight.dto';
+import { UserHighlightQueryDto } from './dto/user-highlight-query.dto';
+import { UserHighlightResponseDto } from './dto/user-highlight.response.dto';
+import { DeleteUserHighlightCommand } from '../application/commands/delete-user-highlight/delete-user-highlight.command';
+import { GetUserHighlightQuery } from '../application/queries/get-user-highlight/get-user-highlight.query';
 
 @ApiProblemResponses()
 @ApiTags('User Highlights')
+@UseGuards(PoliciesGuard)
 @Controller('user-highlights')
-@UseGuards(JwtAuthGuard)
 export class UserHighlightsController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
   ) {}
 
-  @ApiOperation({ summary: 'Create Highlight' })
+  @ApiOperation({ summary: 'Create highlight' })
+  @CheckPolicy('create', 'UserHighlight')
   @Post()
   @ApiCreatedResponse({ type: UserHighlightResponseDto })
   async createHighlight(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Body() dto: CreateUserHighlightDto,
-  ) {
-    const command = new CreateUserHighlightCommand(
-      userId,
-      dto.bookId,
-      dto.chapterId,
-      dto.paragraphId,
-      dto.content,
-      dto.color,
-      dto.note,
+  ): Promise<UserHighlightResponseDto> {
+    const id = await this.commandBus.execute(dto.toCommand(actor));
+    const result = await this.queryBus.execute(
+      new GetUserHighlightQuery(actor, id),
     );
-    const highlight = await this.commandBus.execute(command);
-
-    return {
-      id: highlight.id,
-      bookId: highlight.bookId,
-      chapterId: highlight.chapterId,
-      paragraphId: highlight.paragraphId,
-      content: highlight.content,
-      color: highlight.color,
-      note: highlight.note,
-      createdAt: highlight.createdAt,
-    };
+    if (!result) throw new NotFoundDomainException('USER_HIGHLIGHT_NOT_FOUND');
+    return UserHighlightResponseDto.fromReadModel(result);
   }
 
-  @ApiOperation({ summary: 'Get Highlights By Book' })
+  @ApiOperation({ summary: 'Get highlights by book' })
+  @CheckPolicy('read', 'UserHighlight')
   @Get('book/:bookId')
   @ApiPaginatedResponse(UserHighlightResponseDto, 'offset')
   async getHighlightsByBook(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Param('bookId', new ParseUUIDPipe({ version: '4' })) bookId: string,
-  ) {
-    const query = new GetUserHighlightsQuery(userId, bookId, undefined);
-    const highlights = await this.queryBus.execute(query);
-    const data = highlights.map((h: any) => ({
-      id: h.id,
-      bookId: h.bookId,
-      chapterId: h.chapterId,
-      paragraphId: h.paragraphId,
-      content: h.content,
-      color: h.color,
-      note: h.note,
-      createdAt: h.createdAt,
-      updatedAt: h.updatedAt,
-    }));
-    return {
-      data: data,
-      meta: buildPaginationMeta(1, Math.max(data.length, 1), data.length),
-    };
+    @Query() pagination: UserHighlightQueryDto,
+  ): Promise<PaginatedResult<UserHighlightResponseDto>> {
+    const page = await this.queryBus.execute(
+      pagination.toBookQuery(actor, bookId),
+    );
+    return paginate(page.items, page.total, pagination, (items) =>
+      UserHighlightResponseDto.fromReadModels(items),
+    );
   }
 
-  @ApiOperation({ summary: 'Get Highlights By Chapter' })
+  @ApiOperation({ summary: 'Get highlights by chapter' })
+  @CheckPolicy('read', 'UserHighlight')
   @Get('chapter/:chapterId')
   @ApiPaginatedResponse(UserHighlightResponseDto, 'offset')
   async getHighlightsByChapter(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Param('chapterId', new ParseUUIDPipe({ version: '4' })) chapterId: string,
-  ) {
-    const query = new GetUserHighlightsQuery(userId, undefined, chapterId);
-    const highlights = await this.queryBus.execute(query);
-    const data = highlights.map((h: any) => ({
-      id: h.id,
-      bookId: h.bookId,
-      chapterId: h.chapterId,
-      paragraphId: h.paragraphId,
-      content: h.content,
-      color: h.color,
-      note: h.note,
-      createdAt: h.createdAt,
-      updatedAt: h.updatedAt,
-    }));
-    return {
-      data: data,
-      meta: buildPaginationMeta(1, Math.max(data.length, 1), data.length),
-    };
+    @Query() pagination: UserHighlightQueryDto,
+  ): Promise<PaginatedResult<UserHighlightResponseDto>> {
+    const page = await this.queryBus.execute(
+      pagination.toChapterQuery(actor, chapterId),
+    );
+    return paginate(page.items, page.total, pagination, (items) =>
+      UserHighlightResponseDto.fromReadModels(items),
+    );
   }
 
-  @ApiOperation({ summary: 'Update Highlight' })
+  @ApiOperation({ summary: 'Update highlight' })
+  @CheckPolicy('update', 'UserHighlight')
   @Patch(':id')
   @ApiOkResponse({ type: UserHighlightResponseDto })
   async updateHighlight(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Param('id', new ParseUUIDPipe({ version: '4' })) highlightId: string,
-    @CurrentAbility() ability: AppAbility,
     @Body() dto: UpdateUserHighlightDto,
-  ) {
-    const command = new UpdateUserHighlightCommand(
-      highlightId,
-      userId,
-      ability,
-      dto.color,
-      dto.note,
+  ): Promise<UserHighlightResponseDto> {
+    await this.commandBus.execute(dto.toCommand(actor, highlightId));
+    const result = await this.queryBus.execute(
+      new GetUserHighlightQuery(actor, highlightId),
     );
-    const highlight = await this.commandBus.execute(command);
-
-    return {
-      id: highlight.id,
-      color: highlight.color,
-      note: highlight.note,
-      updatedAt: highlight.updatedAt,
-    };
+    if (!result) throw new NotFoundDomainException('USER_HIGHLIGHT_NOT_FOUND');
+    return UserHighlightResponseDto.fromReadModel(result);
   }
 
-  @ApiOperation({ summary: 'Delete Highlight' })
-  @HttpCode(204)
+  @ApiOperation({ summary: 'Delete highlight' })
+  @CheckPolicy('delete', 'UserHighlight')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
   @ApiNoContentResponse()
   async deleteHighlight(
-    @CurrentUser('id') userId: string,
+    @CurrentActor() actor: Actor,
     @Param('id', new ParseUUIDPipe({ version: '4' })) highlightId: string,
-    @CurrentAbility() ability: AppAbility,
-  ) {
-    const command = new DeleteUserHighlightCommand(
-      highlightId,
-      userId,
-      ability,
+  ): Promise<void> {
+    await this.commandBus.execute(
+      new DeleteUserHighlightCommand(highlightId, actor),
     );
-    await this.commandBus.execute(command);
   }
 }

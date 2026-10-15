@@ -8,6 +8,5 @@ import { EmailModule } from '@/modules/auth/infrastructure/email/email.module';
 @Module({
   imports: [CqrsModule, OtpRepositoryModule, EmailModule],
   providers: [SendOtpHandler, VerifyOtpHandler],
-  exports: [SendOtpHandler, VerifyOtpHandler],
 })
 export class OtpApplicationModule {}

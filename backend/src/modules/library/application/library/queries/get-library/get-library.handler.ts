@@ -1,39 +1,43 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { ReadingStatus } from '@/modules/library/domain/library/entities/reading-list.entity';
-import { LibraryItemReadModel } from '@/modules/library/domain/library/read-models/library-item.read-model';
-import { IReadingListRepository } from '@/modules/library/domain/library/repositories/reading-list.repository.interface';
+import type { LibraryItemReadModel } from '@/modules/library/application/read-models/library-item.read-model';
+import { LibraryReadRepository } from '@/modules/library/application/ports/library-read.repository';
 import { IReadingProgressRepository } from '@/modules/library/domain/library/repositories/reading-progress.repository.interface';
 import { BookId } from '@/modules/library/domain/library/value-objects/book-id.vo';
 import { UserId } from '@/modules/library/domain/library/value-objects/user-id.vo';
-import { IChapterRepository } from '@/modules/chapters/domain/public-api';
+import { IChapterReadRepository } from '@/modules/chapters';
 import { GetLibraryQuery } from './get-library.query';
+import { assertLibraryAccess } from '@/modules/library/application/policies/library-access.policy';
+import type { PageResult } from '@/shared/domain/pagination.types';
 
 @QueryHandler(GetLibraryQuery)
 export class GetLibraryHandler implements IQueryHandler<
   GetLibraryQuery,
-  LibraryItemReadModel[]
+  PageResult<LibraryItemReadModel>
 > {
   constructor(
-    private readonly readingListRepository: IReadingListRepository,
+    private readonly libraryReadRepository: LibraryReadRepository,
     private readonly readingProgressRepository: IReadingProgressRepository,
-    private readonly chapterRepository: IChapterRepository,
+    private readonly chapterRepository: IChapterReadRepository,
   ) {}
 
-  async execute(query: GetLibraryQuery): Promise<LibraryItemReadModel[]> {
+  async execute(
+    query: GetLibraryQuery,
+  ): Promise<PageResult<LibraryItemReadModel>> {
+    assertLibraryAccess(query.actor, 'read', query.userId);
     const userId = UserId.create(query.userId);
-    const status = query.status || ReadingStatus.READING;
+    const status = query.status;
 
-    const items = await this.readingListRepository.findAllDetailByUserId(
-      userId,
+    const page = await this.libraryReadRepository.findPageByUser(
+      userId.toString(),
       status,
-      query.limit,
+      query.page,
     );
 
-    if (items.length > 0) {
-      await this.enrichChapterInfo(userId, items);
+    if (page.items.length > 0) {
+      await this.enrichChapterInfo(userId, page.items);
     }
 
-    return items;
+    return page;
   }
 
   private async enrichChapterInfo(

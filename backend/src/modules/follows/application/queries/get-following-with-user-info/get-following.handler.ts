@@ -1,10 +1,10 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import {
-  IFollowRepository,
-  PaginatedFollowsWithUserInfo,
-} from '@/modules/follows/domain/repositories/follow.repository.interface';
+import { IFollowRepository } from '@/modules/follows/domain/repositories/follow.repository.interface';
 import { GetFollowingQuery } from './get-following.query';
+import { ForbiddenDomainException } from '@/shared/domain/common-exceptions';
+import type { PageResult } from '@/shared/domain/pagination.types';
+import type { FollowWithUserInfoResult } from '../../follow.result';
 
 @QueryHandler(GetFollowingQuery)
 export class GetFollowingHandler implements IQueryHandler<GetFollowingQuery> {
@@ -14,8 +14,11 @@ export class GetFollowingHandler implements IQueryHandler<GetFollowingQuery> {
 
   async execute(
     query: GetFollowingQuery,
-  ): Promise<PaginatedFollowsWithUserInfo> {
+  ): Promise<PageResult<FollowWithUserInfoResult>> {
     try {
+      if (!query.actor.ability.can('read', 'Follow')) {
+        throw new ForbiddenDomainException('FOLLOW_READ_FORBIDDEN');
+      }
       this.logger.log(`Getting following list for user ${query.userId}`);
       const result = await this.followRepository.findByUserWithUserInfo(
         query.userId,
@@ -25,7 +28,7 @@ export class GetFollowingHandler implements IQueryHandler<GetFollowingQuery> {
       this.logger.log(
         `Retrieved ${result.data.length} following for user ${query.userId}`,
       );
-      return result;
+      return { items: result.data, total: result.meta.total };
     } catch (error) {
       this.logger.error(
         `Failed to get following list for user ${query.userId}`,

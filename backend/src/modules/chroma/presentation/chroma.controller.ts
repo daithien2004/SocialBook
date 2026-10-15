@@ -8,20 +8,27 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
+import type { Actor } from '@/shared/casl/actor';
+import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
 
 import { Public } from '@/shared/platform/decorators/custom.decorator';
-import { Roles } from '@/shared/platform/decorators/roles.decorator';
-import { RolesGuard } from '@/shared/platform/guards/roles.guard';
 import { AIThrottleGuard } from '@/modules/ai/presentation/public-api';
 
 import { BatchIndexDto } from '@/modules/chroma/presentation/dto/batch-index.dto';
 import { IndexDocumentDto } from '@/modules/chroma/presentation/dto/index-document.dto';
 import { SearchQueryDto } from '@/modules/chroma/presentation/dto/search-query.dto';
 import { SearchResponseDto } from '@/modules/chroma/presentation/dto/search.response.dto';
+import {
+  AskChatbotResponseDto,
+  BatchIndexResponseDto,
+  ClearCollectionResponseDto,
+  CollectionStatsResponseDto,
+  IndexDocumentResponseDto,
+  ReindexResponseDto,
+} from '@/modules/chroma/presentation/dto/chroma.response.dto';
 
-import { BatchIndexCommand } from '@/modules/chroma/application/commands/batch-index/batch-index.command';
-import { IndexDocumentCommand } from '@/modules/chroma/application/commands/index-document/index-document.command';
-import { SearchCommand } from '@/modules/chroma/application/commands/search/search.command';
 import { AskChatbotCommand } from '@/modules/chroma/application/commands/ask-chatbot/ask-chatbot.command';
 import { ClearCollectionCommand } from '@/modules/chroma/application/commands/clear-collection/clear-collection.command';
 import { ReindexAllCommand } from '@/modules/chroma/application/commands/reindex-all/reindex-all.command';
@@ -35,6 +42,7 @@ import {
 
 @ApiProblemResponses()
 @ApiTags('Chroma')
+@UseGuards(PoliciesGuard)
 @Controller('chroma')
 export class ChromaController {
   constructor(
@@ -43,129 +51,88 @@ export class ChromaController {
   ) {}
 
   @ApiOperation({ summary: 'Search' })
+  @CheckPolicy('read', 'Search')
   @Public()
   @Post('search')
-  async search(@Body() searchQuery: SearchQueryDto) {
-    const command = new SearchCommand(
-      searchQuery.query,
-      searchQuery.contentType,
-      searchQuery.filters,
-      searchQuery.limit,
-      searchQuery.threshold,
-      searchQuery.embedding,
-    );
+  async search(
+    @CurrentActor() actor: Actor,
+    @Body() searchQuery: SearchQueryDto,
+  ) {
+    const command = searchQuery.toQuery(actor);
 
-    const result = await this.commandBus.execute(command);
+    const result = await this.queryBus.execute(command);
 
     return new SearchResponseDto(result.results, result.query, result.total);
   }
 
   @ApiOperation({ summary: 'Index Document' })
-  @Roles('admin')
-  @UseGuards(RolesGuard)
+  @CheckPolicy('manage', 'Search')
   @Post('index')
-  @ApiCreatedResponse({
-    schema: {
-      type: 'object',
-      required: ['success'],
-      properties: {
-        success: { type: 'boolean' },
-        documentId: { type: 'string' },
-        error: { type: 'string' },
-      },
-    },
-  })
-  async indexDocument(@Body() indexDocumentDto: IndexDocumentDto) {
-    const command = new IndexDocumentCommand(
-      indexDocumentDto.contentId,
-      indexDocumentDto.contentType,
-      indexDocumentDto.content,
-      indexDocumentDto.metadata,
-      indexDocumentDto.embedding,
-    );
+  @ApiCreatedResponse({ type: IndexDocumentResponseDto })
+  async indexDocument(
+    @CurrentActor() actor: Actor,
+    @Body() indexDocumentDto: IndexDocumentDto,
+  ): Promise<IndexDocumentResponseDto> {
+    const command = indexDocumentDto.toCommand(actor);
 
     const result = await this.commandBus.execute(command);
 
-    return result;
+    return IndexDocumentResponseDto.fromResult(result);
   }
 
   @ApiOperation({ summary: 'Batch index Index' })
-  @Roles('admin')
-  @UseGuards(RolesGuard)
+  @CheckPolicy('manage', 'Search')
   @Post('batch-index')
   @HttpCode(200)
-  @ApiOkResponse({
-    schema: {
-      type: 'object',
-      required: ['totalProcessed', 'successful', 'failed', 'errors'],
-      properties: {
-        totalProcessed: { type: 'integer' },
-        successful: { type: 'integer' },
-        failed: { type: 'integer' },
-        errors: {
-          type: 'array',
-          items: {
-            type: 'object',
-            required: ['contentId', 'error'],
-            properties: {
-              contentId: { type: 'string' },
-              error: { type: 'string' },
-            },
-          },
-        },
-      },
-    },
-  })
-  async batchIndex(@Body() batchIndexDto: BatchIndexDto) {
-    const command = new BatchIndexCommand(
-      batchIndexDto.contentIds,
-      batchIndexDto.contentType,
-      batchIndexDto.forceReindex,
-    );
+  @ApiOkResponse({ type: BatchIndexResponseDto })
+  async batchIndex(
+    @CurrentActor() actor: Actor,
+    @Body() batchIndexDto: BatchIndexDto,
+  ): Promise<BatchIndexResponseDto> {
+    const command = batchIndexDto.toCommand(actor);
 
     const result = await this.commandBus.execute(command);
 
-    return result;
+    return BatchIndexResponseDto.fromResult(result);
   }
 
   @ApiOperation({ summary: 'Reindex All' })
-  @Roles('admin')
-  @UseGuards(RolesGuard)
+  @CheckPolicy('manage', 'Search')
   @Post('reindex-all')
-  async reindexAll() {
-    const command = new ReindexAllCommand();
+  @ApiOkResponse({ type: ReindexResponseDto })
+  async reindexAll(@CurrentActor() actor: Actor): Promise<ReindexResponseDto> {
+    const command = new ReindexAllCommand(actor);
     const result = await this.commandBus.execute(command);
 
-    return result;
+    return ReindexResponseDto.fromResult(result);
   }
 
   @ApiOperation({ summary: 'Clear Collection' })
-  @Roles('admin')
-  @UseGuards(RolesGuard)
+  @CheckPolicy('manage', 'Search')
   @Post('clear')
   @HttpCode(200)
-  @ApiOkResponse({
-    schema: {
-      type: 'object',
-      required: ['success'],
-      properties: { success: { type: 'boolean' } },
-    },
-  })
-  async clearCollection() {
-    const command = new ClearCollectionCommand();
+  @ApiOkResponse({ type: ClearCollectionResponseDto })
+  async clearCollection(
+    @CurrentActor() actor: Actor,
+  ): Promise<ClearCollectionResponseDto> {
+    const command = new ClearCollectionCommand(actor);
     const result = await this.commandBus.execute(command);
 
-    return result;
+    return ClearCollectionResponseDto.fromResult(result);
   }
 
   @ApiOperation({ summary: 'Get Stats' })
+  @CheckPolicy('read', 'Search')
   @Public()
   @Get('stats')
-  async getStats() {
-    const query = new GetCollectionStatsQuery();
+  @ApiOkResponse({ type: CollectionStatsResponseDto })
+  async getStats(
+    @CurrentActor() actor: Actor,
+  ): Promise<CollectionStatsResponseDto> {
+    const query = new GetCollectionStatsQuery(actor);
     const stats = await this.queryBus.execute(query);
 
-    return stats;
+    return CollectionStatsResponseDto.fromResult(stats);
   }
 
   @ApiOperation({ summary: 'Check health' })
@@ -189,12 +156,17 @@ export class ChromaController {
   }
 
   @ApiOperation({ summary: 'Ask Chatbot' })
+  @CheckPolicy('create', 'AIRequest')
   @Public()
   @UseGuards(AIThrottleGuard)
   @Post('chat/ask')
-  async askChatbot(@Body() body: { question: string }) {
-    const command = new AskChatbotCommand(body.question);
+  @ApiOkResponse({ type: AskChatbotResponseDto })
+  async askChatbot(
+    @CurrentActor() actor: Actor,
+    @Body() body: { question: string },
+  ): Promise<AskChatbotResponseDto> {
+    const command = new AskChatbotCommand(actor, body.question);
     const result = await this.commandBus.execute(command);
-    return result;
+    return AskChatbotResponseDto.fromResult(result);
   }
 }

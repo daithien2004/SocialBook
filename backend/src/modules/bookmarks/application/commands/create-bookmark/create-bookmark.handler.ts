@@ -1,13 +1,13 @@
-﻿import { ForbiddenError } from '@casl/ability';
-import { CommandHandler } from '@nestjs/cqrs';
+﻿import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Transactional } from '@nestjs-cls/transactional';
+import { ForbiddenError } from '@casl/ability';
 import { IIdGenerator } from '@/shared/domain/id-generator.interface';
 import { BookmarkRepository } from '@/modules/bookmarks/domain/repositories/bookmark.repository';
 import { Bookmark } from '@/modules/bookmarks/domain/entities/bookmark.entity';
 import { CreateBookmarkCommand } from './create-bookmark.command';
 
 @CommandHandler(CreateBookmarkCommand)
-export class CreateBookmarkHandler {
+export class CreateBookmarkHandler implements ICommandHandler<CreateBookmarkCommand> {
   constructor(
     private readonly bookmarkRepository: BookmarkRepository,
     private readonly idGenerator: IIdGenerator,

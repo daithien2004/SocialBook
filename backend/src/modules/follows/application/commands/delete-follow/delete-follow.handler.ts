@@ -8,6 +8,8 @@ import { IFollowRepository } from '@/modules/follows/domain/repositories/follow.
 import { UserId } from '@/modules/follows/domain/value-objects/user-id.vo';
 import { TargetId } from '@/modules/follows/domain/value-objects/target-id.vo';
 import { DeleteFollowCommand } from './delete-follow.command';
+import { subject } from '@casl/ability';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(DeleteFollowCommand)
 export class DeleteFollowHandler implements ICommandHandler<DeleteFollowCommand> {
@@ -15,11 +17,12 @@ export class DeleteFollowHandler implements ICommandHandler<DeleteFollowCommand>
 
   constructor(private readonly followRepository: IFollowRepository) {}
 
+  @Transactional()
   async execute(command: DeleteFollowCommand) {
     try {
       // Find the existing follow
       const existingFollow = await this.followRepository.exists(
-        UserId.create(command.userId),
+        UserId.create(command.actor.userId),
         TargetId.create(command.targetId),
       );
 
@@ -28,10 +31,17 @@ export class DeleteFollowHandler implements ICommandHandler<DeleteFollowCommand>
       }
 
       // Check if user can delete this follow (only the follower can delete)
-      if (existingFollow.userId.getValue() !== command.userId) {
-        throw new ForbiddenDomainException(
-          'You can only delete your own follows',
-        );
+      if (
+        !command.actor.ability.can(
+          'update',
+          subject('Follow', {
+            id: existingFollow.id.toString(),
+            userId: existingFollow.userId.toString(),
+            targetId: existingFollow.targetId.toString(),
+          }),
+        )
+      ) {
+        throw new ForbiddenDomainException('FOLLOW_UPDATE_FORBIDDEN');
       }
 
       // Deactivate the follow (soft delete)
@@ -39,13 +49,13 @@ export class DeleteFollowHandler implements ICommandHandler<DeleteFollowCommand>
       await this.followRepository.save(existingFollow);
 
       this.logger.log(
-        `Follow deactivated successfully: ${existingFollow.id.toString()} (User: ${command.userId} -> Target: ${command.targetId})`,
+        `Follow deactivated successfully: ${existingFollow.id.toString()} (User: ${command.actor.userId} -> Target: ${command.targetId})`,
       );
 
       return { success: true };
     } catch (error) {
       this.logger.error(
-        `Failed to delete follow: ${command.userId} -> ${command.targetId}`,
+        `Failed to delete follow: ${command.actor.userId} -> ${command.targetId}`,
         error,
       );
       throw error;

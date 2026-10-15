@@ -1,17 +1,14 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
-import { PrismaService } from '@/core/database/postgres/prisma.service';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
 import {
   BOOK_WITH_RELATIONS,
   PrismaBookMapper,
 } from '@/modules/books/infrastructure/public-api';
-import { ChapterResult } from '@/modules/chapters/application/chapters/queries/get-chapters/get-chapters.result';
+import { ChapterReadModel } from '@/modules/chapters/application/read-models/chapter.read-model';
 import { IChapterReadRepository } from '@/modules/chapters/application/ports/chapter-read.repository';
 import { ChapterDetailReadModel } from '@/modules/chapters/application/read-models/chapter-detail.read-model';
-import { ChapterListReadModel } from '@/modules/chapters/domain/chapters/read-models/chapter-list.read-model';
+import { ChapterListReadModel } from '@/modules/chapters/application/read-models/chapter-list.read-model';
 import {
   ChapterFilter,
   ChapterSortField,
@@ -27,6 +24,9 @@ import {
   buildPaginationMeta,
 } from '@/shared/domain/pagination.types';
 import { CHAPTER_WITH_PARAGRAPHS } from './chapter.mapper';
+import { accessibleBy } from '@/shared/casl/accessible-by';
+import type { AppAbility } from '@/shared/casl/app-ability';
+import type { ChapterAudioSourceReadModel } from '@/modules/chapters/application/read-models/chapter-audio-source.read-model';
 
 interface ChapterPageRow extends PrismaChapter {
   paragraphs: Array<{ id: string; content: string; orderIndex: number }>;
@@ -46,11 +46,50 @@ function isChapterSortField(value: string): value is ChapterSortField {
 
 @Injectable()
 export class ChapterReadRepository implements IChapterReadRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
+  ) {}
+
+  async findAudioSourceById(
+    chapterId: string,
+  ): Promise<ChapterAudioSourceReadModel | null> {
+    const row = await this.transactionHost.tx.chapter.findFirst({
+      where: { id: chapterId, isDeleted: false },
+      select: {
+        id: true,
+        bookId: true,
+        paragraphs: {
+          select: { content: true },
+          orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
+        },
+      },
+    });
+    return row;
+  }
+
+  async findAudioSourcesByBookId(
+    bookId: string,
+    limit: number,
+  ): Promise<ChapterAudioSourceReadModel[]> {
+    const rows = await this.transactionHost.tx.chapter.findMany({
+      where: { bookId, isDeleted: false },
+      select: {
+        id: true,
+        bookId: true,
+        paragraphs: {
+          select: { content: true },
+          orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
+        },
+      },
+      orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
+      take: limit,
+    });
+    return rows;
+  }
 
   async findSlugsByIds(chapterIds: string[]): Promise<Map<string, string>> {
     if (chapterIds.length === 0) return new Map();
-    const rows = await this.prisma.chapter.findMany({
+    const rows = await this.transactionHost.tx.chapter.findMany({
       where: { id: { in: chapterIds }, isDeleted: false },
       select: { id: true, slug: true },
     });
@@ -58,17 +97,28 @@ export class ChapterReadRepository implements IChapterReadRepository {
   }
 
   async findDetailBySlug(
+    ability: AppAbility,
     chapterSlug: string,
     bookSlug: string,
   ): Promise<ChapterDetailReadModel | null> {
-    const book = await this.prisma.book.findFirst({
-      where: { slug: bookSlug, isDeleted: false },
+    const book = await this.transactionHost.tx.book.findFirst({
+      where: {
+        AND: [
+          { slug: bookSlug, isDeleted: false },
+          accessibleBy(ability).ofType('Book'),
+        ],
+      },
       include: BOOK_WITH_RELATIONS,
     });
     if (!book) return null;
 
-    const chapter = await this.prisma.chapter.findFirst({
-      where: { slug: chapterSlug, bookId: book.id, isDeleted: false },
+    const chapter = await this.transactionHost.tx.chapter.findFirst({
+      where: {
+        AND: [
+          { slug: chapterSlug, bookId: book.id, isDeleted: false },
+          accessibleBy(ability).ofType('Chapter'),
+        ],
+      },
       include: CHAPTER_WITH_PARAGRAPHS,
     });
     if (!chapter) return null;
@@ -77,16 +127,59 @@ export class ChapterReadRepository implements IChapterReadRepository {
     return this.toDetail(book, chapter, navigation.previous, navigation.next);
   }
 
+  async findById(
+    ability: AppAbility,
+    chapterId: string,
+  ): Promise<ChapterReadModel | null> {
+    const row = await this.transactionHost.tx.chapter.findFirst({
+      where: {
+        AND: [
+          { id: chapterId, isDeleted: false },
+          accessibleBy(ability).ofType('Chapter'),
+        ],
+      },
+      include: CHAPTER_WITH_PARAGRAPHS,
+    });
+    return row ? this.toChapterReadModel(row) : null;
+  }
+
+  async isAccessibleBySlug(
+    ability: AppAbility,
+    chapterSlug: string,
+    bookSlug: string,
+  ): Promise<boolean> {
+    const chapter = await this.transactionHost.tx.chapter.findFirst({
+      where: {
+        AND: [
+          { slug: chapterSlug, isDeleted: false },
+          accessibleBy(ability).ofType('Chapter'),
+          {
+            book: {
+              is: {
+                AND: [
+                  { slug: bookSlug, isDeleted: false },
+                  accessibleBy(ability).ofType('Book'),
+                ],
+              },
+            },
+          },
+        ],
+      },
+      select: { id: true },
+    });
+    return chapter !== null;
+  }
+
   async findCurrentRoomChapterById(
     bookId: string,
     chapterId: string,
   ): Promise<ChapterDetailReadModel | null> {
     const [book, chapter] = await Promise.all([
-      this.prisma.book.findUnique({
+      this.transactionHost.tx.book.findUnique({
         where: { id: bookId },
         include: BOOK_WITH_RELATIONS,
       }),
-      this.prisma.chapter.findFirst({
+      this.transactionHost.tx.chapter.findFirst({
         where: { id: chapterId, bookId },
         include: CHAPTER_WITH_PARAGRAPHS,
       }),
@@ -101,13 +194,13 @@ export class ChapterReadRepository implements IChapterReadRepository {
     bookId: string,
     chapterSlug: string,
   ): Promise<ChapterDetailReadModel | null> {
-    const book = await this.prisma.book.findFirst({
+    const book = await this.transactionHost.tx.book.findFirst({
       where: { id: bookId, isDeleted: false },
       include: BOOK_WITH_RELATIONS,
     });
     if (!book) return null;
 
-    const chapter = await this.prisma.chapter.findFirst({
+    const chapter = await this.transactionHost.tx.chapter.findFirst({
       where: { bookId, slug: chapterSlug, isDeleted: false },
       include: CHAPTER_WITH_PARAGRAPHS,
     });
@@ -118,46 +211,58 @@ export class ChapterReadRepository implements IChapterReadRepository {
   }
 
   async findPaginated(
+    ability: AppAbility,
     chapterFilter: ChapterFilter,
     pagination: PaginationOptions,
-    sort?: SortOptions,
-  ): Promise<PaginatedResult<ChapterResult>> {
+    sort?: SortOptions<ChapterSortField>,
+  ): Promise<PaginatedResult<ChapterReadModel>> {
     const where: PrismaTypes.ChapterWhereInput = {
-      isDeleted: false,
-      ...(chapterFilter.title
-        ? { title: { contains: chapterFilter.title, mode: 'insensitive' } }
-        : {}),
-      ...(chapterFilter.bookId ? { bookId: chapterFilter.bookId } : {}),
-      ...(chapterFilter.orderIndex === undefined
-        ? {}
-        : { orderIndex: chapterFilter.orderIndex }),
+      AND: [
+        accessibleBy(ability).ofType('Chapter'),
+        {
+          isDeleted: false,
+          ...(chapterFilter.title
+            ? { title: { contains: chapterFilter.title, mode: 'insensitive' } }
+            : {}),
+          ...(chapterFilter.bookId ? { bookId: chapterFilter.bookId } : {}),
+          ...(chapterFilter.orderIndex === undefined
+            ? {}
+            : { orderIndex: chapterFilter.orderIndex }),
+        },
+      ],
     };
     const page = this.positiveInteger(pagination.page, 1);
-    const limit = Math.min(this.positiveInteger(pagination.limit, 10), 1000);
+    const limit = Math.min(this.positiveInteger(pagination.limit, 10), 100);
     const { sortField, direction } = this.resolveSort(sort);
     const [rows, total] = await Promise.all([
-      this.prisma.chapter.findMany({
+      this.transactionHost.tx.chapter.findMany({
         where,
         include: CHAPTER_WITH_PARAGRAPHS,
         orderBy: [{ [sortField]: direction }, { id: direction }],
         skip: (page - 1) * limit,
         take: limit,
       }),
-      this.prisma.chapter.count({ where }),
+      this.transactionHost.tx.chapter.count({ where }),
     ]);
 
     return {
-      data: rows.map((row) => this.toChapterResult(row)),
+      data: rows.map((row) => this.toChapterReadModel(row)),
       meta: buildPaginationMeta(page, limit, total),
     };
   }
 
   async findListByBookSlug(
+    ability: AppAbility,
     bookSlug: string,
     pagination: PaginationOptions,
-  ): Promise<ChapterListReadModel> {
-    const book = await this.prisma.book.findFirst({
-      where: { slug: bookSlug, isDeleted: false },
+  ): Promise<ChapterListReadModel | null> {
+    const book = await this.transactionHost.tx.book.findFirst({
+      where: {
+        AND: [
+          { slug: bookSlug, isDeleted: false },
+          accessibleBy(ability).ofType('Book'),
+        ],
+      },
       select: {
         id: true,
         title: true,
@@ -166,16 +271,15 @@ export class ChapterReadRepository implements IChapterReadRepository {
         authorId: true,
       },
     });
-    if (!book) throw new NotFoundException('Book not found');
-
+    if (!book) return null;
     const page = this.positiveInteger(pagination.page, 1);
-    const limit = Math.min(this.positiveInteger(pagination.limit, 10), 1000);
+    const limit = Math.min(this.positiveInteger(pagination.limit, 10), 100);
     const where: PrismaTypes.ChapterWhereInput = {
       bookId: book.id,
       isDeleted: false,
     };
     const [chapters, total] = await Promise.all([
-      this.prisma.chapter.findMany({
+      this.transactionHost.tx.chapter.findMany({
         where,
         select: {
           id: true,
@@ -191,11 +295,11 @@ export class ChapterReadRepository implements IChapterReadRepository {
         skip: (page - 1) * limit,
         take: limit,
       }),
-      this.prisma.chapter.count({ where }),
+      this.transactionHost.tx.chapter.count({ where }),
     ]);
 
     const ttsRows = chapters.length
-      ? await this.prisma.textToSpeech.findMany({
+      ? await this.transactionHost.tx.textToSpeech.findMany({
           where: {
             chapterId: { in: chapters.map((chapter) => chapter.id) },
             status: 'completed',
@@ -242,14 +346,31 @@ export class ChapterReadRepository implements IChapterReadRepository {
     };
   }
 
+  countByBook(bookId: string): Promise<number> {
+    return this.transactionHost.tx.chapter.count({
+      where: { bookId, isDeleted: false },
+    });
+  }
+
+  async countChaptersForBooks(bookIds: string[]): Promise<Map<string, number>> {
+    if (bookIds.length === 0) return new Map();
+
+    const rows = await this.transactionHost.tx.chapter.groupBy({
+      by: ['bookId'],
+      where: { bookId: { in: bookIds }, isDeleted: false },
+      _count: { _all: true },
+    });
+    return new Map(rows.map((row) => [row.bookId, row._count._all]));
+  }
+
   private async findNavigation(bookId: string, orderIndex: number) {
     const [previous, next] = await Promise.all([
-      this.prisma.chapter.findFirst({
+      this.transactionHost.tx.chapter.findFirst({
         where: { bookId, isDeleted: false, orderIndex: { lt: orderIndex } },
         select: { id: true, title: true, slug: true, orderIndex: true },
         orderBy: [{ orderIndex: 'desc' }, { id: 'desc' }],
       }),
-      this.prisma.chapter.findFirst({
+      this.transactionHost.tx.chapter.findFirst({
         where: { bookId, isDeleted: false, orderIndex: { gt: orderIndex } },
         select: { id: true, title: true, slug: true, orderIndex: true },
         orderBy: [{ orderIndex: 'asc' }, { id: 'asc' }],
@@ -322,7 +443,7 @@ export class ChapterReadRepository implements IChapterReadRepository {
     };
   }
 
-  private toChapterResult(row: ChapterPageRow): ChapterResult {
+  private toChapterReadModel(row: ChapterPageRow): ChapterReadModel {
     const paragraphs = row.paragraphs.map(({ id, content }) => ({
       id,
       content,

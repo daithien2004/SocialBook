@@ -11,7 +11,7 @@ import type {
   CreateChapterParams,
   DeleteChapterParams,
   GetChapterByIdParams,
-  GetChapterKnowledgeParams,
+  GenerateChapterKnowledgeParams,
   GetChapterParams,
   GetChaptersImportStatusParams,
   GetChaptersParams,
@@ -171,16 +171,16 @@ export function getChaptersImportStatus(
   });
 }
 
-export function getChapterKnowledge(
-  params: GetChapterKnowledgeParams,
+export function generateChapterKnowledge(
+  params: GenerateChapterKnowledgeParams,
 ): Promise<ChapterKnowledge> {
   return apiRequest<ChapterKnowledge>({
-    url: NESTJS_CHAPTERS_ENDPOINTS.getChapterKnowledge(
+    url: NESTJS_CHAPTERS_ENDPOINTS.generateChapterKnowledge(
       params.bookSlug,
       params.chapterId,
     ),
-    method: 'GET',
-    params: { force: params.force ? 'true' : undefined },
+    method: 'POST',
+    data: { force: params.force ?? false },
   });
 }
 

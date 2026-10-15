@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/core/database/postgres/prisma.service';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
 import { ILikeRepository } from '@/modules/likes/domain/repositories/like.repository.interface';
 import { Like as LikeEntity } from '@/modules/likes/domain/entities/like.entity';
 import { TargetId } from '@/modules/likes/domain/value-objects/target-id.vo';
@@ -9,10 +10,12 @@ import { LikeMapper } from './like.mapper';
 
 @Injectable()
 export class LikeRepository implements ILikeRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
+  ) {}
 
   async save(like: LikeEntity): Promise<void> {
-    await this.prisma.like.upsert({
+    await this.transactionHost.tx.like.upsert({
       where: {
         userId_targetType_targetId: {
           userId: like.userId.toString(),
@@ -38,7 +41,7 @@ export class LikeRepository implements ILikeRepository {
     targetId: TargetId,
     targetType: TargetType,
   ): Promise<LikeEntity | null> {
-    const row = await this.prisma.like.findUnique({
+    const row = await this.transactionHost.tx.like.findUnique({
       where: {
         userId_targetType_targetId: {
           userId: userId.toString(),
@@ -51,7 +54,7 @@ export class LikeRepository implements ILikeRepository {
   }
 
   countByTarget(targetId: TargetId, targetType: TargetType): Promise<number> {
-    return this.prisma.like.count({
+    return this.transactionHost.tx.like.count({
       where: { targetId: targetId.toString(), targetType, status: true },
     });
   }

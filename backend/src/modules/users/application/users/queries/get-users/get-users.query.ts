@@ -1,10 +1,11 @@
 import { Query } from '@nestjs/cqrs';
-import { User } from '@/modules/users/domain/users/entities/user.entity';
+import type { AdminUserReadModel } from '@/modules/users/application/read-models/admin-user.read-model';
+import type { PageResult } from '@/shared/domain/pagination.types';
+import type { Actor } from '@/shared/casl/actor';
 
-import { PageResult } from '@/shared/domain/pagination.types';
-
-export class GetUsersQuery extends Query<PageResult<User>> {
+export class GetUsersQuery extends Query<PageResult<AdminUserReadModel>> {
   constructor(
+    public readonly actor: Actor,
     public readonly page: number,
     public readonly limit: number,
     public readonly username?: string,

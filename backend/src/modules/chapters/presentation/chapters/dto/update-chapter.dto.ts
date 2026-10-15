@@ -10,6 +10,8 @@ import {
   IsUUID,
   IsNumber,
 } from 'class-validator';
+import type { Actor } from '@/shared/casl/actor';
+import { UpdateChapterCommand } from '@/modules/chapters/application/chapters/commands/update-chapter/update-chapter.command';
 
 class ParagraphDto {
   @IsOptional()
@@ -45,4 +47,19 @@ export class UpdateChapterDto {
   @IsOptional()
   @IsNumber()
   orderIndex?: number;
+
+  toCommand(actor: Actor, id: string): UpdateChapterCommand {
+    return new UpdateChapterCommand({
+      actor,
+      id,
+      title: this.title,
+      bookId: this.bookId,
+      paragraphs: this.paragraphs?.map((paragraph) => ({
+        id: paragraph.id,
+        content: paragraph.content,
+      })),
+      slug: this.slug,
+      orderIndex: this.orderIndex,
+    });
+  }
 }

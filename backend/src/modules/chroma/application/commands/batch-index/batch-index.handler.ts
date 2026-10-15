@@ -1,30 +1,29 @@
 import { BatchIndexCommand } from './batch-index.command';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { BadRequestDomainException } from '@/shared/domain/common-exceptions';
 import { IVectorRepository } from '@/modules/chroma/domain/repositories/vector.repository.interface';
+import { ForbiddenError } from '@casl/ability';
+import type { BatchIndexResult } from '@/modules/chroma/application/chroma.result';
 
 @CommandHandler(BatchIndexCommand)
-export class BatchIndexHandler {
+export class BatchIndexHandler implements ICommandHandler<BatchIndexCommand> {
   private readonly logger = new Logger(BatchIndexHandler.name);
 
   constructor(private readonly vectorRepository: IVectorRepository) {}
 
-  async execute(command: BatchIndexCommand) {
+  async execute(command: BatchIndexCommand): Promise<BatchIndexResult> {
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'create',
+      'Search',
+    );
     try {
       this.logger.log(
         `Starting batch index for ${command.contentIds.length} ${command.contentType}s`,
       );
 
       // Use the appropriate repository method based on content type
-      interface BatchResult {
-        totalProcessed: number;
-        successful: number;
-        failed: number;
-        errors: Array<{ contentId: string; error: string }>;
-      }
-
-      const result: BatchResult = await (async () => {
+      const result: BatchIndexResult = await (async () => {
         switch (command.contentType) {
           case 'book':
             return this.vectorRepository.indexBooks(command.contentIds);

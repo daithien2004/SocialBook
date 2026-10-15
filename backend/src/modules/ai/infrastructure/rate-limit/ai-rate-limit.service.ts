@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { TransactionHost } from '@nestjs-cls/transactional';
 import { ICachePort } from '@/shared/domain/cache.port';
 import { getErrorMessage } from '@/shared/platform/utils/error.util';
-import { PrismaService } from '@/core/database/postgres/prisma.service';
+import { PrismaTransactionalAdapter } from '@/core/database/postgres/prisma-transaction.types';
 import { AIRateLimitConfigPort } from '../../application/ports/ai-rate-limit-config.port';
 import type { AIRateLimitConfigReadModel } from '../../application/read-models/ai-rate-limit-config.read-model';
 
@@ -44,7 +45,7 @@ export class RateLimitConfigService extends AIRateLimitConfigPort {
   private readonly logger = new Logger(RateLimitConfigService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly transactionHost: TransactionHost<PrismaTransactionalAdapter>,
     private readonly cacheService: ICachePort,
   ) {
     super();
@@ -64,7 +65,7 @@ export class RateLimitConfigService extends AIRateLimitConfigPort {
   }
 
   async update(data: Partial<AIRateLimitConfig>): Promise<AIRateLimitConfig> {
-    await this.prisma.systemConfig.upsert({
+    await this.transactionHost.tx.systemConfig.upsert({
       where: { key: CONFIG_KEY },
       create: { key: CONFIG_KEY, value: data },
       update: { value: data },
@@ -79,7 +80,7 @@ export class RateLimitConfigService extends AIRateLimitConfigPort {
     key: string,
   ): Promise<Partial<AIRateLimitConfig> | null> {
     try {
-      const document = await this.prisma.systemConfig.findUnique({
+      const document = await this.transactionHost.tx.systemConfig.findUnique({
         where: { key },
       });
       return document ? toPartialConfig(document.value) : null;
@@ -113,12 +114,12 @@ export class RateLimitConfigService extends AIRateLimitConfigPort {
       const legacyConfig = await this.readConfig(LEGACY_CONFIG_KEY);
       if (!legacyConfig) return null;
 
-      await this.prisma.systemConfig.upsert({
+      await this.transactionHost.tx.systemConfig.upsert({
         where: { key: CONFIG_KEY },
         create: { key: CONFIG_KEY, value: legacyConfig },
         update: { value: legacyConfig },
       });
-      await this.prisma.systemConfig.deleteMany({
+      await this.transactionHost.tx.systemConfig.deleteMany({
         where: { key: LEGACY_CONFIG_KEY },
       });
       await this.cacheService.del(LEGACY_CACHE_KEY);

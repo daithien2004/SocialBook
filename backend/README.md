@@ -21,6 +21,8 @@ src/
 
 `core/queue` owns the BullMQ connection only. Features register their own queues and consumers. `shared/queue` contains reusable job schemas and options. PostgreSQL migrations live in `prisma/migrations/`; `src/seeds/` contains Prisma seed scripts. Seeds may import feature public APIs, but features must not import seeds.
 
+PostgreSQL primary keys use UUID `id` fields. Do not carry MongoDB `_id`/`ObjectId` names or conversions into new code. Prisma stays in infrastructure; commands load and save domain aggregates through repositories, while queries return application read models mapped to presentation response DTOs.
+
 The API and worker use the same `AppModule`, but worker consumers, scheduled tasks, and outbox relays are registered only when `WORKER_MODE=true`. `main.ts` loads `api-mode.ts` before `AppModule` so API role is established before feature module metadata is evaluated. `worker.ts` similarly loads `worker-mode.ts` first.
 
 The module boundary rules are checked by `scripts/check-module-boundaries.mjs`. They cover public feature APIs, layer dependency direction, `core`/`shared` isolation, domain framework dependencies, queue registration placement, and direct Nest module cycles. The checker runs in CI.
@@ -65,8 +67,8 @@ npm run test:e2e --workspace=backend
 npm run seed --workspace=backend
 ```
 
-`check` runs typecheck, ESLint, architecture checks, and Jest. See the repository [AGENTS.md](../AGENTS.md) for coding and type-safety requirements, and [the architecture overview](../docs/backend-architecture-overview.md) for the current system map.
+`check` runs typecheck, ESLint, architecture checks, and Jest. See the repository [AGENTS.md](../AGENTS.md) for coding and type-safety requirements, the [architecture overview](../docs/audit/backend-architecture-overview.md) for the system map, and the [NestJS module conventions](../.claude/skills/nestjs-clean-module/references/conventions.md) and [Swagger contract conventions](../.claude/skills/nestjs-swagger-contract/SKILL.md) for implementation standards.
 
 ## Application use-case conventions
 
-Handlers should first be classified as Query, Create, Single aggregate mutation, Multi-document command, or External service. The shared rules, failure protections, and Reading Rooms reference matrix are in the [application use-case conventions](../docs/audit/backend-application-use-case-conventions.md).
+Handlers should first be classified as Query, Create, Single aggregate mutation, Multi-document command, or External service. Follow the [NestJS module conventions](../.claude/skills/nestjs-clean-module/references/conventions.md); use [Reading Rooms](src/modules/reading-rooms/) as the concrete feature example while the remaining modules are being aligned.

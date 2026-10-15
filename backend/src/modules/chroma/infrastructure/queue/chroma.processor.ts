@@ -21,8 +21,8 @@ interface ChromaDeleteBookJobData {
 type ChromaJobData = ChromaIndexBookJobData | ChromaDeleteBookJobData;
 
 @Processor('chroma', {
-  // concurrency: 3 â€” thá»­ nghiá»‡m theo kháº£ nÄƒng cá»§a Chroma vÃ  embedding API.
-  // TÄƒng lÃªn náº¿u Chroma khÃ´ng pháº£n há»“i láº­u.
+  // concurrency: 3 — thử nghiệm theo khả năng của Chroma vÃ  embedding API.
+  // Tăng lên nếu Chroma không phản hồi lậu.
   concurrency: 3,
 })
 export class ChromaProcessor extends WorkerHost {
@@ -59,9 +59,9 @@ export class ChromaProcessor extends WorkerHost {
       const book = await this.bookRepository.findById(bookId);
 
       if (!book) {
-        // SÃ¡ch Ä‘Ã£ bá»‹ xÃ³a trong lÃºc job Ä‘ang chá» â€” dá»n index má»“ cÃ´i thay vÃ¬ táº¡o má»›i.
+        // Sách đã bị xóa trong lúc job đang chờ — dọn index mồ côi thay vì tạo mới.
         this.logger.warn(
-          `Book ${payload.bookId} no longer exists â€” cleaning up orphan index instead of creating new one.`,
+          `Book ${payload.bookId} no longer exists — cleaning up orphan index instead of creating new one.`,
         );
         await this.handleBookDeleted(payload);
         return;
@@ -84,10 +84,10 @@ export class ChromaProcessor extends WorkerHost {
 
       // 2. Prepare chunks
       const titleStr = book.title.toString();
-      const authorStr = book.authorName || book.author?.name || 'KhÃ´ng rÃµ';
+      const authorStr = book.authorName || book.author?.name || 'Không rõ';
       const genreStr = book.genreObjects?.map((g) => g.name).join(', ') || '';
 
-      const contextHeader = `SÃ¡ch: ${titleStr} | TÃ¡c giáº£: ${authorStr} | Thá»ƒ loáº¡i: ${genreStr}\nNá»™i dung: `;
+      const contextHeader = `Sách: ${titleStr} | Tác giả: ${authorStr} | Thể loại: ${genreStr}\nNội dung: `;
 
       const descriptionClean = this.stripHtml(book.description);
       const chunks = this.chunkText(descriptionClean, 500);

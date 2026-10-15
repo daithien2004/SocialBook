@@ -7,8 +7,8 @@ import { IPostRepository } from '@/modules/posts/domain/posts/repositories/post.
 import { PostErrorMessages } from '@/modules/posts/application/error-messages';
 import { DeletePostCommand } from './delete-post.command';
 
-import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(DeletePostCommand)
 export class DeletePostHandler implements ICommandHandler<
@@ -17,12 +17,23 @@ export class DeletePostHandler implements ICommandHandler<
 > {
   constructor(private readonly postRepository: IPostRepository) {}
 
+  @Transactional()
   async execute(command: DeletePostCommand): Promise<void> {
     const post = await this.postRepository.findById(command.postId);
     if (!post)
       throw new NotFoundDomainException(PostErrorMessages.POST_NOT_FOUND);
 
-    if (!command.ability.can(Action.Delete, subject(Subject.Post, post))) {
+    if (
+      !command.actor.ability.can(
+        'delete',
+        subject('Post', {
+          id: post.id,
+          userId: post.userId,
+          isDeleted: post.isDeleted,
+          isFlagged: post.isFlagged,
+        }),
+      )
+    ) {
       throw new ForbiddenDomainException(
         PostErrorMessages.POST_DELETE_FORBIDDEN,
       );

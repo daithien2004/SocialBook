@@ -1,12 +1,12 @@
 ﻿import { ForbiddenError } from '@casl/ability';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Transactional } from '@nestjs-cls/transactional';
 import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
 import { BookmarkRepository } from '@/modules/bookmarks/domain/repositories/bookmark.repository';
 import { DeleteBookmarkCommand } from './delete-bookmark.command';
 
 @CommandHandler(DeleteBookmarkCommand)
-export class DeleteBookmarkHandler {
+export class DeleteBookmarkHandler implements ICommandHandler<DeleteBookmarkCommand> {
   constructor(private readonly bookmarkRepository: BookmarkRepository) {}
 
   @Transactional()

@@ -93,7 +93,7 @@ k6 report benchmark-results.json
 |-----------|------|
 | CPU | — |
 | RAM | — |
-| Node | v20.x |
-| MongoDB | 7.x |
+| Node | v24.x |
+| PostgreSQL | 17.x |
 | Redis | 7.x |
 | Network | Localhost / Docker |

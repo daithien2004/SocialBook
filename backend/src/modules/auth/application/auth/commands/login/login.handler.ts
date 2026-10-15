@@ -1,5 +1,5 @@
 import { LoginCommand } from './login.command';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   UnauthorizedDomainException,
   UserBannedDomainException,
@@ -8,7 +8,7 @@ import { TokenService } from '../../services/token.service';
 import { IRoleRepository } from '@/modules/roles/domain/public-api';
 
 @CommandHandler(LoginCommand)
-export class LoginHandler {
+export class LoginHandler implements ICommandHandler<LoginCommand> {
   constructor(
     private readonly tokenService: TokenService,
     private readonly rolesRepository: IRoleRepository,

@@ -1,7 +1,9 @@
 import { Command } from '@nestjs/cqrs';
+import type { Actor } from '@/shared/casl/actor';
 
 export class TrackUserEventCommand extends Command<void> {
   constructor(
+    public readonly actor: Actor,
     public readonly userId: string,
     public readonly eventType: string,
     public readonly bookId?: string,

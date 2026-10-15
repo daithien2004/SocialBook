@@ -12,7 +12,6 @@ import {
 import { Book as BookEntity } from '@/modules/books/domain/books/entities/book.entity';
 import {
   BookFilter,
-  BookSearchCandidate,
   IBookRepository,
 } from '@/modules/books/domain/books/repositories/book.repository.interface';
 import { BookId } from '@/modules/books/domain/books/value-objects/book-id.vo';
@@ -137,15 +136,7 @@ export class BookRepository implements IBookRepository {
     return row ? PrismaBookMapper.toDomain(row) : null;
   }
 
-  async findByTitle(title: BookTitle): Promise<BookEntity | null> {
-    const row = await this.client.book.findFirst({
-      where: { title: title.toString(), isDeleted: false },
-      include: BOOK_WITH_RELATIONS,
-    });
-    return row ? PrismaBookMapper.toDomain(row) : null;
-  }
-
-  async findAll(
+  private async findAll(
     filter: BookFilter,
     pagination: PaginationOptions,
     sort?: SortOptions,
@@ -172,7 +163,7 @@ export class BookRepository implements IBookRepository {
     };
   }
 
-  async findByGenre(
+  findByGenre(
     genreId: GenreId,
     pagination: PaginationOptions,
     sort?: SortOptions,
@@ -355,36 +346,5 @@ export class BookRepository implements IBookRepository {
       const row = byId.get(id.toString());
       return row ? [PrismaBookMapper.toDomain(row)] : [];
     });
-  }
-
-  async findIdsByFilter(filter: BookFilter): Promise<string[]> {
-    const rows = await this.client.book.findMany({
-      where: buildBookFilter(filter),
-      select: { id: true },
-    });
-    return rows.map((row) => row.id);
-  }
-
-  async findSearchCandidates(
-    filter: BookFilter,
-    limit: number,
-  ): Promise<BookSearchCandidate[]> {
-    const rows = await this.client.book.findMany({
-      where: buildBookFilter(filter),
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-      take: limit,
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        author: { select: { name: true } },
-      },
-    });
-    return rows.map((row) => ({
-      id: row.id,
-      title: row.title,
-      description: row.description,
-      authorName: row.author.name,
-    }));
   }
 }

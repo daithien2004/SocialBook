@@ -1,12 +1,9 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DeleteCollectionCommand } from './delete-collection.command';
 import { ICollectionRepository } from '@/modules/library/domain/library/repositories/collection.repository.interface';
-import {
-  ForbiddenDomainException,
-  NotFoundDomainException,
-} from '@/shared/domain/common-exceptions';
-import { Action, Subject } from '@socialbook/shared';
-import { subject } from '@casl/ability';
+import { NotFoundDomainException } from '@/shared/domain/common-exceptions';
+import { ForbiddenError, subject } from '@casl/ability';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(DeleteCollectionCommand)
 export class DeleteCollectionHandler implements ICommandHandler<
@@ -15,6 +12,7 @@ export class DeleteCollectionHandler implements ICommandHandler<
 > {
   constructor(private readonly collectionRepository: ICollectionRepository) {}
 
+  @Transactional()
   async execute(command: DeleteCollectionCommand): Promise<void> {
     const collection = await this.collectionRepository.findById(command.id);
 
@@ -22,16 +20,14 @@ export class DeleteCollectionHandler implements ICommandHandler<
       throw new NotFoundDomainException('Collection not found');
     }
 
-    if (
-      !command.ability.can(
-        Action.Delete,
-        subject(Subject.Collection, { userId: collection.userId.getValue() }),
-      )
-    ) {
-      throw new ForbiddenDomainException(
-        'You do not have permission to delete this collection',
-      );
-    }
+    ForbiddenError.from(command.actor.ability).throwUnlessCan(
+      'delete',
+      subject('LibraryCollection', {
+        id: collection.id,
+        userId: collection.userId.toString(),
+        isPublic: collection.isPublic,
+      }),
+    );
 
     await this.collectionRepository.delete(command.id);
   }

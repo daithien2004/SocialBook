@@ -1,19 +1,19 @@
 import { UpdateUserHighlightCommand } from './update-user-highlight.command';
-import { CommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   ForbiddenDomainException,
   NotFoundDomainException,
 } from '@/shared/domain/common-exceptions';
 import { IUserHighlightRepository } from '@/modules/user-highlights/domain/repositories/user-highlight.repository.interface';
-import { UserHighlight } from '@/modules/user-highlights/domain/entities/user-highlight.entity';
-import { Action, Subject } from '@socialbook/shared';
 import { subject } from '@casl/ability';
+import { Transactional } from '@nestjs-cls/transactional';
 
 @CommandHandler(UpdateUserHighlightCommand)
-export class UpdateUserHighlightHandler {
+export class UpdateUserHighlightHandler implements ICommandHandler<UpdateUserHighlightCommand> {
   constructor(private readonly highlightRepository: IUserHighlightRepository) {}
 
-  async execute(command: UpdateUserHighlightCommand): Promise<UserHighlight> {
+  @Transactional()
+  async execute(command: UpdateUserHighlightCommand): Promise<void> {
     const highlight = await this.highlightRepository.findById(
       command.highlightId,
     );
@@ -23,14 +23,15 @@ export class UpdateUserHighlightHandler {
     }
 
     if (
-      !command.ability.can(
-        Action.Update,
-        subject(Subject.UserHighlight, highlight),
+      !command.actor.ability.can(
+        'update',
+        subject('UserHighlight', {
+          id: highlight.id,
+          userId: highlight.userId,
+        }),
       )
     ) {
-      throw new ForbiddenDomainException(
-        'You can only update your own highlights',
-      );
+      throw new ForbiddenDomainException('USER_HIGHLIGHT_UPDATE_FORBIDDEN');
     }
 
     if (command.color !== undefined) {
@@ -42,6 +43,5 @@ export class UpdateUserHighlightHandler {
     }
 
     await this.highlightRepository.save(highlight);
-    return highlight;
   }
 }

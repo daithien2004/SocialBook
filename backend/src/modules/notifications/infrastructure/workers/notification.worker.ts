@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job, UnrecoverableError } from 'bullmq';
-import { NotificationsService } from '../../presentation/realtime/notifications.service';
+import { AbilityFactory } from '@/shared/casl/ability.factory';
+import { CreateNotificationCommand } from '../../application/commands/create-notification/create-notification.command';
+import type { NotificationMeta } from '../../domain/entities/notification.entity';
 import { IPostRepository } from '@/modules/posts/domain/public-api';
 import { ICommentRepository } from '@/modules/comments';
 import { CommentId } from '@/modules/comments';
@@ -12,7 +15,7 @@ import {
   LikeToggledJobPayload,
   UserFollowedJobPayload,
   PostModeratedJobPayload,
-} from '@/modules/notifications/application/public-api';
+} from '../../application/jobs/notification-job.payload';
 import { EventNames } from '@/shared/platform/constants/event-names.constant';
 import {
   LikeToggledJobSchema,
@@ -29,13 +32,39 @@ export class NotificationWorker extends WorkerHost {
   private readonly logger = new Logger(NotificationWorker.name);
 
   constructor(
-    private readonly notificationsService: NotificationsService,
+    private readonly commandBus: CommandBus,
+    private readonly abilityFactory: AbilityFactory,
     private readonly postRepository: IPostRepository,
     private readonly commentRepository: ICommentRepository,
     private readonly userRepository: IUserRepository,
     private readonly targetResolverRegistry: TargetResolverRegistry,
   ) {
     super();
+  }
+
+  private async createNotification(input: {
+    userId: string;
+    title: string;
+    message: string;
+    type: string;
+    meta?: NotificationMeta;
+    actionUrl?: string;
+  }): Promise<void> {
+    const actor = this.abilityFactory.createActor({
+      userId: 'notification-worker',
+      roles: ['admin'],
+    });
+    await this.commandBus.execute(
+      new CreateNotificationCommand(
+        actor,
+        input.userId,
+        input.title,
+        input.message,
+        input.type,
+        input.meta,
+        input.actionUrl,
+      ),
+    );
   }
 
   async process(job: Job): Promise<void> {
@@ -107,18 +136,18 @@ export class NotificationWorker extends WorkerHost {
     const actor = await this.userRepository.findById(
       UserId.create(payload.userId),
     );
-    const username = actor ? actor.username : 'NgÆ°á»i dÃ¹ng';
+    const username = actor ? actor.username : 'Người dùng';
     const image = actor ? actor.image || '' : '';
 
     let ownerId: string | null = null;
-    const title = 'LÆ°á»£t thÃ­ch má»›i';
-    let message = `${username} Ä‘Ã£ thÃ­ch ná»™i dung cá»§a báº¡n`;
+    const title = 'Lượt thích mới';
+    let message = `${username} đã thích nội dung của bạn`;
 
     if (payload.targetType === 'post') {
       const post = await this.postRepository.findById(payload.targetId);
       if (post) {
         ownerId = post.userId;
-        message = `${username} Ä‘Ã£ thÃ­ch bÃ i viáº¿t cá»§a báº¡n: "${post.content.substring(0, 30)}..."`;
+        message = `${username} đã thích bài viết của bạn: "${post.content.substring(0, 30)}..."`;
       }
     } else if (payload.targetType === 'comment') {
       const comment = await this.commentRepository.findById(
@@ -126,7 +155,7 @@ export class NotificationWorker extends WorkerHost {
       );
       if (comment) {
         ownerId = comment.userId.toString();
-        message = `${username} Ä‘Ã£ thÃ­ch bÃ¬nh luáº­n cá»§a báº¡n: "${comment.content.toString().substring(0, 30)}..."`;
+        message = `${username} đã thích bình luận của bạn: "${comment.content.toString().substring(0, 30)}..."`;
       }
     }
 
@@ -139,7 +168,7 @@ export class NotificationWorker extends WorkerHost {
       // Check idempotency could be added here if needed,
       // but NotificationService.create might already be idempotent if we pass a unique external ID.
       // For now, let's keep it simple.
-      await this.notificationsService.create({
+      await this.createNotification({
         userId: ownerId,
         title,
         message,
@@ -159,12 +188,12 @@ export class NotificationWorker extends WorkerHost {
     const actor = await this.userRepository.findById(
       UserId.create(payload.userId),
     );
-    const username = actor ? actor.username : 'NgÆ°á»i dÃ¹ng';
+    const username = actor ? actor.username : 'Người dùng';
     const image = actor ? actor.image || '' : '';
 
     let ownerId: string | null = null;
-    let title = 'BÃ¬nh luáº­n má»›i';
-    let message = `${username} Ä‘Ã£ bÃ¬nh luáº­n vá» ná»™i dung cá»§a báº¡n`;
+    let title = 'Bình luận mới';
+    let message = `${username} đã bình luận về nội dung của bạn`;
 
     if (payload.parentId) {
       const parentComment = await this.commentRepository.findById(
@@ -172,14 +201,14 @@ export class NotificationWorker extends WorkerHost {
       );
       if (parentComment) {
         ownerId = parentComment.userId.toString();
-        title = 'Pháº£n há»“i bÃ¬nh luáº­n';
-        message = `${username} Ä‘Ã£ tráº£ lá»i bÃ¬nh luáº­n cá»§a báº¡n`;
+        title = 'Phản hồi bình luận';
+        message = `${username} đã trả lời bình luận của bạn`;
       }
     } else if (payload.targetType === 'post') {
       const post = await this.postRepository.findById(payload.targetId);
       if (post) {
         ownerId = post.userId;
-        message = `${username} Ä‘Ã£ bÃ¬nh luáº­n vá» bÃ i viáº¿t cá»§a báº¡n`;
+        message = `${username} đã bình luận về bài viết của bạn`;
       }
     }
 
@@ -189,7 +218,7 @@ export class NotificationWorker extends WorkerHost {
         payload.targetId,
       );
 
-      await this.notificationsService.create({
+      await this.createNotification({
         userId: ownerId,
         title,
         message,
@@ -209,17 +238,17 @@ export class NotificationWorker extends WorkerHost {
     const actor = await this.userRepository.findById(
       UserId.create(payload.userId),
     );
-    const username = actor ? actor.username : 'NgÆ°á»i dÃ¹ng';
+    const username = actor ? actor.username : 'Người dùng';
     const image = actor ? actor.image || '' : '';
 
     const ownerId = payload.targetId;
-    const title = 'NgÆ°á»i theo dÃµi má»›i';
-    const message = `${username} Ä‘Ã£ báº¯t Ä‘áº§u theo dÃµi báº¡n`;
+    const title = 'Người theo dõi mới';
+    const message = `${username} đã bắt đầu theo dõi bạn`;
 
     if (ownerId && ownerId !== payload.userId) {
       const actionUrl = `/users/${payload.userId}`;
 
-      await this.notificationsService.create({
+      await this.createNotification({
         userId: ownerId,
         title,
         message,
@@ -237,16 +266,16 @@ export class NotificationWorker extends WorkerHost {
 
   private async handlePostModeratedEvent(payload: PostModeratedJobPayload) {
     const ownerId = payload.userId;
-    const title = 'BÃ i viáº¿t bá»‹ gáº¯n cá» vi pháº¡m';
-    let message = `BÃ i viáº¿t cá»§a báº¡n Ä‘Ã£ bá»‹ áº©n do: ${payload.reason}`;
+    const title = 'Bài viết bị gắn cờ vi phạm';
+    let message = `Bài viết của bạn đã bị ẩn do: ${payload.reason}`;
 
     if (payload.action === 'BLOCK') {
-      message = `BÃ i viáº¿t cá»§a báº¡n Ä‘Ã£ bá»‹ xÃ³a do vi pháº¡m tiÃªu chuáº©n cá»™ng Ä‘á»“ng: ${payload.reason}`;
+      message = `Bài viết của bạn đã bị xóa do vi phạm tiêu chuẩn cộng đồng: ${payload.reason}`;
     }
 
     const actionUrl = `/posts/${payload.postId}`;
 
-    await this.notificationsService.create({
+    await this.createNotification({
       userId: ownerId,
       title,
       message,

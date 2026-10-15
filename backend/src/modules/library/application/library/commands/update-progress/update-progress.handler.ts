@@ -1,12 +1,13 @@
 import { BookId as DomainBookId } from '@/modules/library/domain/library/value-objects/book-id.vo';
-import { BookId as ChapterBookId } from '@/modules/chapters/domain/public-api';
+import { IChapterReadRepository } from '@/modules/chapters';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   ReadingList,
   ReadingStatus,
 } from '@/modules/library/domain/library/entities/reading-list.entity';
 import { ReadingProgress } from '@/modules/library/domain/library/entities/reading-progress.entity';
-import { LibraryItemReadModel } from '@/modules/library/domain/library/read-models/library-item.read-model';
+import type { LibraryItemReadModel } from '@/modules/library/application/read-models/library-item.read-model';
+import { LibraryReadRepository } from '@/modules/library/application/ports/library-read.repository';
 import { IReadingListRepository } from '@/modules/library/domain/library/repositories/reading-list.repository.interface';
 import { IReadingProgressRepository } from '@/modules/library/domain/library/repositories/reading-progress.repository.interface';
 import { BookId } from '@/modules/library/domain/library/value-objects/book-id.vo';
@@ -17,7 +18,6 @@ import { UpdateProgressCommand } from './update-progress.command';
 import { ReadingProgressResult } from '../../dto/library.dto';
 import { LibraryApplicationMapper } from '../../mappers/library.mapper';
 import { IBookRepository } from '@/modules/books/domain/public-api';
-import { IChapterRepository } from '@/modules/chapters/domain/public-api';
 import { ChapterStatus } from '@/modules/library/domain/library/entities/reading-progress.entity';
 import { IRecommendationCachePort } from '@/modules/recommendations/domain/public-api';
 import {
@@ -25,6 +25,7 @@ import {
   NotFoundDomainException,
 } from '@/shared/domain/common-exceptions';
 import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
+import { assertLibraryAccess } from '@/modules/library/application/policies/library-access.policy';
 
 export interface UpdateProgressResult {
   readingList: LibraryItemReadModel;
@@ -38,15 +39,17 @@ export class UpdateProgressHandler implements ICommandHandler<
 > {
   constructor(
     private readonly readingListRepository: IReadingListRepository,
+    private readonly libraryReadRepository: LibraryReadRepository,
     private readonly readingProgressRepository: IReadingProgressRepository,
     private readonly idGenerator: IIdGenerator,
     private readonly bookRepository: IBookRepository,
-    private readonly chapterRepository: IChapterRepository,
+    private readonly chapterRepository: IChapterReadRepository,
     private readonly recommendationCache: IRecommendationCachePort,
     private readonly unitOfWork: UnitOfWorkPort,
   ) {}
 
   async execute(command: UpdateProgressCommand): Promise<UpdateProgressResult> {
+    assertLibraryAccess(command.actor, 'manage', command.userId);
     const userId = UserId.create(command.userId);
     const bookId = BookId.create(command.bookId);
     const chapterId = ChapterId.create(command.chapterId);
@@ -109,7 +112,7 @@ export class UpdateProgressHandler implements ICommandHandler<
 
       if (!wasCompleted && isCompletedNow) {
         const totalChapters = await this.chapterRepository.countByBook(
-          ChapterBookId.create(command.bookId),
+          command.bookId,
         );
         const allProgresses =
           await this.readingProgressRepository.findByUserIdAndBookId(
@@ -144,9 +147,9 @@ export class UpdateProgressHandler implements ICommandHandler<
       void this.recommendationCache.clear(command.userId);
     }
 
-    const detail = await this.readingListRepository.findDetailByUserIdAndBookId(
-      userId,
-      bookId,
+    const detail = await this.libraryReadRepository.findDetailByUserIdAndBookId(
+      userId.toString(),
+      bookId.toString(),
     );
     if (!detail) {
       throw new InternalServerDomainException(

@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 SocialBook is a full-stack social network for book lovers built with:
 
 - **Frontend**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Radix UI, Framer Motion, shadcn/ui
-- **Backend**: NestJS 11, TypeScript, MongoDB/Mongoose, Redis, Socket.IO, ChromaDB (vector search)
+- **Backend**: NestJS 11, TypeScript, Prisma 7, PostgreSQL, Redis, Socket.IO, ChromaDB (vector search)
 - **Infra**: Docker Compose (6 services), Nginx reverse proxy
 
 ## Repository Layout
@@ -35,7 +35,7 @@ npm run dev                                # API + worker + frontend, together v
 
 ### Infrastructure
 ```bash
-docker-compose up -d  # Start Redis, MongoDB, ChromaDB, Nginx
+docker-compose up -d  # Start PostgreSQL, Redis, ChromaDB, Nginx
 ```
 
 ### Backend
@@ -87,16 +87,16 @@ Design tokens are generated from `design-tokens/` via Style Dictionary into `src
 
 ## Architecture
 
-### Backend - Clean Architecture Layers
+### Backend - Feature-first Clean Architecture
 
 ```
 backend/src/
-├── domain/            # Enterprise Business Rules (Entities, Value Objects, Port Interfaces)
-├── application/       # Application Business Rules (CQRS: Commands, Queries, Use Cases)
-├── infrastructure/    # Frameworks & External Adapters (Mongoose, Redis, AI APIs, Gateways)
-├── presentation/      # Delivery Mechanism (REST Controllers, WebSocket Gateways)
-└── shared/            # Cross-cutting Concerns (Logger, Base Classes, Decorators)
+├── core/               # Config, PostgreSQL/Prisma, Redis, queues, logging, health, security
+├── shared/             # Cross-feature domain, CASL, platform, queue contracts
+└── modules/<feature>/  # Feature-owned presentation/application/domain/infrastructure
 ```
+
+Read [backend/README.md](backend/README.md) and [docs/audit/backend-architecture-overview.md](docs/audit/backend-architecture-overview.md) for the current map. The `nestjs-clean-module` skill is the implementation standard; Reading Rooms is the reference module, and remaining modules are being aligned progressively.
 
 ### Two Processes, One Image
 
@@ -110,13 +110,13 @@ consumers get registered:
   DB but silently drops the push.
 - `@Cron` jobs run in the worker too, so a schedule fires once rather than once per API replica.
 
-The gate lives in `src/common/utils/process-role.util.ts` (`isWorkerProcess()`), and the modules
-that use it are pinned by `test/unit/module-graph/process-role.spec.ts` — **a new `@Processor`
-that isn't listed there fails that test**, which is deliberate. `main.ts` throws if started with
-`WORKER_MODE=true`; `npm run dev` starts both processes.
+The process-role helper lives in `src/shared/platform/utils/process-role.util.ts` (`isWorkerProcess()`).
+`main.ts` rejects `WORKER_MODE=true`; `worker.ts` sets it before loading `AppModule`. `npm run dev`
+starts the API and worker separately.
 
-### Domain Modules (29 bounded contexts)
-`ai`, `analytics`, `auth`, `authors`, `bookmarks`, `books`, `chapters`, `chroma`, `cloudinary`, `comments`, `content-moderation`, `follows`, `genres`, `library`, `likes`, `notifications`, `posts`, `progress`, `reading-room-interactions`, `reading-rooms`, `recommendations`, `reviews`, `roles`, `scraper`, `search`, `statistics`, `text-to-speech`, `user-highlights`, `users`
+### Feature modules
+
+Feature roots live under `backend/src/modules/`. Current modules include `ai`, `analytics`, `auth`, `authors`, `bookmarks`, `books`, `chapters`, `chroma`, `comments`, `content-moderation`, `follows`, `genres`, `library`, `likes`, `media`, `notifications`, `posts`, `reading-rooms`, `recommendations`, `reviews`, `roles`, `search`, `statistics`, `target-resolution`, `text-to-speech`, `user-highlights`, and `users`. Each feature owns its wiring; use its `index.ts` as the cross-feature public API.
 
 ### Frontend Architecture
 - Next.js App Router with Server/Client Component boundaries
@@ -206,17 +206,17 @@ export const getErrorMessage = (error: any): string => {
 };
 ```
 
-## MongoDB Guidelines
+## PostgreSQL / Prisma Guidelines
 
-- Use indexes intentionally (compound indexes, text indexes, partial filters)
-- Favor `$match` early in aggregation pipelines
-- Avoid full-document fetches when projection suffices
+- Use PostgreSQL UUID `id` fields; do not add MongoDB `_id` or `ObjectId` conventions.
+- Keep Prisma access in infrastructure and use explicit `select` projections for read repositories.
+- Add indexes for real filter/sort patterns and review migrations before applying them.
 
 ## Local Skills / Agents / Rules
 
 Project craft rules at `.claude/rules/craftsman.md` (read before any task).
 
-Each directory under `.claude/skills/` with a `SKILL.md` is an available local skill. The primary backend module standard is `nestjs-clean-module`; focused skills remain available for consistency design, flow audits, CQRS events/outbox and testing, realtime/queues, type safety, and legacy MongoDB work.
+Each directory under `.claude/skills/` with a `SKILL.md` is an available local skill. The primary backend module standard is `nestjs-clean-module`; HTTP contracts follow `nestjs-swagger-contract`. Focused skills remain available for consistency design, flow audits, CQRS events/outbox and testing, realtime/queues, and type safety.
 
 `.claude/agents/` holds subagent definitions for delegated tasks (`backend.md`, `frontend.md`, `reviewer.md`).
 
@@ -229,7 +229,7 @@ Each directory under `.claude/skills/` with a `SKILL.md` is an available local s
 ## Environment Variables
 
 **Backend `.env`**:
-- `PORT`, `MONGO_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `FRONTEND_URL`
+- `PORT`, `DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `FRONTEND_URL`
 
 **Frontend `.env.local`**:
 - `NEXT_PUBLIC_NEST_API_URL`, `NEXT_PUBLIC_SOCKET_URL`

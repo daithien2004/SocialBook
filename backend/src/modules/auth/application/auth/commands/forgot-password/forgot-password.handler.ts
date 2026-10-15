@@ -1,5 +1,5 @@
 import { ForgotPasswordCommand } from './forgot-password.command';
-import { CommandBus, CommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { IUserRepository, UserEmail } from '@/modules/users/domain/public-api';
 import { SendOtpCommand } from '@/modules/auth/application/otp/commands/send-otp/send-otp.command';
 
@@ -7,7 +7,7 @@ const RECOVERY_REQUEST_MESSAGE =
   'If an account supports password recovery, an OTP will be sent.';
 
 @CommandHandler(ForgotPasswordCommand)
-export class ForgotPasswordHandler {
+export class ForgotPasswordHandler implements ICommandHandler<ForgotPasswordCommand> {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly commandBus: CommandBus,
@@ -21,7 +21,9 @@ export class ForgotPasswordHandler {
       return RECOVERY_REQUEST_MESSAGE;
     }
 
-    await this.commandBus.execute(new SendOtpCommand(command.email));
+    await this.commandBus.execute(
+      new SendOtpCommand(command.actor, command.email),
+    );
     return RECOVERY_REQUEST_MESSAGE;
   }
 }

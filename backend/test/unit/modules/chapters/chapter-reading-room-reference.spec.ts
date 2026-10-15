@@ -1,4 +1,9 @@
 import { Test } from '@nestjs/testing';
+import { ClsModule } from 'nestjs-cls';
+import {
+  ClsPluginTransactional,
+  NoOpTransactionalAdapter,
+} from '@nestjs-cls/transactional';
 import { ConflictDomainException } from '@/shared/domain/common-exceptions';
 import { Chapter } from '@/modules/chapters/domain/chapters/entities/chapter.entity';
 import { IChapterRepository } from '@/modules/chapters/domain/chapters/repositories/chapter.repository.interface';
@@ -7,7 +12,13 @@ import { DeleteChapterHandler } from '@/modules/chapters/application/chapters/co
 import { UpdateChapterCommand } from '@/modules/chapters/application/chapters/commands/update-chapter/update-chapter.command';
 import { UpdateChapterHandler } from '@/modules/chapters/application/chapters/commands/update-chapter/update-chapter.handler';
 import { ReadingRoomReferencePort } from '@/modules/reading-rooms';
-import { UnitOfWorkPort } from '@/shared/application/unit-of-work.port';
+import { AbilityFactory } from '@/shared/casl/ability.factory';
+import { defineChapterAbilities } from '@/modules/chapters/application/policies/chapter.ability';
+
+const actor = new AbilityFactory([defineChapterAbilities]).createActor({
+  userId: 'admin-user',
+  roles: ['admin'],
+});
 
 const chapter = Chapter.reconstitute({
   id: '00000000-0000-4000-8000-000000000015',
@@ -26,6 +37,18 @@ describe('chapter mutations while a reading room uses the chapter', () => {
   it('does not delete a chapter referenced by an active room', async () => {
     const deleteChapter = jest.fn(() => Promise.resolve());
     const moduleRef = await Test.createTestingModule({
+      imports: [
+        ClsModule.forRoot({
+          plugins: [
+            new ClsPluginTransactional({
+              adapter: new NoOpTransactionalAdapter({
+                tx: {},
+                disableWarning: true,
+              }),
+            }),
+          ],
+        }),
+      ],
       providers: [
         DeleteChapterHandler,
         {
@@ -41,19 +64,13 @@ describe('chapter mutations while a reading room uses the chapter', () => {
             hasActiveRoomForChapter: jest.fn().mockResolvedValue(true),
           },
         },
-        {
-          provide: UnitOfWorkPort,
-          useValue: {
-            execute: jest.fn(<T>(operation: () => Promise<T>) => operation()),
-          },
-        },
       ],
     }).compile();
 
     await expect(
       moduleRef
         .get(DeleteChapterHandler)
-        .execute(new DeleteChapterCommand(chapter.id.toString())),
+        .execute(new DeleteChapterCommand(actor, chapter.id.toString())),
     ).rejects.toBeInstanceOf(ConflictDomainException);
     expect(deleteChapter).not.toHaveBeenCalled();
     await moduleRef.close();
@@ -62,6 +79,18 @@ describe('chapter mutations while a reading room uses the chapter', () => {
   it('does not move a chapter referenced by an active room to another book', async () => {
     const saveChapter = jest.fn(() => Promise.resolve());
     const moduleRef = await Test.createTestingModule({
+      imports: [
+        ClsModule.forRoot({
+          plugins: [
+            new ClsPluginTransactional({
+              adapter: new NoOpTransactionalAdapter({
+                tx: {},
+                disableWarning: true,
+              }),
+            }),
+          ],
+        }),
+      ],
       providers: [
         UpdateChapterHandler,
         {
@@ -79,18 +108,13 @@ describe('chapter mutations while a reading room uses the chapter', () => {
             hasActiveRoomForChapter: jest.fn().mockResolvedValue(true),
           },
         },
-        {
-          provide: UnitOfWorkPort,
-          useValue: {
-            execute: jest.fn(<T>(operation: () => Promise<T>) => operation()),
-          },
-        },
       ],
     }).compile();
 
     await expect(
       moduleRef.get(UpdateChapterHandler).execute(
         new UpdateChapterCommand({
+          actor,
           id: chapter.id.toString(),
           bookId: '00000000-0000-4000-8000-000000000020',
         }),

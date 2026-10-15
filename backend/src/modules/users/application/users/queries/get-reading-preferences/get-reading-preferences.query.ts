@@ -1,8 +1,12 @@
 import { Query } from '@nestjs/cqrs';
-import { ReadingPreferences } from '@/modules/users/domain/users/value-objects/reading-preferences.vo';
+import type { Actor } from '@/shared/casl/actor';
+import type { ReadingPreferencesReadModel } from '@/modules/users/application/read-models/reading-preferences.read-model';
 
-export class GetReadingPreferencesQuery extends Query<ReadingPreferences> {
-  constructor(public readonly userId: string) {
+export class GetReadingPreferencesQuery extends Query<ReadingPreferencesReadModel> {
+  constructor(
+    public readonly actor: Actor,
+    public readonly userId: string,
+  ) {
     super();
   }
 }

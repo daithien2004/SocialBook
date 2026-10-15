@@ -9,6 +9,9 @@ import { BookOutboxRelayCron } from './infrastructure/queue/book-outbox-relay.cr
 import { isWorkerProcess } from '@/shared/platform/utils/process-role.util';
 import { BooksRepositoryModule } from '@/modules/books/infrastructure/public-api';
 import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.module';
+import { AbilityFactory } from '@/shared/casl/ability.factory';
+import { PoliciesGuard } from '@/shared/casl/policies.guard';
+import { defineChromaAbilities } from './application/policies/chroma.ability';
 
 @Module({
   imports: [
@@ -20,6 +23,11 @@ import { IdGeneratorModule } from '@/core/database/id-generator/id-generator.mod
   ],
   controllers: [ChromaController],
   providers: [
+    {
+      provide: AbilityFactory,
+      useFactory: () => new AbilityFactory([defineChromaAbilities]),
+    },
+    PoliciesGuard,
     ...(isWorkerProcess()
       ? [ChromaProcessor, ChromaReconciliationCron, BookOutboxRelayCron]
       : []),

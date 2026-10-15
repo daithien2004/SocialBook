@@ -28,13 +28,5 @@ export const QueryHandlers = [GetCommentsHandler, GetCommentCountHandler];
     NotificationsInfrastructureModule,
   ],
   providers: [...CommandHandlers, ...QueryHandlers],
-  exports: [
-    CreateCommentHandler,
-    DeleteCommentHandler,
-    GetCommentsHandler,
-    GetCommentCountHandler,
-    ModerateCommentHandler,
-    UpdateCommentHandler,
-  ],
 })
 export class CommentsApplicationModule {}
