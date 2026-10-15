@@ -4,9 +4,11 @@ import { HttpExceptionFilter } from '@/shared/platform/filters/http-exception.fi
 import { JwtAuthGuard } from '@/shared/platform/guards/jwt-auth.guard';
 import { CsrfGuard } from '@/shared/platform/guards/csrf.guard';
 import { CsrfMiddleware } from '@/shared/platform/middlewares/csrf.middleware';
+import { RateLimitModule } from './rate-limit.module';
 import { UserThrottlerGuard } from './user-throttler.guard';
 
 @Module({
+  imports: [RateLimitModule],
   providers: [
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
     { provide: APP_GUARD, useClass: JwtAuthGuard },

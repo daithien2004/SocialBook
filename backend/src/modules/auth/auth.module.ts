@@ -7,6 +7,7 @@ import { UsersRepositoryModule } from '@/modules/users/infrastructure/public-api
 import { AbilityFactory } from '@/shared/casl/ability.factory';
 import { PoliciesGuard } from '@/shared/casl/policies.guard';
 import { defineUserAbilities } from '@/modules/users/application/public-api';
+import { AuthActorContextGuard } from './presentation/auth/guards/auth-actor-context.guard';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { defineUserAbilities } from '@/modules/users/application/public-api';
       provide: AbilityFactory,
       useFactory: () => new AbilityFactory([defineUserAbilities]),
     },
+    AuthActorContextGuard,
     PoliciesGuard,
   ],
 })

@@ -1,4 +1,3 @@
-import { ApiTags } from '@nestjs/swagger';
 import {
   buildPaginationMeta,
   PaginatedResult,
@@ -7,7 +6,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
 import { SkipThrottle } from '@nestjs/throttler';
 import {
-  ApiFileUpload,
+  UseImageUpload,
   Public,
 } from '@/shared/platform/decorators/custom.decorator';
 import {
@@ -49,18 +48,21 @@ import type { Actor } from '@/shared/casl/actor';
 import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
 import { PoliciesGuard } from '@/shared/casl/policies.guard';
 import {
-  ApiPaginatedResponse,
-  ApiProblemResponses,
-} from '@/shared/platform/decorators/api-response.decorators';
-import {
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiNoContentResponse,
-  ApiOkResponse,
-  ApiOperation,
-} from '@nestjs/swagger';
+  ApiBooksController,
+  ApiCreateBook,
+  ApiDeleteBook,
+  ApiGetBookById,
+  ApiGetBookBySlug,
+  ApiGetBookFilters,
+  ApiListAdminBooks,
+  ApiListBooks,
+  ApiListTopReadBooks,
+  ApiRecordBookView,
+  ApiToggleBookLike,
+  ApiUpdateBook,
+} from './books.swagger';
 
-@ApiTags('Books')
+@ApiBooksController()
 @Controller('books')
 @SkipThrottle({ global: true })
 @UseGuards(PoliciesGuard)
@@ -70,20 +72,16 @@ export class BooksController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  @ApiOperation({ summary: 'Create a book' })
-  @ApiProblemResponses([400, 401, 403, 409, 413, 422, 429, 500, 503])
-  @ApiBearerAuth()
+  @ApiCreateBook()
   @Post()
-  @ApiCreatedResponse({ type: BookResponseDto })
   @CheckPolicy('create', 'Book')
   @SkipThrottle({ global: false })
-  @ApiFileUpload('coverUrl')
+  @UseImageUpload('coverUrl')
   async create(
     @Body() createBookDto: CreateBookDto,
     @CurrentActor() actor: Actor,
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<BookResponseDto> {
-    // Xử lý upload file trước khi tạo command
     const bookId = await this.commandBus.execute(
       createBookDto.toCommand(actor, file),
     );
@@ -93,10 +91,7 @@ export class BooksController {
     return BookResponseDto.fromReadModel(book);
   }
 
-  @ApiOperation({ summary: 'List books for administration' })
-  @ApiProblemResponses([400, 401, 403, 429, 500])
-  @ApiBearerAuth()
-  @ApiPaginatedResponse(BookResponseDto, 'offset')
+  @ApiListAdminBooks()
   @Get('admin/all')
   @CheckPolicy('read', 'Book')
   @SkipThrottle({ global: false })
@@ -115,12 +110,10 @@ export class BooksController {
     return { data: BookResponseDto.fromArray(result.data), meta: result.meta };
   }
 
-  @ApiOperation({ summary: 'Get book filter options' })
-  @ApiProblemResponses([429, 500])
+  @ApiGetBookFilters()
   @Public()
   @Get('filters/all')
   @CheckPolicy('read', 'Book')
-  @ApiOkResponse({ type: BookFiltersResponseDto })
   async getFilters(
     @CurrentActor() actor: Actor,
   ): Promise<BookFiltersResponseDto> {
@@ -130,11 +123,9 @@ export class BooksController {
     return BookFiltersResponseDto.fromReadModel(data);
   }
 
-  @ApiOperation({ summary: 'List the most-read books' })
-  @ApiProblemResponses([400, 429, 500])
+  @ApiListTopReadBooks()
   @Public()
   @CheckPolicy('read', 'Book')
-  @ApiPaginatedResponse(BookResponseDto, 'offset')
   @Get('top-read')
   async getTopReadBooks(
     @CurrentActor() actor: Actor,
@@ -151,11 +142,9 @@ export class BooksController {
     };
   }
 
-  @ApiOperation({ summary: 'List books' })
-  @ApiProblemResponses([400, 429, 500])
+  @ApiListBooks()
   @Public()
   @CheckPolicy('read', 'Book')
-  @ApiPaginatedResponse(BookResponseDto, 'offset')
   @Get()
   async findAll(
     @Query() filter: FilterBookDto,
@@ -190,12 +179,10 @@ export class BooksController {
     return { data: BookResponseDto.fromArray(result.data), meta: result.meta };
   }
 
-  @ApiOperation({ summary: 'Get a book by slug' })
-  @ApiProblemResponses([400, 404, 429, 500])
+  @ApiGetBookBySlug()
   @Get(':slug')
   @Public()
   @CheckPolicy('read', 'Book')
-  @ApiOkResponse({ type: BookDetailResponseDto })
   async findOne(
     @Param('slug') slug: string,
     @CurrentActor() actor: Actor,
@@ -206,12 +193,9 @@ export class BooksController {
     return BookDetailResponseDto.fromReadModel(book);
   }
 
-  @ApiOperation({ summary: 'Toggle the current user’s like on a book' })
-  @ApiProblemResponses([401, 403, 404, 409, 429, 500])
-  @ApiBearerAuth()
+  @ApiToggleBookLike()
   @Patch(':slug/like')
   @CheckPolicy('like', 'Book')
-  @ApiOkResponse({ type: BookLikeResponseDto })
   @SkipThrottle({ global: false })
   async toggleLike(
     @Param('slug') slug: string,
@@ -236,13 +220,11 @@ export class BooksController {
     });
   }
 
-  @ApiOperation({ summary: 'Record a book view' })
-  @ApiProblemResponses([404, 429, 500])
+  @ApiRecordBookView()
   @Post(':slug/views')
   @Public()
   @CheckPolicy('read', 'Book')
   @HttpCode(204)
-  @ApiNoContentResponse()
   async recordView(
     @Param('slug') slug: string,
     @CurrentActor() actor: Actor,
@@ -251,12 +233,10 @@ export class BooksController {
     return undefined;
   }
 
-  @ApiOperation({ summary: 'Get a book by ID' })
-  @ApiProblemResponses([400, 404, 429, 500])
+  @ApiGetBookById()
   @Get('id/:id')
   @Public()
   @CheckPolicy('read', 'Book')
-  @ApiOkResponse({ type: BookResponseDto })
   async findOneById(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @CurrentActor() actor: Actor,
@@ -267,14 +247,11 @@ export class BooksController {
     return BookResponseDto.fromReadModel(book);
   }
 
-  @ApiOperation({ summary: 'Update a book' })
-  @ApiProblemResponses([400, 401, 403, 404, 409, 413, 422, 429, 500, 503])
-  @ApiBearerAuth()
+  @ApiUpdateBook()
   @Put(':id')
   @CheckPolicy('update', 'Book')
-  @ApiOkResponse({ type: BookResponseDto })
   @SkipThrottle({ global: false })
-  @ApiFileUpload('coverUrl')
+  @UseImageUpload('coverUrl')
   async update(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @Body() updateBookDto: UpdateBookDto,
@@ -291,12 +268,9 @@ export class BooksController {
     return BookResponseDto.fromReadModel(book);
   }
 
-  @ApiOperation({ summary: 'Delete a book' })
-  @ApiProblemResponses([400, 401, 403, 404, 409, 429, 500])
-  @ApiBearerAuth()
+  @ApiDeleteBook()
   @HttpCode(204)
   @Delete(':id')
-  @ApiNoContentResponse()
   @CheckPolicy('delete', 'Book')
   @SkipThrottle({ global: false })
   async remove(

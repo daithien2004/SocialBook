@@ -9,10 +9,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { Suspense, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { mapOAuthError } from '@/lib/map-oauth-error';
 import { useAppSession } from '@/lib/app-session';
-import { queryClient } from '@/lib/query-client';
 import { getErrorMessage } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FullScreenSpinner } from '@/components/shared/AppLoading';
@@ -38,6 +38,7 @@ function LoginPageContent() {
   const searchParams = useSearchParams();
   const { refetch } = useAppSession();
   const loginMutation = useLoginMutation();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const error = searchParams.get('error');

@@ -5,7 +5,7 @@ export interface SetCookieSpec {
   name: string;
   value: string;
   path: string;
-  maxAgeSeconds: number;
+  maxAgeSeconds?: number;
   httpOnly: boolean;
   secure: boolean;
   sameSite: 'lax' | 'strict' | 'none';
@@ -37,8 +37,19 @@ export class AuthCookieService {
     return {
       name: 'sb_refresh_token',
       value: token,
-      path: '/api/auth',
+      path: '/',
       maxAgeSeconds: REFRESH_TTL_SECONDS,
+      httpOnly: true,
+      secure: this.secure,
+      sameSite: this.sameSite,
+    };
+  }
+
+  accessTokenCookie(token: string): SetCookieSpec {
+    return {
+      name: 'sb_access_token',
+      value: token,
+      path: '/',
       httpOnly: true,
       secure: this.secure,
       sameSite: this.sameSite,
@@ -49,7 +60,7 @@ export class AuthCookieService {
     return {
       name: 'sb_oauth_state',
       value: state,
-      path: '/api/auth',
+      path: '/',
       maxAgeSeconds: OAUTH_STATE_TTL_SECONDS,
       httpOnly: true,
       secure: this.secure,
@@ -58,10 +69,14 @@ export class AuthCookieService {
   }
 
   clearRefreshToken(): ClearCookieSpec {
-    return { name: 'sb_refresh_token', path: '/api/auth' };
+    return { name: 'sb_refresh_token', path: '/' };
+  }
+
+  clearAccessToken(): ClearCookieSpec {
+    return { name: 'sb_access_token', path: '/' };
   }
 
   clearOauthState(): ClearCookieSpec {
-    return { name: 'sb_oauth_state', path: '/api/auth' };
+    return { name: 'sb_oauth_state', path: '/' };
   }
 }

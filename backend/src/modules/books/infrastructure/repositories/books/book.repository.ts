@@ -95,17 +95,6 @@ export class BookRepository implements IBookRepository {
     return this.transactionHost.tx;
   }
 
-  private inTransaction<T>(
-    operation: (client: Prisma.TransactionClient) => Promise<T>,
-  ): Promise<T> {
-    if (this.transactionHost.isTransactionActive()) {
-      return operation(this.transactionHost.tx);
-    }
-    return this.transactionHost.withTransaction(() =>
-      operation(this.transactionHost.tx),
-    );
-  }
-
   async findUnindexedBooks(limit: number): Promise<BookEntity[]> {
     const rows = await this.client.book.findMany({
       where: {
@@ -191,42 +180,40 @@ export class BookRepository implements IBookRepository {
     if (!book.isDirty) return;
 
     const nextVersion = book.loadedVersion + 1;
-    await this.inTransaction(async (transaction) => {
-      const result = await transaction.book.updateMany({
-        where: {
-          id: book.id.toString(),
-          version: book.loadedVersion,
-          isDeleted: false,
-        },
-        data: { ...fields, version: nextVersion },
-      });
-      if (result.count === 0) {
-        throw new ConcurrencyException('Book changed after it was loaded');
-      }
-
-      await transaction.bookGenre.deleteMany({
-        where: { bookId: book.id.toString() },
-      });
-      await transaction.bookLike.deleteMany({
-        where: { bookId: book.id.toString() },
-      });
-      if (book.genres.length > 0) {
-        await transaction.bookGenre.createMany({
-          data: book.genres.map((genreId) => ({
-            bookId: book.id.toString(),
-            genreId: genreId.toString(),
-          })),
-        });
-      }
-      if (book.likedBy.length > 0) {
-        await transaction.bookLike.createMany({
-          data: book.likedBy.map((userId) => ({
-            bookId: book.id.toString(),
-            userId,
-          })),
-        });
-      }
+    const result = await this.client.book.updateMany({
+      where: {
+        id: book.id.toString(),
+        version: book.loadedVersion,
+        isDeleted: false,
+      },
+      data: { ...fields, version: nextVersion },
     });
+    if (result.count === 0) {
+      throw new ConcurrencyException('Book changed after it was loaded');
+    }
+
+    await this.client.bookGenre.deleteMany({
+      where: { bookId: book.id.toString() },
+    });
+    await this.client.bookLike.deleteMany({
+      where: { bookId: book.id.toString() },
+    });
+    if (book.genres.length > 0) {
+      await this.client.bookGenre.createMany({
+        data: book.genres.map((genreId) => ({
+          bookId: book.id.toString(),
+          genreId: genreId.toString(),
+        })),
+      });
+    }
+    if (book.likedBy.length > 0) {
+      await this.client.bookLike.createMany({
+        data: book.likedBy.map((userId) => ({
+          bookId: book.id.toString(),
+          userId,
+        })),
+      });
+    }
     book.markPersisted(nextVersion);
   }
 
@@ -294,32 +281,28 @@ export class BookRepository implements IBookRepository {
   }
 
   async addLike(id: BookId, userId: string): Promise<void> {
-    await this.inTransaction(async (transaction) => {
-      const inserted = await transaction.bookLike.createMany({
-        data: [{ bookId: id.toString(), userId }],
-        skipDuplicates: true,
-      });
-      if (inserted.count > 0) {
-        await transaction.book.updateMany({
-          where: { id: id.toString(), isDeleted: false },
-          data: { likes: { increment: 1 }, version: { increment: 1 } },
-        });
-      }
+    const inserted = await this.client.bookLike.createMany({
+      data: [{ bookId: id.toString(), userId }],
+      skipDuplicates: true,
     });
+    if (inserted.count > 0) {
+      await this.client.book.updateMany({
+        where: { id: id.toString(), isDeleted: false },
+        data: { likes: { increment: 1 }, version: { increment: 1 } },
+      });
+    }
   }
 
   async removeLike(id: BookId, userId: string): Promise<void> {
-    await this.inTransaction(async (transaction) => {
-      const removed = await transaction.bookLike.deleteMany({
-        where: { bookId: id.toString(), userId },
-      });
-      if (removed.count > 0) {
-        await transaction.book.updateMany({
-          where: { id: id.toString(), likes: { gt: 0 } },
-          data: { likes: { decrement: 1 }, version: { increment: 1 } },
-        });
-      }
+    const removed = await this.client.bookLike.deleteMany({
+      where: { bookId: id.toString(), userId },
     });
+    if (removed.count > 0) {
+      await this.client.book.updateMany({
+        where: { id: id.toString(), likes: { gt: 0 } },
+        data: { likes: { decrement: 1 }, version: { increment: 1 } },
+      });
+    }
   }
 
   countByGenre(genreId: string): Promise<number> {

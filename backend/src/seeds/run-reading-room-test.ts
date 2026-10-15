@@ -1,21 +1,20 @@
 import { INestApplicationContext, Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DatabaseSeedModule } from './database.seed.module';
-import { BookPostLikesSeed } from './book-post-likes.seeder';
+import { ReadingRoomTestSeed } from './reading-room-test.seeder';
 
-const logger = new Logger('BookPostLikesSeed');
+const logger = new Logger('ReadingRoomTestSeed');
 
-async function bootstrap() {
+async function bootstrap(): Promise<void> {
   let app: INestApplicationContext | undefined;
 
   try {
     app = await NestFactory.createApplicationContext(DatabaseSeedModule);
-    const seed = app.get(BookPostLikesSeed);
-    await seed.run();
-    logger.log('Book and post likes seeded successfully!');
+    await app.get(ReadingRoomTestSeed).run();
+    logger.log('Reading room test roles and user are ready.');
   } catch (error: unknown) {
     logger.error(
-      'Seeding failed:',
+      'Reading room test seed failed:',
       error instanceof Error ? error.stack : String(error),
     );
     process.exitCode = 1;
@@ -26,7 +25,7 @@ async function bootstrap() {
 
 void bootstrap().catch((error: unknown) => {
   logger.error(
-    'Seed process failed:',
+    'Reading room test seed process failed:',
     error instanceof Error ? error.stack : String(error),
   );
   process.exitCode = 1;

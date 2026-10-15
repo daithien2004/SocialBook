@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ExecutionContext, Injectable } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -7,6 +7,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 @Injectable()
 export class UserThrottlerGuard extends ThrottlerGuard {
+  override canActivate(context: ExecutionContext): Promise<boolean> {
+    // The global HTTP throttler uses HTTP request/response APIs; WebSocket
+    // events have their own guards and rate-limit policy.
+    if (context.getType() !== 'http') {
+      return Promise.resolve(true);
+    }
+
+    return super.canActivate(context);
+  }
+
   protected override getTracker(
     request: Record<string, unknown>,
   ): Promise<string> {

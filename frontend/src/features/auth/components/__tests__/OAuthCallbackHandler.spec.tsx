@@ -1,17 +1,13 @@
 /** @jest-environment jsdom */
 import { render } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { OAuthCallbackHandler } from '../OAuthCallbackHandler';
-import { queryClient } from '@/lib/query-client';
 import { useAppSession } from '@/lib/app-session';
 
 jest.mock('next/navigation', () => ({
   usePathname: jest.fn(),
   useSearchParams: jest.fn(),
-}));
-
-jest.mock('@/lib/query-client', () => ({
-  queryClient: { clear: jest.fn() },
 }));
 
 jest.mock('@/lib/app-session', () => ({
@@ -22,6 +18,8 @@ describe('OAuthCallbackHandler', () => {
   let mockSearchParams: URLSearchParams;
   let mockReplaceState: jest.SpyInstance;
   let mockRefetch: jest.Mock;
+  let queryClient: QueryClient;
+  let clearQueryClient: jest.SpyInstance;
 
   beforeEach(() => {
     mockSearchParams = new URLSearchParams();
@@ -30,6 +28,8 @@ describe('OAuthCallbackHandler', () => {
 
     mockRefetch = jest.fn().mockResolvedValue(undefined);
     (useAppSession as jest.Mock).mockReturnValue({ refetch: mockRefetch });
+    queryClient = new QueryClient();
+    clearQueryClient = jest.spyOn(queryClient, 'clear');
 
     mockReplaceState = jest
       .spyOn(window.history, 'replaceState')
@@ -39,15 +39,23 @@ describe('OAuthCallbackHandler', () => {
   });
 
   afterEach(() => {
+    queryClient.clear();
     jest.restoreAllMocks();
   });
+
+  const renderHandler = () =>
+    render(
+      <QueryClientProvider client={queryClient}>
+        <OAuthCallbackHandler />
+      </QueryClientProvider>,
+    );
 
   it('clears cache, refetches session and strips oauth param on success', () => {
     mockSearchParams = new URLSearchParams('oauth=success');
 
-    render(<OAuthCallbackHandler />);
+    renderHandler();
 
-    expect(queryClient.clear).toHaveBeenCalledTimes(1);
+    expect(clearQueryClient).toHaveBeenCalledTimes(1);
     expect(mockRefetch).toHaveBeenCalledTimes(1);
     expect(mockReplaceState).toHaveBeenCalledWith(null, '', '/');
   });
@@ -55,15 +63,15 @@ describe('OAuthCallbackHandler', () => {
   it('keeps unrelated query params while removing oauth', () => {
     mockSearchParams = new URLSearchParams('oauth=success&tab=reviews');
 
-    render(<OAuthCallbackHandler />);
+    renderHandler();
 
     expect(mockReplaceState).toHaveBeenCalledWith(null, '', '/?tab=reviews');
   });
 
   it('does nothing when the oauth param is absent', () => {
-    render(<OAuthCallbackHandler />);
+    renderHandler();
 
-    expect(queryClient.clear).not.toHaveBeenCalled();
+    expect(clearQueryClient).not.toHaveBeenCalled();
     expect(mockRefetch).not.toHaveBeenCalled();
     expect(mockReplaceState).not.toHaveBeenCalled();
   });
@@ -71,18 +79,22 @@ describe('OAuthCallbackHandler', () => {
   it('does nothing when oauth is not a success value', () => {
     mockSearchParams = new URLSearchParams('oauth=failure');
 
-    render(<OAuthCallbackHandler />);
+    renderHandler();
 
-    expect(queryClient.clear).not.toHaveBeenCalled();
+    expect(clearQueryClient).not.toHaveBeenCalled();
     expect(mockReplaceState).not.toHaveBeenCalled();
   });
 
   it('does not clear the cache on repeat renders', () => {
     mockSearchParams = new URLSearchParams('oauth=success');
-    const { rerender } = render(<OAuthCallbackHandler />);
+    const { rerender } = renderHandler();
 
-    rerender(<OAuthCallbackHandler />);
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <OAuthCallbackHandler />
+      </QueryClientProvider>,
+    );
 
-    expect(queryClient.clear).toHaveBeenCalledTimes(1);
+    expect(clearQueryClient).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,5 +1,4 @@
 import './globals.css';
-import localFont from 'next/font/local';
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 import ScrollToTop from '@/components/shared/ScrollToTop';
@@ -10,13 +9,6 @@ import GlobalConfirmModal from '@/components/shared/GlobalConfirmModal';
 import { ThemeProvider } from '@/context/ThemeProvider';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { OAuthCallbackHandler } from '@/features/auth/components/OAuthCallbackHandler';
-
-const inter = localFont({
-  src: './fonts/InterVariable.woff2',
-  variable: '--font-inter',
-  display: 'swap',
-  weight: '100 900',
-});
 
 const CreatePostModal = dynamic(
   () => import('@/features/posts/components/CreatePostModal'),
@@ -68,7 +60,7 @@ export default function RootLayout({
   return (
     <html
       lang="vi"
-      className={`${inter.variable} mdl-js`}
+      className="mdl-js"
       suppressHydrationWarning
     >
       <head />

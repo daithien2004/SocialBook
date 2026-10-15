@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { queryClient } from '@/lib/query-client';
 import { useAppSession } from '@/lib/app-session';
 import { apiRequest } from '@/lib/api-client';
 
@@ -10,6 +10,7 @@ export interface UseLogoutResult {
 
 export function useLogout(): UseLogoutResult {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { refetch } = useAppSession();
 
   const handleLogout = useCallback(async () => {
@@ -25,7 +26,7 @@ export function useLogout(): UseLogoutResult {
       await refetch();
       router.push('/login');
     }
-  }, [router, refetch]);
+  }, [queryClient, router, refetch]);
 
   return { handleLogout };
 }

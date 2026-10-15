@@ -32,8 +32,6 @@ const envValidationSchema = z
     BULL_REDIS_HOST: z.string().optional(),
     BULL_REDIS_PORT: z.coerce.number().int().positive().optional(),
     BULL_REDIS_PASSWORD: z.string().optional(),
-    BULL_BOARD_USER: z.string().optional(),
-    BULL_BOARD_PASSWORD: z.string().optional(),
     ACCESS_TOKEN_EXPIRES_IN: z.string().optional(),
     REFRESH_TOKEN_EXPIRES_IN: z.string().optional(),
     ADMIN_USERNAME: z.string().optional(),

@@ -7,7 +7,7 @@ interface SafeImageProps extends ImageProps {
   fallbackSrc?: string;
 }
 
-const DEFAULT_FALLBACK = '/book-covers.png';
+const DEFAULT_FALLBACK = '/book-cover-fallback.svg';
 
 export const SafeImage = ({ src, fallbackSrc = DEFAULT_FALLBACK, alt, ...props }: SafeImageProps) => {
   const [error, setError] = useState(false);
@@ -19,6 +19,7 @@ export const SafeImage = ({ src, fallbackSrc = DEFAULT_FALLBACK, alt, ...props }
       key={typeof src === 'string' ? src : undefined}
       src={displaySrc}
       alt={alt}
+      unoptimized={process.env.NODE_ENV === 'development' || error || !src}
       onError={() => {
         setError(true);
       }}

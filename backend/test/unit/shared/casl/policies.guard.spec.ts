@@ -5,7 +5,7 @@ import { defineReadingRoomAbilities } from '@/modules/reading-rooms/application/
 import { AbilityFactory } from '@/shared/casl/ability.factory';
 import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
 import { PoliciesGuard } from '@/shared/casl/policies.guard';
-import { Public } from '@/shared/platform/decorators/custom.decorator';
+import type { JwtValidatedUser } from '@/shared/platform/interfaces/jwt-validated-user.interface';
 
 class PolicyController {
   @CheckPolicy('read', 'ReadingRoom')
@@ -13,10 +13,6 @@ class PolicyController {
 
   @CheckPolicy('delete', 'ReadingRoom')
   deleteRoom(): void {}
-
-  @Public()
-  @CheckPolicy('read', 'ReadingRoom')
-  publicReadRoom(): void {}
 
   unprotectedRoute(): void {}
 }
@@ -29,7 +25,7 @@ describe('PoliciesGuard', () => {
 
   function contextFor(
     method: keyof PolicyController,
-    request: { user?: { id?: unknown; role?: unknown; roles?: unknown } },
+    request: { user?: JwtValidatedUser; actor?: { userId: string } },
   ): ExecutionContextHost {
     const handler = PolicyController.prototype[method];
     return new ExecutionContextHost([request], PolicyController, handler);
@@ -37,37 +33,35 @@ describe('PoliciesGuard', () => {
 
   it('allows a request with coarse permission for the declared policy', () => {
     const context = contextFor('readRoom', {
-      user: { id: 'user-1', role: 'member' },
+      user: { id: 'user-1', email: 'user@example.com', roles: ['member'] },
     });
 
     expect(guard.canActivate(context)).toBe(true);
   });
 
-  it('rejects requests without a validated principal', () => {
-    const context = contextFor('readRoom', {
-      user: { id: 42, role: 'member' },
-    });
+  it('leaves authentication of missing users to the authentication guard', () => {
+    const context = contextFor('readRoom', {});
 
-    expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
+    expect(guard.canActivate(context)).toBe(true);
   });
 
   it('rejects a principal without the declared action', () => {
     const context = contextFor('deleteRoom', {
-      user: { id: 'user-1', role: 'member' },
+      user: { id: 'user-1', email: 'user@example.com', roles: ['member'] },
     });
 
     expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
   });
 
-  it('attaches an anonymous actor to public routes with a read policy', () => {
+  it('does not create an actor when the request has no authenticated user', () => {
     const request: {
-      user?: { id?: unknown; role?: unknown; roles?: unknown };
+      user?: JwtValidatedUser;
       actor?: { userId: string };
     } = {};
-    const context = contextFor('publicReadRoom', request);
+    const context = contextFor('readRoom', request);
 
     expect(guard.canActivate(context)).toBe(true);
-    expect(request.actor?.userId).toBe('anonymous');
+    expect(request.actor).toBeUndefined();
   });
 
   it('does not affect routes without policy metadata', () => {

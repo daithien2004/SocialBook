@@ -1,13 +1,14 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useLikeBook } from '@/features/books/api/books.mutations';
 import { bookKeys } from '@/lib/query-keys';
 import { toast } from 'sonner';
 import { useAppAuth } from '@/features/auth/hooks';
-import { queryClient } from '@/lib/query-client';
 import type { Book } from '../types/book.interface';
 
 export function useBookLike(book?: Book | null) {
   const { user } = useAppAuth();
   const likeBook = useLikeBook();
+  const queryClient = useQueryClient();
 
   const isLiked = !user?.id || !book?.likedBy ? false : book.likedBy.includes(user.id);
   const likesCount = book?.stats?.likes ?? 0;

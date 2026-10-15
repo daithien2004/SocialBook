@@ -99,7 +99,9 @@ export class OAuthController {
   private applyCookie(res: Response, spec: SetCookieSpec): void {
     res.cookie(spec.name, spec.value, {
       path: spec.path,
-      maxAge: spec.maxAgeSeconds * 1000,
+      ...(spec.maxAgeSeconds === undefined
+        ? {}
+        : { maxAge: spec.maxAgeSeconds * 1000 }),
       httpOnly: spec.httpOnly,
       secure: spec.secure,
       sameSite: spec.sameSite,
@@ -247,6 +249,10 @@ export class OAuthController {
         new OAuthAuthCommand(actor, profile),
       );
 
+      this.applyCookie(
+        res,
+        this.cookieService.accessTokenCookie(result.accessToken),
+      );
       this.applyCookie(
         res,
         this.cookieService.refreshTokenCookie(result.refreshToken),

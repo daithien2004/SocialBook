@@ -9,18 +9,12 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "seed": "ts-node -r tsconfig-paths/register src/seeds/run-seed.ts",
-    "seed:revert": "ts-node -r tsconfig-paths/register src/seeds/run-seed.ts --revert",
+    "seed": "npm run seed:reading-room-test",
+    "seed:reading-room-test": "npm run build && node dist/src/seeds/run-reading-room-test.js",
     "db:generate": "prisma generate",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "seed:chapter-discussions": "ts-node -r tsconfig-paths/register src/seeds/run-chapter-discussions.ts",
-    "seed:chapter-discussions:prod": "node -r tsconfig-paths/register dist/seeds/run-chapter-discussions.js",
-    "seed:read-progress-review:prod": "node -r tsconfig-paths/register dist/seeds/run-read-progress-review.js",
-    "seed:posts-diverse:prod": "node -r tsconfig-paths/register dist/seeds/run-posts-diverse.js",
-    "seed:book-post-likes:prod": "node -r tsconfig-paths/register dist/seeds/run-book-post-likes.js",
-    "seed:reading-rooms:prod": "node -r tsconfig-paths/register dist/seeds/run-reading-rooms.js",
     "build": "nest build",
     "prebuild": "npm run db:generate",
     "openapi:export": "node scripts/export-openapi.mjs",
@@ -49,8 +43,6 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@bull-board/api": "^9.10.1",
-    "@bull-board/express": "^9.10.1",
     "@casl/ability": "^7.0.1",
     "@casl/prisma": "^2.0.2",
     "@huggingface/inference": "^4.13.5",
@@ -80,7 +72,6 @@
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "@socialbook/shared": "0.1.0",
-    "@socket.io/admin-ui": "^0.5.1",
     "@socket.io/redis-adapter": "^8.3.0",
     "@socket.io/redis-emitter": "^5.1.0",
     "axios": "^1.13.2",
@@ -108,6 +99,7 @@
     "resend": "^6.14.0",
     "rxjs": "^7.8.1",
     "slugify": "^1.6.6",
+    "socket.io": "^4.8.4",
     "tsconfig-paths": "^4.2.0",
     "undici": "^7.29.1",
     "zod": "^4.6.5"

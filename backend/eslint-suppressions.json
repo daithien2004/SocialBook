@@ -7,14 +7,6 @@
       "count": 1
     }
   },
-  "src/main.ts": {
-    "@typescript-eslint/consistent-type-assertions": {
-      "count": 2
-    },
-    "@typescript-eslint/restrict-template-expressions": {
-      "count": 2
-    }
-  },
   "src/modules/ai/infrastructure/ai/ai-provider.factory.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 1

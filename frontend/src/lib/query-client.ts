@@ -27,10 +27,3 @@ export function getQueryClient() {
   }
 }
 
-// Export a proxy so existing code using `queryClient.invalidateQueries` still works,
-// but it dynamically fetches the correct instance (browser instance on client, new instance on server).
-export const queryClient = new Proxy({} as unknown as QueryClient, {
-  get(target, prop) {
-    return Reflect.get(getQueryClient(), prop);
-  }
-}) as QueryClient;

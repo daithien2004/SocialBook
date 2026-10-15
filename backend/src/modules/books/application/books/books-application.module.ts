@@ -16,7 +16,7 @@ import { LikesApplicationModule } from '@/modules/likes/application/public-api';
 import { ReviewsInfrastructureModule } from '@/modules/reviews/infrastructure/public-api';
 import { ReadingRoomsReferenceModule } from '@/modules/reading-rooms';
 import { MediaInfrastructureModule } from '@/modules/media/infrastructure/public-api';
-import { NotificationsApplicationModule } from '@/modules/notifications/application/public-api';
+import { NotificationQueueModule } from '@/modules/notifications/infrastructure/public-api';
 
 @Module({
   imports: [
@@ -26,7 +26,7 @@ import { NotificationsApplicationModule } from '@/modules/notifications/applicat
     ReviewsInfrastructureModule,
     ReadingRoomsReferenceModule,
     MediaInfrastructureModule,
-    NotificationsApplicationModule,
+    NotificationQueueModule,
     CqrsModule,
   ],
   providers: [

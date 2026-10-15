@@ -125,7 +125,7 @@ async function createApp(
   const app = moduleRef.createNestApplication({ logger: false });
   app.use((req: Request, _res: Response, next: NextFunction) => {
     if (req.header('x-test-anonymous') !== 'true') {
-      Object.assign(req, { user: { id: 'user-1', role: 'user' } });
+      Object.assign(req, { user: { id: 'user-1', roles: ['user'] } });
     }
     next();
   });

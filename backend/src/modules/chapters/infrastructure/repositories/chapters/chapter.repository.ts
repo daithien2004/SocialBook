@@ -31,17 +31,6 @@ export class ChapterRepository implements IChapterRepository {
     return this.transactionHost.tx;
   }
 
-  private inTransaction<T>(
-    operation: (client: Prisma.TransactionClient) => Promise<T>,
-  ): Promise<T> {
-    if (this.transactionHost.isTransactionActive()) {
-      return operation(this.transactionHost.tx);
-    }
-    return this.transactionHost.withTransaction(() =>
-      operation(this.transactionHost.tx),
-    );
-  }
-
   async findById(id: ChapterId): Promise<ChapterEntity | null> {
     const row = await this.client.chapter.findFirst({
       where: { id: id.toString(), isDeleted: false },
@@ -62,23 +51,21 @@ export class ChapterRepository implements IChapterRepository {
   }
 
   async touchIfInBook(id: ChapterId, bookId: BookId): Promise<string | null> {
-    return this.inTransaction(async (client) => {
-      const updated = await client.chapter.updateMany({
-        where: {
-          id: id.toString(),
-          bookId: bookId.toString(),
-          isDeleted: false,
-        },
-        data: { roomReferenceRevision: { increment: 1 } },
-      });
-      if (updated.count === 0) return null;
-
-      const chapter = await client.chapter.findUnique({
-        where: { id: id.toString() },
-        select: { slug: true },
-      });
-      return chapter?.slug ?? null;
+    const updated = await this.client.chapter.updateMany({
+      where: {
+        id: id.toString(),
+        bookId: bookId.toString(),
+        isDeleted: false,
+      },
+      data: { roomReferenceRevision: { increment: 1 } },
     });
+    if (updated.count === 0) return null;
+
+    const chapter = await this.client.chapter.findUnique({
+      where: { id: id.toString() },
+      select: { slug: true },
+    });
+    return chapter?.slug ?? null;
   }
 
   async findByParagraphId(paragraphId: string): Promise<ChapterEntity | null> {
@@ -166,65 +153,61 @@ export class ChapterRepository implements IChapterRepository {
     }));
 
     if (chapter.isNew) {
-      await this.inTransaction((client) =>
-        client.chapter.create({
-          data: {
-            id: chapter.id.toString(),
-            bookId: chapter.bookId.toString(),
-            title: chapter.title.toString(),
-            slug: chapter.slug,
-            orderIndex: chapter.orderIndex.getValue(),
-            viewsCount: chapter.viewsCount,
-            version: 0,
-            ttsStatus: chapter.ttsStatus ?? null,
-            audioUrl: chapter.audioUrl ?? null,
-            createdAt: chapter.createdAt,
-            updatedAt: chapter.updatedAt,
-            paragraphs: { create: paragraphs },
-          },
-        }),
-      );
+      await this.client.chapter.create({
+        data: {
+          id: chapter.id.toString(),
+          bookId: chapter.bookId.toString(),
+          title: chapter.title.toString(),
+          slug: chapter.slug,
+          orderIndex: chapter.orderIndex.getValue(),
+          viewsCount: chapter.viewsCount,
+          version: 0,
+          ttsStatus: chapter.ttsStatus ?? null,
+          audioUrl: chapter.audioUrl ?? null,
+          createdAt: chapter.createdAt,
+          updatedAt: chapter.updatedAt,
+          paragraphs: { create: paragraphs },
+        },
+      });
       chapter.markPersisted(0);
       return;
     }
 
     if (!chapter.isDirty) return;
 
-    await this.inTransaction(async (client) => {
-      const result = await client.chapter.updateMany({
-        where: {
-          id: chapter.id.toString(),
-          isDeleted: false,
-          version: chapter.loadedVersion,
-        },
-        data: {
-          bookId: chapter.bookId.toString(),
-          title: chapter.title.toString(),
-          slug: chapter.slug,
-          orderIndex: chapter.orderIndex.getValue(),
-          viewsCount: chapter.viewsCount,
-          version: nextVersion,
-          ttsStatus: chapter.ttsStatus ?? null,
-          audioUrl: chapter.audioUrl ?? null,
-          updatedAt: chapter.updatedAt,
-        },
-      });
-      if (result.count === 0) {
-        throw new ConcurrencyException('Chapter changed after it was loaded');
-      }
-
-      await client.paragraph.deleteMany({
-        where: { chapterId: chapter.id.toString() },
-      });
-      if (paragraphs.length > 0) {
-        await client.paragraph.createMany({
-          data: paragraphs.map((paragraph) => ({
-            ...paragraph,
-            chapterId: chapter.id.toString(),
-          })),
-        });
-      }
+    const result = await this.client.chapter.updateMany({
+      where: {
+        id: chapter.id.toString(),
+        isDeleted: false,
+        version: chapter.loadedVersion,
+      },
+      data: {
+        bookId: chapter.bookId.toString(),
+        title: chapter.title.toString(),
+        slug: chapter.slug,
+        orderIndex: chapter.orderIndex.getValue(),
+        viewsCount: chapter.viewsCount,
+        version: nextVersion,
+        ttsStatus: chapter.ttsStatus ?? null,
+        audioUrl: chapter.audioUrl ?? null,
+        updatedAt: chapter.updatedAt,
+      },
     });
+    if (result.count === 0) {
+      throw new ConcurrencyException('Chapter changed after it was loaded');
+    }
+
+    await this.client.paragraph.deleteMany({
+      where: { chapterId: chapter.id.toString() },
+    });
+    if (paragraphs.length > 0) {
+      await this.client.paragraph.createMany({
+        data: paragraphs.map((paragraph) => ({
+          ...paragraph,
+          chapterId: chapter.id.toString(),
+        })),
+      });
+    }
 
     chapter.markPersisted(nextVersion);
   }

@@ -103,9 +103,7 @@ export class ReviewRepository implements IReviewRepository {
       return row ? toReviewDomain(row) : null;
     };
 
-    return this.transactionHost.isTransactionActive()
-      ? toggle()
-      : this.transactionHost.withTransaction(toggle);
+    return toggle();
   }
 
   async existsByUserAndBook(userId: string, bookId: string): Promise<boolean> {

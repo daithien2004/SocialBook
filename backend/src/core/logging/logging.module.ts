@@ -1,23 +1,9 @@
 import { Module } from '@nestjs/common';
-import { getRedisConnectionToken } from '@nestjs-modules/ioredis';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
-import Redis from 'ioredis';
 import { randomUUID } from 'node:crypto';
-import { RedisConnectionModule } from '../redis/redis-connection.module';
 
 @Module({
   imports: [
-    RedisConnectionModule,
-    ThrottlerModule.forRootAsync({
-      imports: [RedisConnectionModule],
-      inject: [getRedisConnectionToken()],
-      useFactory: (redis: Redis) => ({
-        throttlers: [{ name: 'global', ttl: 60_000, limit: 100 }],
-        storage: new ThrottlerStorageRedisService(redis),
-      }),
-    }),
     PinoLoggerModule.forRoot({
       pinoHttp: {
         genReqId: (request, response) => {
@@ -29,12 +15,11 @@ import { RedisConnectionModule } from '../redis/redis-connection.module';
           response.setHeader('x-request-id', requestId);
           return requestId;
         },
-        customProps: (request) => ({ traceId: request.id }),
         redact: {
           paths: [
             'req.headers.authorization',
             'req.headers.cookie',
-            'req.headers.x-csrf-token',
+            'req.headers["x-csrf-token"]',
             'req.body.password',
             'req.body.refreshToken',
             'req.body.accessToken',
@@ -53,6 +38,6 @@ import { RedisConnectionModule } from '../redis/redis-connection.module';
       },
     }),
   ],
-  exports: [ThrottlerModule, PinoLoggerModule],
+  exports: [PinoLoggerModule],
 })
 export class LoggingModule {}

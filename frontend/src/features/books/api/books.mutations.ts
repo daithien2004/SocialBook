@@ -1,5 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
-import { queryClient } from '@/lib/query-client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { bookKeys } from '@/lib/query-keys';
 import {
   createBook,
@@ -10,17 +9,20 @@ import {
   updateBook,
 } from './books.api';
 
-export const useCreateBook = () =>
-  useMutation({
+export const useCreateBook = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
     mutationFn: createBook,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: bookKeys.lists() });
       queryClient.invalidateQueries({ queryKey: bookKeys.adminLists() });
     },
   });
+};
 
-export const useUpdateBook = () =>
-  useMutation({
+export const useUpdateBook = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
     mutationFn: updateBook,
     onSuccess: (result, variables) => {
       queryClient.invalidateQueries({
@@ -35,31 +37,37 @@ export const useUpdateBook = () =>
       queryClient.invalidateQueries({ queryKey: bookKeys.adminLists() });
     },
   });
+};
 
-export const useDeleteBook = () =>
-  useMutation({
+export const useDeleteBook = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
     mutationFn: deleteBook,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: bookKeys.lists() });
       queryClient.invalidateQueries({ queryKey: bookKeys.adminLists() });
     },
   });
+};
 
-export const useLikeBook = () =>
-  useMutation({
+export const useLikeBook = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
     mutationFn: toggleLikeBook,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: bookKeys.lists() });
     },
   });
+};
 
 export const useRecordView = () =>
   useMutation({
     mutationFn: recordBookView,
   });
 
-export const useRecordSearchKeyword = () =>
-  useMutation({
+export const useRecordSearchKeyword = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
     mutationFn: recordSearchKeyword,
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -67,3 +75,4 @@ export const useRecordSearchKeyword = () =>
       });
     },
   });
+};

@@ -61,7 +61,7 @@ export class PostModerationProcessor extends WorkerHost {
   /**
    * Được gọi sau khi BullMQ đã thử hết số lần cho phép mà vẫn thất bại.
    * Lúc này mới đánh dấu bài viết cần Admin duyệt tay.
-   * Nhờ vậy, số job Failed trên bull-board phản ánh đúng thực tế.
+   * Nhờ vậy, job chỉ được đánh dấu thất bại sau khi đã hết lượt retry.
    */
   @OnWorkerEvent('failed')
   async onFailed(job: Job<PostModerationJobData>, err: Error): Promise<void> {

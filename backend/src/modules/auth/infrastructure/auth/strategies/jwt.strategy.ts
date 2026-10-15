@@ -14,6 +14,7 @@ import {
   getAuthUserCacheKey,
 } from '@/shared/platform/cache/auth-cache.keys';
 import { UserId } from '@/modules/users/domain/public-api';
+import type { JwtValidatedUser } from '@/shared/platform/interfaces/jwt-validated-user.interface';
 
 export interface JwtPayload {
   sub: string;
@@ -27,7 +28,11 @@ export function accessTokenFromRequest(req: {
   cookies?: Record<string, string | undefined>;
   headers?: Record<string, string | string[] | undefined>;
 }): string | null {
-  return ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+  return (
+    ExtractJwt.fromAuthHeaderAsBearerToken()(req) ??
+    req.cookies?.['sb_access_token'] ??
+    null
+  );
 }
 
 interface AuthUserCache {
@@ -50,7 +55,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayload) {
+  async validate(payload: JwtPayload): Promise<JwtValidatedUser> {
     const userId = payload.sub;
     const cacheKey = getAuthUserCacheKey(userId);
 
@@ -59,7 +64,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       if (cached.isBanned) {
         this.throwBanned();
       }
-      return { id: userId, email: payload.email, role: cached.role };
+      return { id: userId, email: payload.email, roles: [cached.role] };
     }
 
     const user = await this.userRepository.findById(UserId.create(userId));
@@ -80,7 +85,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       AUTH_USER_CACHE_TTL_SECONDS,
     );
 
-    return { id: userId, email: payload.email, role };
+    return { id: userId, email: payload.email, roles: [role] };
   }
 
   private async resolveRoleName(roleId: string): Promise<string> {

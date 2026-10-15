@@ -11,6 +11,9 @@ let nextConfig: NextConfig = {
   },
   cacheComponents: true,
   images: {
+    // In local development, let the browser fetch remote covers directly.
+    // The Next image optimizer needs outbound access to each image host.
+    unoptimized: process.env.NODE_ENV === 'development',
     remotePatterns: [
       {
         protocol: 'https',

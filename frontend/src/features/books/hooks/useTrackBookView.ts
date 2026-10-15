@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRecordView } from '@/features/books/api/books.mutations';
 import { bookKeys } from '@/lib/query-keys';
-import { queryClient } from '@/lib/query-client';
 import type { Book } from '../types/book.interface';
 
 export function useTrackBookView(bookSlug?: string) {
   const recordView = useRecordView();
+  const queryClient = useQueryClient();
   const hasRecordedView = useRef(false);
 
   useEffect(() => {
@@ -29,5 +30,5 @@ export function useTrackBookView(bookSlug?: string) {
           );
         });
     }
-  }, [bookSlug, recordView]);
+  }, [bookSlug, queryClient, recordView]);
 }

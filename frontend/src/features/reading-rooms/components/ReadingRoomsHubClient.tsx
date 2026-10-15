@@ -28,14 +28,23 @@ export function ReadingRoomsHubClient() {
   const [openSearchBook, setOpenSearchBook] = useState(false);
   const [maxMembers, setMaxMembers] = useState(10);
   const [activeTab, setActiveTab] = useState('active');
+  const { user, isAuthenticated, isLoading: isLoadingAuth } = useAppAuth();
   const createRoom = useCreateRoom();
   const isLoading = createRoom.isPending;
-  const { data: booksData, isLoading: isBooksLoading } = useQuery(bookQueries.list({ page: 1, limit: 100 }));
-  const { data: myRooms, isLoading: isMyRoomsLoading } = useQuery({ ...readingRoomQueries.myActive() });
-  const { data: myHistory, isLoading: isHistoryLoading } = useQuery({ ...readingRoomQueries.myHistory() });
+  const { data: booksData, isLoading: isBooksLoading } = useQuery({
+    ...bookQueries.list({ page: 1, limit: 100 }),
+    enabled: isAuthenticated,
+  });
+  const { data: myRooms, isLoading: isMyRoomsLoading } = useQuery({
+    ...readingRoomQueries.myActive(),
+    enabled: isAuthenticated,
+  });
+  const { data: myHistory, isLoading: isHistoryLoading } = useQuery({
+    ...readingRoomQueries.myHistory(),
+    enabled: isAuthenticated,
+  });
   const reactivateRoom = useReactivateRoom();
   const isReactivating = reactivateRoom.isPending;
-  const { user, isAuthenticated, isLoading: isLoadingAuth } = useAppAuth();
   const router = useRouter();
 
   const selectedBookData = booksData?.data.find((b: BookSummary) => b.id === selectedBook);

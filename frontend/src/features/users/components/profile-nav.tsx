@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { type FollowStateResponse } from "@/features/follows/types/follow.interface";
 import { userKeys } from "@/lib/query-keys";
-import { queryClient } from "@/lib/query-client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Settings } from "lucide-react";
 import { useRouter, useSelectedLayoutSegment } from "next/navigation";
 import { useState } from "react";
@@ -18,6 +18,7 @@ interface ProfileNavProps {
 export function ProfileNav({ profileUserId, initialFollowState }: ProfileNavProps) {
     const segment = useSelectedLayoutSegment();
     const router = useRouter();
+    const queryClient = useQueryClient();
 
     const [followState, setFollowState] = useState<FollowStateResponse | null>(
         initialFollowState

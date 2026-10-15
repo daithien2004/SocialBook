@@ -26,6 +26,7 @@ import type { Response } from 'express';
 import { Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
 import { LoginGuard } from './guards/login.guard';
+import { AuthActorContextGuard } from './guards/auth-actor-context.guard';
 
 // Use Cases
 import { GenerateWsTicketCommand } from '@/modules/auth/application/auth/commands/generate-ws-ticket/generate-ws-ticket.command';
@@ -66,6 +67,7 @@ import { ApiProblemResponses } from '@/shared/platform/decorators/api-response.d
 
 @ApiProblemResponses()
 @ApiTags('Authentication')
+@UseGuards(AuthActorContextGuard)
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -77,7 +79,9 @@ export class AuthController {
   private applyCookie(res: Response, spec: SetCookieSpec): void {
     res.cookie(spec.name, spec.value, {
       path: spec.path,
-      maxAge: spec.maxAgeSeconds * 1000,
+      ...(spec.maxAgeSeconds === undefined
+        ? {}
+        : { maxAge: spec.maxAgeSeconds * 1000 }),
       httpOnly: spec.httpOnly,
       secure: spec.secure,
       sameSite: spec.sameSite,
@@ -87,7 +91,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Log in' })
   @Public()
   @Throttle({ global: { limit: 5 } })
-  @UseGuards(LoginGuard, PoliciesGuard)
+  @UseGuards(LoginGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOkResponse({ type: AccessTokenResponseDto })
@@ -100,6 +104,10 @@ export class AuthController {
     const command = new LoginCommand(actor, req.user, req.ip, userAgent);
     const result = await this.commandBus.execute(command);
 
+    this.applyCookie(
+      res,
+      this.cookieService.accessTokenCookie(result.accessToken),
+    );
     this.applyCookie(
       res,
       this.cookieService.refreshTokenCookie(result.refreshToken),
@@ -116,8 +124,8 @@ export class AuthController {
     @CurrentActor() _actor: Actor,
     @Req() req: { user: JwtValidatedUser },
   ): ProfileResponseDto {
-    const { id, email, role } = req.user;
-    return ProfileResponseDto.fromValues(id, email, role);
+    const { id, email, roles } = req.user;
+    return ProfileResponseDto.fromValues(id, email, roles[0]);
   }
 
   @ApiOperation({ summary: 'Get Me' })
@@ -133,7 +141,7 @@ export class AuthController {
     return MeResponseDto.fromValues({
       id: user.id,
       email: req.user.email,
-      role: req.user.role,
+      role: req.user.roles[0],
       username: user.username,
       image: user.image,
     });
@@ -152,8 +160,10 @@ export class AuthController {
     const command = new LogoutCommand(actor, req.user.id);
     await this.commandBus.execute(command);
 
+    const access = this.cookieService.clearAccessToken();
     const refresh = this.cookieService.clearRefreshToken();
     const oauthState = this.cookieService.clearOauthState();
+    res.clearCookie(access.name, { path: access.path });
     res.clearCookie(refresh.name, { path: refresh.path });
     res.clearCookie(oauthState.name, { path: oauthState.path });
   }
@@ -165,12 +175,12 @@ export class AuthController {
   @ApiOkResponse({ type: WsTicketResponseDto })
   async getWsTicket(
     @CurrentActor() actor: Actor,
-    @Req() req: { user: JwtPayload },
+    @Req() req: { user: JwtValidatedUser },
   ): Promise<{ ticket: string }> {
     const command = new GenerateWsTicketCommand(
       actor,
-      req.user.sub,
-      req.user.role,
+      req.user.id,
+      req.user.roles[0],
     );
     const ticket = await this.commandBus.execute(command);
     return WsTicketResponseDto.fromTicket(ticket);
@@ -222,7 +232,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Refresh' })
-  @UseGuards(AuthGuard('jwt-refresh'), PoliciesGuard)
+  @UseGuards(AuthGuard('jwt-refresh'))
   @Public()
   @Throttle({ global: { limit: 10 } })
   @Post('refresh')
@@ -260,6 +270,7 @@ export class AuthController {
     const { accessToken, refreshToken: newRefreshToken } =
       await this.commandBus.execute(command);
 
+    this.applyCookie(res, this.cookieService.accessTokenCookie(accessToken));
     this.applyCookie(
       res,
       this.cookieService.refreshTokenCookie(newRefreshToken),

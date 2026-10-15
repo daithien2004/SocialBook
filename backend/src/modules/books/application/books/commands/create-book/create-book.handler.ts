@@ -5,7 +5,6 @@ import {
   ICommandHandler,
   QueryBus,
 } from '@nestjs/cqrs';
-import { ForbiddenError } from '@casl/ability';
 import { randomUUID } from 'node:crypto';
 import { CreateAuthorCommand, FindAuthorByNameQuery } from '@/modules/authors';
 import { BookOutboxPort } from '@/modules/books/application/public-api';
@@ -39,7 +38,6 @@ export class CreateBookHandler implements ICommandHandler<
   ) {}
 
   async execute(command: CreateBookCommand): Promise<string> {
-    ForbiddenError.from(command.actor.ability).throwUnlessCan('create', 'Book');
     if (command.genres.length === 0) {
       throw new BadRequestDomainException('Book must have at least one genre');
     }

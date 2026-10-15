@@ -1,11 +1,10 @@
 import { useState, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';
 import { reviewQueries } from '@/features/reviews/api/review.queries';
 import { useCreateReview, useUpdateReview, useDeleteReview, useToggleLikeReview } from '@/features/reviews/api/review.mutations';
 import { bookKeys } from '@/lib/query-keys';
-import { queryClient } from '@/lib/query-client';
 import type { Review } from '../types/review.interface';
 
 export interface UseReviewFormOptions {
@@ -38,6 +37,7 @@ export function useReviewForm({
   bookId,
   bookSlug,
 }: UseReviewFormOptions): UseReviewFormResult {
+  const queryClient = useQueryClient();
   const { data: reviews, isLoading: isLoadingReviews } = useQuery({
     ...reviewQueries.byBook(bookId),
     enabled: !!bookId,
@@ -113,6 +113,7 @@ export function useReviewForm({
       editingReviewId,
       createReview,
       updateReview,
+      queryClient,
       resetForm,
     ],
   );

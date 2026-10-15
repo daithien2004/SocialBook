@@ -1,194 +1,41 @@
 // This side-effect import must precede AppModule and all feature imports.
 import './api-mode';
 
-import {
-  json,
-  urlencoded,
-  Application as ExpressApplication,
-  Request,
-  Response,
-  NextFunction,
-} from 'express';
 import { Logger } from 'nestjs-pino';
-import {
-  BadRequestException,
-  ValidationPipe,
-  VersioningType,
-} from '@nestjs/common';
+import { VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import cookieParser from 'cookie-parser';
-import helmet from 'helmet';
-import { createBullBoard } from '@bull-board/api';
-import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
-import { ExpressAdapter } from '@bull-board/express';
-import { Queue } from 'bullmq';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
-import { RedisIoAdapter } from './core/redis/redis-io.adapter';
-import { configSwagger } from './core/config/swagger.config';
-import { timingSafeEqual } from 'crypto';
-import { POST_MODERATION_QUEUE } from './modules/posts/infrastructure/queues/post-moderation/post-moderation.processor';
-import { CHAPTERS_IMPORT_QUEUE } from './modules/chapters/infrastructure/queues/chapters-import/chapters-import.processor';
-import { mapValidationErrors } from './shared/platform/mappers/validation-error.mapper';
-import { isChapterImportStartRequest } from '@/modules/chapters/presentation/public-api';
+import { setupBodyParsers } from './bootstrap/setup-body-parsers';
+import { setupSecurity } from './bootstrap/setup-security';
+import { setupSwagger } from './bootstrap/setup-swagger';
+import { setupValidation } from './bootstrap/setup-validation';
+import { setupWebSocket } from './bootstrap/setup-websocket';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+async function bootstrap(): Promise<void> {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   });
+  const config = app.get(ConfigService);
+
   app.useLogger(app.get(Logger));
-  app.use(helmet());
-
-  // Tăng giới hạn payload riêng cho endpoint bắt đầu import chương.
-  const chapterImportJsonParser = json({ limit: '50mb' });
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    if (isChapterImportStartRequest(req.method, req.path)) {
-      chapterImportJsonParser(req, res, next);
-      return;
-    }
-    next();
-  });
-  // Các API còn lại giới hạn body JSON ở 1mb.
-  app.use(json({ limit: '1mb' }));
-  app.use(urlencoded({ limit: '1mb', extended: true }));
-
-  // Get ConfigService from the application context
-  const configService = app.get(ConfigService);
-
-  // Use ConfigService to read environment variables
-  const frontendUrl = configService.get<string>(
-    'env.FRONTEND_URL',
-    'http://localhost:3000',
-  );
-  const port = configService.get<number>('env.PORT', 5000);
-
-  // Set global prefix 'api' for all routes
   app.setGlobalPrefix('api');
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: '1',
   });
 
-  // Configure ValidationPipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      exceptionFactory: (errors) =>
-        new BadRequestException({
-          code: 'VALIDATION_ERROR',
-          detail: 'Request validation failed',
-          errors: mapValidationErrors(errors),
-        }),
-    }),
-  );
+  setupSecurity(app, config.getOrThrow<string>('env.FRONTEND_URL'));
+  setupBodyParsers(app);
+  setupValidation(app);
+  await setupWebSocket(app, config);
+  setupSwagger(app, config.getOrThrow<string>('env.NODE_ENV'));
 
-  // Configure cookie-parser
-  app.use(cookieParser());
-  const expressApp = app.getHttpAdapter().getInstance() as ExpressApplication;
-  expressApp.set('trust proxy', 1);
-
-  // Configure CORS
-  const origin = frontendUrl.includes(',')
-    ? frontendUrl.split(',').map((url) => url.trim())
-    : frontendUrl;
-
-  const origins = Array.isArray(origin) ? origin : [origin];
-
-  app.enableCors({
-    origin: origins,
-    credentials: true,
-  });
-
-  // Use Redis-backed Socket.IO adapter for horizontal scaling
-  const redisHost = configService.get<string>('env.REDIS_HOST', 'localhost');
-  const redisPort = configService.get<number>('env.REDIS_PORT', 6379);
-  const redisPassword = configService.get<string>('env.REDIS_PASSWORD', '');
-  const redisUrl = redisPassword
-    ? `redis://:${redisPassword}@${redisHost}:${redisPort}`
-    : `redis://${redisHost}:${redisPort}`;
-
-  const redisIoAdapter = new RedisIoAdapter(app);
-  await redisIoAdapter.connectToRedis(redisUrl);
-  app.useWebSocketAdapter(redisIoAdapter);
-
-  if (configService.get<string>('env.NODE_ENV') !== 'production') {
-    configSwagger(app);
-  }
-
-  // Mục 6: Bull Board — giao diện giám sát queue cho Admin nội bộ.
-  // Truy cập tại /queues (BasicAuth bảo vệ, không cần JWT).
-  const bullBoardAdapter = new ExpressAdapter();
-  bullBoardAdapter.setBasePath('/queues');
-
-  const bullRedisConnection = {
-    host: configService.get<string>('env.BULL_REDIS_HOST', 'localhost'),
-    port: configService.get<number>('env.BULL_REDIS_PORT', 6379),
-    password: configService.get<string>('env.BULL_REDIS_PASSWORD') || undefined,
-  };
-
-  createBullBoard({
-    queues: [
-      new BullMQAdapter(
-        new Queue(POST_MODERATION_QUEUE, { connection: bullRedisConnection }),
-      ),
-      new BullMQAdapter(
-        new Queue(CHAPTERS_IMPORT_QUEUE, { connection: bullRedisConnection }),
-      ),
-    ],
-    serverAdapter: bullBoardAdapter,
-  });
-
-  const bullBoardUser = configService.get<string>(
-    'env.BULL_BOARD_USER',
-    'admin',
-  );
-  const bullBoardPass = configService.get<string>(
-    'env.BULL_BOARD_PASSWORD',
-    '',
-  );
-
-  if (!bullBoardPass || bullBoardPass.length < 12) {
-    throw new Error('BULL_BOARD_PASSWORD phải được cấu hình (>= 12 ký tự)');
-  }
-
-  const safeEq = (a: string, b: string): boolean => {
-    const x = Buffer.from(a);
-    const y = Buffer.from(b);
-    return x.length === y.length && timingSafeEqual(x, y);
-  };
-
-  expressApp.use(
-    '/queues',
-    (req: Request, res: Response, next: NextFunction) => {
-      const auth = req.headers.authorization;
-      if (!auth || !auth.startsWith('Basic ')) {
-        res.setHeader('WWW-Authenticate', 'Basic realm="Bull Board"');
-        res.sendStatus(401);
-        return;
-      }
-      const decoded = Buffer.from(auth.slice(6), 'base64').toString();
-      const colonIndex = decoded.indexOf(':');
-      const user = decoded.slice(0, colonIndex);
-      const pass = decoded.slice(colonIndex + 1);
-
-      if (!safeEq(user, bullBoardUser) || !safeEq(pass, bullBoardPass)) {
-        res.setHeader('WWW-Authenticate', 'Basic realm="Bull Board"');
-        res.sendStatus(401);
-        return;
-      }
-      next();
-    },
-    bullBoardAdapter.getRouter() as Parameters<typeof expressApp.use>[1],
-  );
-
-  // Enable graceful shutdown hooks (important for BullMQ and database connections)
   app.enableShutdownHooks();
+  await app.listen(config.getOrThrow<number>('env.PORT'), '0.0.0.0');
 
-  // Start the server
-  await app.listen(port, '0.0.0.0');
-  const logger = app.get(Logger);
-  logger.log(`Backend running on ${await app.getUrl()}`);
+  app.get(Logger).log(`Backend running on ${await app.getUrl()}`);
 }
+
 void bootstrap();

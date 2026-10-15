@@ -5,6 +5,8 @@ import { env } from '@/env';
 export async function POST() {
   const cookieStore = await cookies();
   const token = cookieStore.get('sb_access_token')?.value;
+  const csrfSecret = cookieStore.get('sb_csrf_secret')?.value;
+  const csrfToken = cookieStore.get('sb_csrf_token')?.value;
 
   if (!token) {
     return NextResponse.json({ ok: false, token: null }, { status: 401 });
@@ -18,11 +20,13 @@ export async function POST() {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
+        ...(csrfSecret ? { Cookie: `sb_csrf_secret=${csrfSecret}` } : {}),
+        ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
       },
     });
 
     if (!res.ok) {
-      return NextResponse.json({ ok: false, token: null }, { status: 401 });
+      return NextResponse.json({ ok: false, token: null }, { status: res.status });
     }
 
     const body: unknown = await res.json();

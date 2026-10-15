@@ -29,7 +29,7 @@ import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
 import { PoliciesGuard } from '@/shared/casl/policies.guard';
 import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
 import {
-  ApiFileUpload,
+  UseImageUpload,
   Public,
 } from '@/shared/platform/decorators/custom.decorator';
 import {
@@ -81,7 +81,7 @@ export class AuthorsController {
     },
   })
   @ApiProblemResponses([401, 403])
-  @ApiFileUpload('photoUrl')
+  @UseImageUpload('photoUrl')
   async create(
     @CurrentActor() actor: Actor,
     @Body() request: CreateAuthorDto,
@@ -150,7 +150,7 @@ export class AuthorsController {
     },
   })
   @ApiProblemResponses([401, 403])
-  @ApiFileUpload('photoUrl')
+  @UseImageUpload('photoUrl')
   async update(
     @CurrentActor() actor: Actor,
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,

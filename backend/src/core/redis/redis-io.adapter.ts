@@ -3,7 +3,6 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import { createClient } from 'redis';
 import { Server, ServerOptions } from 'socket.io';
 import { Logger } from '@nestjs/common';
-import { instrument } from '@socket.io/admin-ui';
 
 function isSocketIoServer(server: unknown): server is Server {
   return (
@@ -63,12 +62,17 @@ export class RedisIoAdapter extends IoAdapter {
   override async close(
     server: Parameters<IoAdapter['close']>[0],
   ): Promise<void> {
-    await super.close(server);
-    this.pubClient?.destroy();
-    this.subClient?.destroy();
-    this.pubClient = undefined;
-    this.subClient = undefined;
-    this.adapterConstructor = undefined;
+    try {
+      await super.close(server);
+    } finally {
+      await Promise.allSettled([
+        this.pubClient?.close(),
+        this.subClient?.close(),
+      ]);
+      this.pubClient = undefined;
+      this.subClient = undefined;
+      this.adapterConstructor = undefined;
+    }
   }
 
   override createIOServer(port: number, options?: ServerOptions): Server {
@@ -85,26 +89,6 @@ export class RedisIoAdapter extends IoAdapter {
     const server = createdServer;
     if (this.adapterConstructor) {
       server.adapter(this.adapterConstructor);
-    }
-
-    // Instrument the socket server for Admin UI only when explicitly enabled
-    if (process.env.SOCKET_ADMIN_UI === 'true') {
-      const username = process.env.SOCKET_ADMIN_USER;
-      const password = process.env.SOCKET_ADMIN_PASSWORD_BCRYPT;
-      if (username && password) {
-        instrument(server, {
-          auth: {
-            type: 'basic',
-            username,
-            password,
-          },
-          mode:
-            process.env.NODE_ENV === 'production'
-              ? 'production'
-              : 'development',
-          readonly: true,
-        });
-      }
     }
 
     return server;
