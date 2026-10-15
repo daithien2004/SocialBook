@@ -35,8 +35,6 @@ import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorat
 import type { Actor } from '@/shared/casl/actor';
 import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
 import { PoliciesGuard } from '@/shared/casl/policies.guard';
-import { Roles } from '@/shared/platform/decorators/roles.decorator';
-import { RolesGuard } from '@/shared/platform/guards/roles.guard';
 
 // Use Cases
 import { ApprovePostCommand } from '@/modules/posts/application/posts/commands/approve-post/approve-post.command';
@@ -192,8 +190,6 @@ export class PostsController {
   @HttpCode(204)
   @Delete(':id/permanent')
   @ApiNoContentResponse()
-  @UseGuards(RolesGuard)
-  @Roles('admin')
   async removeHard(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @CurrentActor() actor: Actor,
@@ -225,8 +221,6 @@ export class PostsController {
   @CheckPolicy('manage', 'Post')
   @Get('admin/flagged')
   @ApiPaginatedResponse(PostResponseDto, 'offset')
-  @UseGuards(RolesGuard)
-  @Roles('admin')
   async getFlaggedPosts(
     @CurrentActor() actor: Actor,
     @Query() query: FlaggedPostsQueryDto,
@@ -240,8 +234,6 @@ export class PostsController {
   @CheckPolicy('manage', 'Post')
   @Get('admin/moderation/stats')
   @ApiOkResponse({ type: PostModerationStatsResponseDto })
-  @UseGuards(RolesGuard)
-  @Roles('admin')
   async getModerationStats(@CurrentActor() actor: Actor) {
     const result = await this.queryBus.execute(
       new GetModerationStatsQuery(actor),
@@ -254,8 +246,6 @@ export class PostsController {
   @Patch('admin/:id/approve')
   @HttpCode(204)
   @ApiNoContentResponse()
-  @UseGuards(RolesGuard)
-  @Roles('admin')
   async approvePost(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @CurrentActor() actor: Actor,
@@ -270,8 +260,6 @@ export class PostsController {
   @HttpCode(204)
   @Delete('admin/:id/reject')
   @ApiNoContentResponse()
-  @UseGuards(RolesGuard)
-  @Roles('admin')
   async rejectPost(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
     @CurrentActor() actor: Actor,
@@ -295,8 +283,6 @@ export class PostsController {
       },
     },
   })
-  @UseGuards(RolesGuard)
-  @Roles('admin')
   async bulkApprovePosts(
     @Body() dto: BulkPostIdsDto,
     @CurrentActor() actor: Actor,
@@ -325,8 +311,6 @@ export class PostsController {
       },
     },
   })
-  @UseGuards(RolesGuard)
-  @Roles('admin')
   async bulkRejectPosts(
     @Body() dto: BulkPostIdsDto,
     @CurrentActor() actor: Actor,

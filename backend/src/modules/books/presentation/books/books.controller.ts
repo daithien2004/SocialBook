@@ -6,7 +6,6 @@ import {
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
 import { SkipThrottle } from '@nestjs/throttler';
-import { RequireAuth } from '@/shared/platform/decorators/auth-swagger.decorator';
 import {
   ApiFileUpload,
   Public,
@@ -76,7 +75,6 @@ export class BooksController {
   @ApiBearerAuth()
   @Post()
   @ApiCreatedResponse({ type: BookResponseDto })
-  @RequireAuth('admin')
   @CheckPolicy('create', 'Book')
   @SkipThrottle({ global: false })
   @ApiFileUpload('coverUrl')
@@ -100,7 +98,6 @@ export class BooksController {
   @ApiBearerAuth()
   @ApiPaginatedResponse(BookResponseDto, 'offset')
   @Get('admin/all')
-  @RequireAuth('admin')
   @CheckPolicy('read', 'Book')
   @SkipThrottle({ global: false })
   async findAllAdmin(
@@ -215,7 +212,6 @@ export class BooksController {
   @Patch(':slug/like')
   @CheckPolicy('like', 'Book')
   @ApiOkResponse({ type: BookLikeResponseDto })
-  @RequireAuth()
   @SkipThrottle({ global: false })
   async toggleLike(
     @Param('slug') slug: string,
@@ -277,7 +273,6 @@ export class BooksController {
   @Put(':id')
   @CheckPolicy('update', 'Book')
   @ApiOkResponse({ type: BookResponseDto })
-  @RequireAuth('admin')
   @SkipThrottle({ global: false })
   @ApiFileUpload('coverUrl')
   async update(
@@ -302,7 +297,6 @@ export class BooksController {
   @HttpCode(204)
   @Delete(':id')
   @ApiNoContentResponse()
-  @RequireAuth('admin')
   @CheckPolicy('delete', 'Book')
   @SkipThrottle({ global: false })
   async remove(

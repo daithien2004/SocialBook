@@ -24,8 +24,6 @@ import { paginate } from '@/shared/domain/pagination.types';
 import { CheckPolicy } from '@/shared/casl/check-policy.decorator';
 import { PoliciesGuard } from '@/shared/casl/policies.guard';
 import { CurrentActor } from '@/shared/platform/decorators/current-actor.decorator';
-import { Roles } from '@/shared/platform/decorators/roles.decorator';
-import { RolesGuard } from '@/shared/platform/guards/roles.guard';
 import {
   ApiPaginatedResponse,
   ApiProblemResponses,
@@ -87,8 +85,6 @@ export class NotificationController {
   @CheckPolicy('create', 'Notification')
   @ApiCreatedResponse({ type: NotificationResponseDto })
   @Post()
-  @Roles('admin')
-  @UseGuards(RolesGuard)
   async create(
     @CurrentActor() actor: Actor,
     @Body() dto: CreateNotificationDto,
